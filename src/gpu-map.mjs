@@ -98,7 +98,7 @@ const origin=params.get('from');
 const validPages=new Set(['index','desktop','memory','kernel','shared-memory',...parallelChapters.map(c=>c.slug),...parallelRecordings.map(r=>r.slug+'-video'),...mapConcepts.flatMap(c=>c.chapters)]);
 if(validPages.has(origin)){
  const close=document.querySelector('.top-actions .gpu-map-link');
- if(close)close.href=origin==='index'?'../index.html':origin+'.html';
+ if(close)close.href=origin==='index'?'../v1.html':origin+'.html';
 }
 registerExperiment('gpu-map',()=>({view:'hardware',open:nodes.filter(n=>n.open).map(n=>n.id),recent}),saved=>{
  for(const node of nodes)node.open=false;

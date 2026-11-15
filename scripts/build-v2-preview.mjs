@@ -50,7 +50,7 @@ await writeFile(output, `<!doctype html>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar v2-topbar"><a class="brand" href="#contents">GPU Lab V2</a>
-<div class="top-actions"><a href="#contents">Contents</a><a href="${current}">Current course</a>
+<div class="top-actions"><a href="#contents">Contents</a><a href="${current}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main" tabindex="-1">${renderV2Contents(href)}</main>
 ${templates}

@@ -80,5 +80,5 @@
   .block-selection { display:block; }
   .overview-lanes { gap:3px; }
   .work-map-controls { top:74px; }
-  .course-nav a[href="#meet-gpu"],.lesson-nav a[href="../index.html#meet-gpu"] { display:flex; }
+  .course-nav a[href="#meet-gpu"],.lesson-nav a[href="../v1.html#meet-gpu"] { display:flex; }
 }

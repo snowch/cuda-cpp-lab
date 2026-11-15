@@ -12,9 +12,15 @@ def check_v2(browser, url):
         page = context.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
-        page.goto(url + 'v2/')
+        page.goto(url)
+        expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA')
         expect(page.locator('html')).to_have_attribute('data-theme', theme)
         expect(page.get_by_role('link', name='Contents', exact=True)).to_be_visible()
+        page.get_by_role('link', name='GPU Lab V1', exact=True).click()
+        expect(page).to_have_url(url + 'v1.html')
+        expect(page.locator('.roadmap h3')).to_have_count(14)
+        page.get_by_role('link', name='Go to GPU Lab V2').click()
+        expect(page).to_have_url(url)
         routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 20
         for route in routes[:2]:
@@ -67,6 +73,10 @@ def check_v2(browser, url):
 
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
+    page.goto(url + 'v2/')
+    expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA')
+    page.get_by_role('link', name='GPU Lab V1', exact=True).click()
+    expect(page).to_have_url(url + 'v1.html')
     page.goto(url + 'v2/reduction.html')
     expect(page.locator('#v2-source')).to_be_visible()
     expect(page.get_by_role('button', name='Run model')).to_be_disabled()

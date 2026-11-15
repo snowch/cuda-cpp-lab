@@ -56,7 +56,8 @@ if(link&&!standalone){
    if(url.pathname===location.pathname)close();else {
     if(url.pathname.endsWith('/inside-sm.html')){
       try{saveReadingState();}catch(error){status.hidden=false;status.textContent='Your reading state could not be saved. '+error.message;return;}
-      url.searchParams.set('from',location.pathname.split('/').at(-1)?.replace('.html','')||'index');
+      url.searchParams.set('from',location.pathname.endsWith('/v1.html') ? 'index' :
+        location.pathname.split('/').at(-1)?.replace('.html','') || 'index');
       url.searchParams.set('return',location.pathname+location.search+location.hash);
     }
     location.assign(url.href);
