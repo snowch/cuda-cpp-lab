@@ -1,8 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html) {
-  const key = "const storageKey = 'gpu-lab-v2:editable-cuda-kernel';";
-  if (!html.includes(key)) throw new Error('The CUDA workbench storage contract changed.');
+  if (!html.includes('lab.firstKernel')) throw new Error('The CUDA workbench must support the first-kernel exercise.');
   return html.replace('</head>', `<style>
 html[data-inline] body { min-height:0; background:transparent; }
 html[data-inline] main { width:100%; padding:2px; }
@@ -20,6 +19,7 @@ html[data-inline] .card { border:0; border-radius:0; background:transparent; pad
 html[data-inline] .card+.card { border-top:1px solid #49615c; background:#192f2a; }
 html[data-inline] .editor-label span,html[data-inline] .sub,html[data-inline] .card .note { color:#b8cdc4; }
 html[data-inline] textarea { min-height:240px; background:#0f211d; border-color:#49615c; }
+html[data-inline="hello"] textarea { min-height:110px; height:110px; }
 html[data-inline] button { background:#223d35; border-color:#557268; color:#edf8f1; }
 html[data-inline] button.primary { background:#a7e3c8; color:#172f29; border-color:#a7e3c8; }
 html[data-inline] :focus-visible { outline-color:#a7e3c8; }
@@ -38,9 +38,8 @@ html[data-inline] .kernel-shortcut { font-size:.82rem; color:#b8cdc4; }
 <script>
 const inlineMode = new URLSearchParams(location.search).get('embed') ||
   document.documentElement.dataset.inline;
-if (inlineMode === 'scale' || inlineMode === 'bounds') document.documentElement.dataset.inline = inlineMode;
+if (['hello', 'scale', 'bounds'].includes(inlineMode)) document.documentElement.dataset.inline = inlineMode;
 </script></head>`)
-    .replace(key, key.replace("';", "' + (document.documentElement.dataset.inline || '');"))
     .replace('</body>', `<script>
 if (document.documentElement.dataset.inline) {
   const toolbar = document.createElement('div');
@@ -52,7 +51,7 @@ if (document.documentElement.dataset.inline) {
     const url = URL.createObjectURL(new Blob([editor.value], { type: 'text/plain' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'runKernel.cu';
+    link.download = profile === 'hello' ? 'hello.cu' : 'runKernel.cu';
     link.hidden = true;
     document.body.append(link);
     link.click();
@@ -61,7 +60,7 @@ if (document.documentElement.dataset.inline) {
   });
   toolbar.append(reset, exportSource);
   const label = document.querySelector('.editor-label');
-  label.querySelector('label').textContent = 'runKernel.cu';
+  label.querySelector('label').textContent = profile === 'hello' ? 'hello.cu' : 'runKernel.cu';
   editor.setAttribute('aria-label', 'CUDA source');
   label.querySelector('span').replaceWith(toolbar);
   document.querySelector('#output-title').textContent = 'Console · simulated output';

@@ -23,11 +23,17 @@ def check_v2(browser, url):
         expect(page).to_have_url(url)
         routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 20
-        for route in routes[:2]:
+        for route, mode in zip(routes[:2], ('scale', 'bounds')):
             page.goto(route)
-            workbench = page.frame_locator('[data-kernel-workbench]')
+            workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile('runKernel'))
             expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
+            if mode == 'scale':
+                first = page.frame_locator('[data-kernel-workbench="hello"]')
+                expect(first.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'output\[0\] = 42\.0f'))
+                expect(first.locator('#values tr')).to_have_count(1)
+                page.get_by_text('Show host code', exact=True).click()
+                expect(page.locator('#v2-first-program')).to_contain_text('hello<<<1, 1>>>(output)')
         for route in routes:
             page.goto(route)
             activity = page.locator('.v2-experiment')
