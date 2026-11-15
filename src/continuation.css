@@ -24,3 +24,12 @@
 .continuation-experiment .controls { padding: 0; grid-template-columns: repeat(auto-fit,minmax(min(100%,15rem),1fr)); }
 .continuation-experiment .controls label,.continuation-experiment .controls select { font-size: 1rem; }
 .continuation-experiment .controls select { margin-top: .4rem; min-height: 44px; }
+
+/* Row/column headers expose reuse; output cells contain private sums. */
+#matmul-concept .matmul-concept-grid { width:100%; table-layout:fixed; border-collapse:separate; border-spacing:6px; margin:18px 0; font-size:16px; text-align:center; }
+#matmul-concept .matmul-concept-grid th,#matmul-concept .matmul-concept-grid td { padding:10px 5px; vertical-align:middle; border:1px solid var(--line); border-radius:6px; background:var(--panel); }
+#matmul-concept .matmul-concept-grid th { background:var(--accent-soft); color:var(--accent); }
+#matmul-concept .matmul-concept-grid span,#matmul-concept .matmul-concept-grid code { display:block; }
+#matmul-concept .matmul-concept-grid code { white-space:nowrap; font-size:16px; font-weight:600; }
+#matmul-concept .matmul-concept-direction { margin-top:4px; font-size:24px; line-height:1.2; color:var(--accent); }
+#matmul-concept .matmul-concept-grid .matmul-concept-corner { border:0; background:transparent; color:var(--accent); font-size:24px; }
