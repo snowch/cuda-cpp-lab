@@ -240,3 +240,38 @@ labels avoid awkward hyphenated wrapping. No page overflow or new controls.
 Focused checks passed uniform signs, alternating masks, a rare three-operation
 negative path, unused positions, independent invalidation, keyboard Run/step and
 no-JavaScript visibility. Results remain hidden until Run.
+
+### Chapter 8 release evidence
+
+[PR #143](https://github.com/snowch/gpu-lab/pull/143) merged as
+`3489002ee80099bdfd99897573f2597d6c9e0511`. Local/PR/production checks and
+deployment passed. Public release/footer matched that SHA; inspected actual
+phone/dark and desktop/light figures. Both masks stayed beside each other;
+initial hidden results, uniform/rare-path/unused-lane cases, independent
+invalidation and keyboard Run passed before chapter 9 began.
+
+### Chapter 9 reading and design review
+
+The problem of combining independent inputs precedes the shared-memory and
+block-barrier definitions. Partner reads and partial sums are then explained
+before the new ordering diagram, followed by the prediction and trace controls.
+The extension to eight inputs and its CUDA reference follow that experiment.
+The former ambiguous reference to “the diagram” now names the Contribution tree
+table and says to Run before inspecting it.
+
+The new figure makes write → barrier → partner-read ordering visible, with every
+block thread at the barrier and only selected threads adding. Its return label
+repeats the barrier before later partner reads. It replaces repeated ordering
+prose while keeping the current contribution tables and shared-word snapshots.
+Those tables supply numerical sets after Run; the new rule shows no indices,
+values or prediction answers. The scope distinguishes required ordering from
+the selected event's memory state. The existing recap explains the same steps.
+
+Inspected the built preceding/changed/following sequence and all 390/820/1440px
+light/dark layouts. Shared arrows turn down in narrow layouts; the return still
+names the barrier. No reduced text, page overflow, new controls or disclosures.
+Focused checks passed initial/changed hidden results, unwritten words, all
+initial writes and barrier, partial contribution stages, four/eight-input sums,
+independent invalidation and keyboard Run/step. The diagnostic never acquires a
+numeric output or contribution tree, even after late writes. The rule remains
+visible with JavaScript disabled.

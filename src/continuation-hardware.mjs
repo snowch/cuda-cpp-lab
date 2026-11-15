@@ -7,6 +7,7 @@ import {renderSmWalkthrough} from './sm-walkthrough-view.mjs';
 import {renderSmHardware} from './sm-hardware-view.mjs';
 import { renderSchedulingRelationships } from './scheduling-relationships.mjs';
 import {renderDivergenceConcept} from './divergence-concept.mjs';
+import {renderReductionConcept} from './reduction-concept.mjs';
 
 const scaleSource = `import torch
 
@@ -169,8 +170,8 @@ export const chapters = [
           ['Shared memory', 'Storage that threads in the same block can read and write. Each FP32 storage position is called a word. In this model thread i first writes input i into shared word i.'],
           ['Block barrier', 'A point that all threads in the block must reach before any continues. It also makes preceding shared-memory writes visible to participating threads after the barrier.'],
         ],
-        body: `<p>Each thread first writes one input into shared memory. The initial barrier orders those writes before partner reads. A partial sum contains some of the inputs; the diagram lists their indices. At partner distance 2, threads 0 and 1 add values from words 2 and 3. After another barrier, thread 0 adds the two partial sums at distance 1.</p>
-          <p>Step through the writes before the arithmetic. “Unwritten” means a thread has not yet stored its input there. Each model arithmetic stage reads a snapshot of the preceding stage, representing the ordering between stages. Only some threads add, but every thread reaches each block barrier.</p>`,
+        body: `<p>Each thread first writes one input into shared memory. The initial barrier orders those writes before partner reads. A partial sum contains some of the inputs. At partner distance 2, threads 0 and 1 add values from words 2 and 3. After another barrier, thread 0 adds the two partial sums at distance 1. After Run, the “Contribution tree” table lists input indices through the selected arithmetic stage.</p>
+          <p>Step through the writes before the arithmetic. “Unwritten” means a thread has not yet stored its input there.</p>${renderReductionConcept()}`,
         task: 'Predict which two input indices contribute to thread 0’s first partial sum. Run and step through the writes, initial barrier and first addition. Explain why the first two array neighbours are not the first pair combined.',
         experiment: { model: 'reduction', defaults: { size: 4, synchronised: true }, controls: [], focus: 'tree', code: sumSource },
       },
