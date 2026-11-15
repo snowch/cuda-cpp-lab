@@ -329,7 +329,9 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 CourseHandler.corrupt=None;page.locator('#save-offline').click();ready(page)
                 page.locator('#remove-offline').click();page.locator('#cancel-remove').click();ready(page)
                 page.locator('#remove-offline').click();page.locator('#confirm-remove').click()
-                expect(page.locator('#offline-status')).to_have_text('Not saved for offline use')
+                # REMOVE waits for any in-flight full-book cache scan. Its RPC
+                # permits 15 seconds; allow that response plus UI scheduling.
+                expect(page.locator('#offline-status')).to_have_text('Not saved for offline use',timeout=20000)
                 assert page.evaluate('caches.keys()') == ['sibling-app:keep']
                 assert page.evaluate("localStorage.getItem('user-content')") == 'keep'
                 expect(page.locator('#lesson-complete')).to_be_checked()
