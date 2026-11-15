@@ -1,69 +1,65 @@
-# GPU Lab V2 pilot
+# GPU Lab V2
 
-The CUDA-first pilot lives under `/gpu-lab/v2/`. Its first three lessons use the
-same `hello.cu` program to introduce a per-thread calculation, a bounds check,
-and the CPU–GPU data path. Each lesson exposes one source change next to the
-output to inspect. The controls generate the complete downloadable program from
-the same parameters used by the browser teaching model.
+The CUDA-first course lives under `/gpu-lab/v2/`. Its 20 lessons progress from
+per-thread arithmetic and CPU–GPU copies to warp execution, matrix operations,
+attention, inference and stable token routing. V2 is developed on the
+`v2/cuda-first-pilot` branch. Each lesson links to the related V1 lesson.
 
-The remaining 17 lessons are marked **Planned**. Each has a learning goal, a
-stable route, Previous/Next links and a related lesson in the current course.
-The branch adds the V2 routes to the static build and offline release manifest.
-The current course keeps its existing entry point and lesson routes.
-
-## Try the pilot
+## Run the course
 
 ```sh
 npm run dev
 ```
 
 Open `http://localhost:5173/gpu-lab/v2/` and start with **One thread, one element**.
-The browser executes the teaching model. Use the desktop CUDA setup to compile
-the downloaded C++ source. The coalescing lesson is still a stub in this pilot.
+The first three lessons share one complete downloadable CUDA program. The
+later lessons use focused CUDA excerpts or algorithm outlines. Their controls
+change the displayed source and run a deterministic teaching trace. Enter a
+prediction before running, step through the result and explain a new case.
+The concept diagrams use original layouts and data from the lessons.
+Traces are teaching models of addresses, dependencies, arithmetic or operation
+counts. The workbench below compiles a supported subset of CUDA device code.
 
-To open the same pilot from a single file on a tablet, generate its offline
-preview and open it in Chrome.
+To use the course models offline on a tablet, generate an HTML file and open
+it in Chromium.
 
 ```sh
-node scripts/build-v2-preview.mjs GPU-Lab-V2-preview.html
+node scripts/build-v2-preview.mjs GPU-Lab-V2.html
 ```
 
-The preview contains all 20 pilot routes and their controls. Links back to the
-current course point to the published site.
+The file includes all lessons, their controls, styles and fonts. To use the
+offline editable CUDA workbench too, put `GPU-Lab-CUDA-workbench.html` alongside
+it. Links to the V1 course require a connection.
 
-## Review checks
+## Edit and run CUDA in WebAssembly
 
-- Read the pilot in order from the input and source to the edit, run result,
-  transfer question and next lesson. Each new concept appears next to the code
-  that needs it. The opening uses CUDA with basic programming knowledge as its
-  prerequisite.
-- Inspect the served pages at phone, tablet and desktop widths in light and dark
-  themes. Verify the edited source, output, keyboard step controls and download.
-- Verify all 20 routes, the planned-page labels and current-course fallback,
-  result invalidation on edits, restoration on reload, and the offline tablet
-  preview in Chromium.
-- Run the existing course unit and browser checks separately from the pilot
-  preview. The browser model labels its output as a model and provides no GPU
-  timing results.
-
-All eight supported `hello.cu` variants compiled to objects with NVIDIA CUDA
-13.2.51, targeting `sm_80`. Physical GPU execution
-is outside this pilot's verification.
-
-## Editable CUDA source workbench
-
-Lesson 1 links to the editable workbench. Clang running in WebAssembly compiles
+Lessons 1 and 2 link to the editable workbench. Clang in WebAssembly compiles
 the exact editor text to CUDA LLVM IR. A lesson-specific backend lowers the
-supported instructions to PTX and GPGPU-Sim runs the result in WebAssembly. The
-lesson supplies the input and launch. Learners can vary the FP32 expression or
-bounds check, see compiler diagnostics, and inspect emitted PTX.
+supported instructions to PTX and GPGPU-Sim runs them in WebAssembly. The
+workbench fixes the launch at two blocks of four threads with five inputs.
+Learners can vary arithmetic, local and global indexing, and the bounds check.
+Compiler diagnostics and generated PTX are visible in the browser.
 
-The hosted workbench downloads about 127 MiB of pinned compiler assets on the
-first run. The separate standalone workbench bundles those assets for offline
-use. The source and build instructions live in the
+The hosted workbench downloads about 127 MiB of pinned compiler assets on
+first run. The standalone workbench bundles these assets. Source and build
+instructions are in the
 [cuda-sim-wasm workbench](https://github.com/snowch/cuda-sim-wasm/tree/experiment/editable-cuda/workbench).
 
-Browser checks covered starter and edited outputs, a malformed edit, an
-unsupported operation, and restoring the starter. The link from lesson 1 and
-return link were tested against the built V2 routes. Offline runs were tested
-at phone and tablet widths in Chromium.
+## Review and validation
+
+- Read from the declared inputs and CUDA source through the prediction,
+  observed trace, transfer question and next lesson. Initial run results are
+  hidden, and selecting new settings clears the earlier prediction and trace.
+  Related V1 lessons provide the longer explanations and reference programs.
+- `npm run check` covers all routes and calculates an expected prediction for
+  every supported guided case. `python tests/browser.py` exercises navigation,
+  result invalidation, persistence, keyboard input, no-script reading and
+  phone, tablet and desktop layouts in both themes.
+- The supplied hello.cu variants previously compiled with NVIDIA CUDA
+  13.2.51 targeting sm_80. The Lenovo offline run verified the starter.
+  The indexing and bounds edits were checked with the pinned WebAssembly
+  compiler and functional simulator. Forty wrapped CUDA excerpt variants
+  compiled with the same NVIDIA toolkit and target. The attention outline is
+  pseudocode. Performance examples use synthetic models.
+- Numerical model assumptions are documented in [model.md](model.md). CUDA
+  mechanism references are in [sources.md](sources.md).

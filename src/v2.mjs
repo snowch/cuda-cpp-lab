@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { mountGuided } from './v2-guided.mjs';
 import { downloadCuda } from './cuda-program.mjs';
 import { fp32, v2Experiments, v2Run } from './v2-model.mjs';
 
@@ -38,6 +39,7 @@ function copiesResult(model, step) {
 }
 
 export function mountV2(root = document) {
+  mountGuided(root);
   const activity = root.querySelector('[data-v2-mode]');
   if (!activity) return;
   const mode = activity.dataset.v2Mode;

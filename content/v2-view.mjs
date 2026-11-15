@@ -1,7 +1,10 @@
 // Copyright © 2026 Christopher Snow.
 import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
 import { fp32, v2Experiments, v2Run } from '../src/v2-model.mjs';
+import { guidedLessons } from '../src/v2-guided.mjs';
+import { escape } from '../src/continuation-ui.mjs';
 import { v2Course } from './v2-course.mjs';
+import { v2Diagram } from './v2-diagrams.mjs';
 
 const teaching = {
   scale: {
@@ -42,20 +45,19 @@ const groups = [
 export function renderV2Contents(href) {
   return `<header class="intro">
     <h1>Learn the GPU through CUDA</h1>
-    <p class="lead">Start with one small program. Change its source, run a model, and inspect what each thread does.</p>
+    <p class="lead">Start with one small CUDA program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with one thread, one element →</a></p>
   </header>
   ${groups.map(([title, start, end]) => `<section class="v2-list">
     <h2>${title}</h2>
     <ol start="${start + 1}">${v2Course.slice(start, end).map(lesson => `<li>
       <a href="${href(lesson.slug)}">${lesson.title}</a>
-      ${lesson.mode ? '' : '<span class="v2-status">Planned</span>'}
       <p>${lesson.goal}</p>
     </li>`).join('')}</ol>
   </section>`).join('')}`;
 }
 
-function renderActivity(mode, legacy, workbenchHref) {
+function renderActivity({mode, slug}, legacy, workbenchHref) {
   const lesson = teaching[mode];
   const experiment = v2Experiments[mode];
   const initial = v2Run(mode, experiment.initial);
@@ -66,10 +68,20 @@ function renderActivity(mode, legacy, workbenchHref) {
     <h2 id="v2-setup">Before you run</h2>
     <p>${lesson.before}</p>
     ${definitions(lesson.terms)}
+    ${v2Diagram(slug)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Change hello.cu</h2>
     ${mode === 'scale' && workbenchHref ? `<p><a class="v2-start" href="${workbenchHref}">Edit, compile and run the CUDA kernel →</a></p>` : ''}
+    ${mode === 'bounds' && workbenchHref ? `<details class="more-settings">
+      <summary>Try two source edits in the CUDA workbench</summary>
+      <p>Restore the starter first. Its fixed launch is two blocks of four threads and five inputs.</p>
+      <ol>
+        <li>Keep <code>output[i]</code> and replace <code>input[i]</code> with <code>input[threadIdx.x]</code>. Predict what the first thread of block 1 reads and where it writes.</li>
+        <li>Restore the starter. Change the guard to <code>i &lt; n - 1</code>. Predict which output stays unwritten and run to check.</li>
+      </ol>
+      <p><a href="${workbenchHref}">Open the CUDA workbench →</a></p>
+    </details>` : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. To compile the complete program, use the downloaded file with the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
@@ -101,25 +113,69 @@ function renderActivity(mode, legacy, workbenchHref) {
   </section>`;
 }
 
+function renderGuided(slug) {
+  const lesson = guidedLessons[slug];
+  const codeLabel = slug === 'attention' ? 'CUDA algorithm outline' : 'CUDA C++ excerpt';
+  return `<section aria-labelledby="v2-setup">
+    <h2 id="v2-setup">Before you run</h2>
+    <p>${lesson.before}</p>
+    ${definitions(lesson.terms)}
+    ${v2Diagram(slug)}
+  </section>
+  <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
+    <h2 id="v2-activity">Predict and run</h2>
+    ${readerTask(lesson.task, 'Try it')}
+    <p class="chapter-browser-note">No installation or GPU is required. The controls change the source shown below. Run model traces the selected case using the assumptions above.</p>
+    <noscript><p class="notice">Enable JavaScript to change settings and run the model. You can still read the starter and compare the final explanation below.</p></noscript>
+    <div class="v2-workbench">
+      <div>
+        ${codePanel({ id: 'v2-source', label: codeLabel, source: lesson.code(lesson.cases[0][0]), explainedLocally: true })}
+        <p class="v2-note">${lesson.inspect}</p>
+      </div>
+      <form class="v2-controls">
+        <label for="v2-choice">${lesson.label}</label>
+        <select id="v2-choice" disabled>${lesson.cases.map(([, label], index) =>
+          `<option value="${index}">${escape(label)}</option>`).join('')}</select>
+        <label for="v2-prediction">${lesson.question}</label>
+        <input id="v2-prediction" type="number" step="any" placeholder="Optional" disabled>
+        <button class="primary" id="v2-run" disabled>Run model</button>
+        <p id="v2-feedback" role="status">Predict the result, then run the model.</p>
+      </form>
+    </div>
+    <div id="v2-result" hidden>
+      <div data-summary></div>
+      <div class="v2-step-actions" data-steps hidden>
+        <button type="button" data-prev>Previous step</button>
+        <output data-position aria-live="polite"></output>
+        <button type="button" data-next>Next step</button>
+      </div>
+      <div data-trace></div>
+    </div>
+  </section>
+  <section class="book-section" aria-labelledby="v2-apply">
+    <h2 id="v2-apply">Apply what you saw</h2>
+    <p>${lesson.transfer}</p>
+    <details class="more-settings"><summary>Compare your explanation</summary><p>${lesson.answer}</p></details>
+  </section>`;
+}
+
 export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
   return `<header class="intro">
-    <p class="eyebrow">Lesson ${number}${lesson.mode ? '' : ' · Planned'}</p>
+    <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
-  ${lesson.mode ? renderActivity(lesson.mode, legacy, workbenchHref) : `<section class="v2-stub">
-    <h2>Planned lesson</h2>
-    <p>For now, see the <a href="${legacy(lesson.current)}">related lesson in the current course</a>.</p>
-  </section>`}
+  ${lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
+  <p><a href="${legacy(lesson.current)}">Explore this topic in the current course →</a></p>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
     <a href="${href(next?.slug ?? 'contents')}">${next?.title ?? 'Contents'} →</a>
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'v2.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'v2.css'];
 export function renderV2Page(lesson, versionMarkup = '') {
   const href = slug => slug === 'contents' ? './' : `./${slug}.html`;
   const legacy = slug => `../lessons/${slug}.html`;
@@ -130,7 +186,7 @@ export function renderV2Page(lesson, versionMarkup = '') {
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>${title}</title>${styles}
 <script type="module" src="../src/theme.mjs"></script>
-${lesson?.mode ? '<script type="module" src="../src/v2.mjs"></script>' : ''}</head>
+${lesson ? '<script type="module" src="../src/v2.mjs"></script>' : ''}</head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar v2-topbar"><a class="brand" href="./">GPU Lab V2</a>

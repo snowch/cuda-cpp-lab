@@ -1,5 +1,5 @@
 // Copyright © 2026 Christopher Snow.
-// Export the V2 course as one browser-readable file for review on a tablet.
+// Export the V2 teaching models as a browser-readable file.
 import { readFile, writeFile } from 'node:fs/promises';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Contents, renderV2Lesson, v2Styles } from '../content/v2-view.mjs';
@@ -33,7 +33,7 @@ const licenses = await Promise.all(licenseNames.map(name =>
   readFile(new URL('../assets/fonts/' + name, import.meta.url), 'utf8')));
 const templates = [
   ['contents', renderV2Contents(href)],
-  ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy)]),
+  ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy, './GPU-Lab-CUDA-workbench.html')]),
 ].map(([slug, markup]) => `<template id="page-${slug}">${markup}</template>`).join('\n');
 
 await writeFile(output, `<!doctype html>
@@ -41,7 +41,7 @@ await writeFile(output, `<!doctype html>
 <html lang="en-GB">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><title>GPU Lab V2 preview</title>
+<meta name="color-scheme" content="light dark"><title>GPU Lab V2</title>
 <style>${styling}</style>
 <script type="importmap">${JSON.stringify({ imports })}</script>
 </head>

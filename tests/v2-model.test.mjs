@@ -2,7 +2,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { v2Course } from '../content/v2-course.mjs';
+import { v2Diagram } from '../content/v2-diagrams.mjs';
 import { renderV2Lesson } from '../content/v2-view.mjs';
+import { guidedLessons } from '../src/v2-guided.mjs';
+import { runTrace } from '../src/v2-traces.mjs';
 import { v2Run } from '../src/v2-model.mjs';
 
 test('the multiplier updates the visible kernel, full program and FP32 results', () => {
@@ -40,13 +43,61 @@ test('copy steps come from the complete program and reflect array size', () => {
   }
 });
 
-test('each planned page has a route and an existing-course fallback without a run control', () => {
+
+const expected = {
+  coalescing: [4, 8, 32],
+  scheduling: [1, 2],
+  divergence: [1, 2, 2],
+  reduction: [2, 4],
+  'shared-memory-banks': [32, 1, 1],
+  matmul: [128, 64, 32],
+  precision: [0, 8, 8],
+  'tensor-cores': [16, 20],
+  attention: [128, 0, 0],
+  inference: [16, 64, 256],
+  'matmul-investigation': [8, 4, 1],
+  histograms: [8, 6],
+  scan: [3, 2],
+  compaction: [3, 3, -1],
+  progress: [4, 2],
+  pipelines: [10, 5],
+  'token-routing': [5, 4],
+};
+
+test('all 20 routes have exercises, transfer prompts and links to the related course', () => {
   assert.equal(new Set(v2Course.map(lesson => lesson.slug)).size, 20);
-  assert.deepEqual(v2Course.filter(lesson => lesson.mode).map(lesson => lesson.mode), ['scale', 'bounds', 'copies']);
-  for (const lesson of v2Course.slice(3)) {
+  assert.equal(Object.keys(guidedLessons).length, 17);
+  for (const lesson of v2Course) {
     const page = renderV2Lesson(lesson, slug => slug + '.html', slug => '../lessons/' + slug + '.html');
-    assert.match(page, /Planned lesson/);
+    assert.doesNotMatch(page, /Planned lesson/);
+    assert.match(page, /id="v2-run"/);
+    assert.match(page, /id="v2-result" hidden/);
+    assert.match(page, /Compare your explanation/);
     assert.ok(page.includes('../lessons/' + lesson.current + '.html'));
-    assert.doesNotMatch(page, /id="v2-run"/);
   }
+});
+
+test('every guided source variant produces its expected prediction and trace', () => {
+  assert.deepEqual(Object.keys(expected).sort(), Object.keys(guidedLessons).sort());
+  for (const [slug, lesson] of Object.entries(guidedLessons)) {
+    const sources = new Set();
+    const answers = lesson.cases.map(([value]) => {
+      sources.add(lesson.code(value));
+      const result = runTrace(slug, value);
+      assert.ok(result.frames.length > 0, slug);
+      assert.ok(result.frames.every(frame => frame.length > 0), slug);
+      return result.answer;
+    });
+    assert.equal(sources.size, lesson.cases.length, slug);
+    assert.deepEqual(answers, expected[slug], slug);
+  }
+});
+
+test('original concept diagrams use the local launch and address-model cases', () => {
+  const indices = v2Diagram('more-threads-than-elements');
+  const sectors = v2Diagram('coalescing');
+  assert.match(indices, /Block 1<\/th><td>4<span>Write<\/span><\/td>/);
+  assert.match(indices, /7<span>Skip<\/span>/);
+  assert.match(sectors, /Bytes 32–63/);
+  assert.match(sectors, /Sector 1<\/strong><span>Lanes 4, 5, 6, 7/);
 });
