@@ -159,7 +159,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             ctx.close()
             print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
-                CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False
+                CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False; CourseHandler.requests=[]
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
                 context=browser.new_context(viewport={'width':width,'height':900},color_scheme=theme,has_touch=width<500,reduced_motion='reduce')
                 errors=[]; context.on('page',lambda page:page.on('pageerror',lambda error:errors.append(str(error))))
