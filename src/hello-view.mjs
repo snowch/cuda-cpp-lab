@@ -1,4 +1,5 @@
 import {recordingLink} from './recording-view.mjs';
+import {renderHelloHardwareConcept} from './hello-hardware-concept.mjs';
 // Copyright © 2026 Christopher Snow.
 import {tensorValue} from './value-format.mjs';
 import {openingCode,browserNotice,codePanel,definitions,readerTask} from './chapter-view.mjs';
@@ -57,7 +58,9 @@ export function renderSmExplanation() {
  return `<div class="hello-sm" aria-labelledby="hello-sm-title"><h3 id="hello-sm-title">Where do these threads run?</h3>
  ${definitions([['Streaming multiprocessor (SM)','A part of the GPU containing hardware that executes instructions for threads.']])}
  <p>Each block stays on one SM. Several blocks can share an SM when resources allow. Threads share the SM’s arithmetic hardware; each thread does not own a separate arithmetic unit. They do not necessarily all execute at once.</p>
- <p class="hello-note">This diagram shows grouping, not hardware placement or execution order. <a id="hello-sm-explore" data-reading-link href="inside-sm.html?from=hello">Watch: inside an SM · 3½ minutes</a>.</p></div>`;
+ <p>Our example GPU device has dedicated memory for the arrays, separate from the compute chip that contains the SMs. An SM keeps each thread’s working values separate while shared hardware calculates with them. Follow threads 0 and 1 from block 0 through the fixed doubling example:</p>
+ ${renderHelloHardwareConcept()}
+ <p class="hello-note">The block tiles show logical grouping. The worked value path connects those threads to storage and shared hardware. <a id="hello-sm-explore" data-reading-link href="inside-sm.html?from=hello">Watch: inside an SM · 3½ minutes</a>.</p></div>`;
 }
 const choice=(id,label,options)=>`<label for="${id}">${label}<select id="${id}"><option value="">Choose…</option>${options.map(([value,text])=>`<option value="${value}">${text}</option>`).join('')}</select></label>`;
 export function renderLaunchPractice() {
@@ -121,7 +124,7 @@ export function renderCodeBridge(stage,factor) {
  <p>Ordinary PyTorch GPU operations usually handle kernel selection and launches for you. One operation may launch several kernels. Tensor layout and data type can still affect performance.</p>
  <p>When you launch a CUDA C++ kernel directly, you specify the block and thread counts. Our <code>runKernel</code> example doubles the inputs using a separate implementation; it is not PyTorch’s internal kernel.</p>
  <p>The CPU program supplies the input count <code>n = 5</code> as a kernel argument. CUDA does not infer an array’s length from its address. For different data, the CPU program must set the count to match, allocate enough input and output storage in GPU memory, and copy the inputs there before launching.</p>
- <p>The launch below is a call in the CPU program, outside the kernel definition. It requests the two blocks of four threads shown in the diagram:</p>
+ <p>The launch below is a call in the CPU program, outside the kernel definition. It requests the two blocks of four threads in the Worked grouping example:</p>
  ${codePanel({id:'hello-bridge-launch-2',source:launchSource(),label:'CUDA C++ · launch from the CPU program',explainedLocally:true})}
  <div class="code-explanations hello-launch-explanations"><p class="code-explanation-heading">What each part does</p><ul>
  <li><code>int n = 5;</code> — Stores the count of five input values. This is separate from how many threads are launched.</li>
