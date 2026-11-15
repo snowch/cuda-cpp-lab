@@ -28,7 +28,9 @@ def check_map_loading(browser, url):
     page.get_by_role('button', name='Course contents').click()
     page.locator('.sidebar nav').get_by_role('link', name='GPU map', exact=True).click()
     expect(page.locator('#hardware-panel h2')).to_have_text('Computer / system')
-    page.wait_for_function("getComputedStyle(document.querySelector('main')).paddingLeft === '16px'")
+    # The intentionally held render-blocking stylesheet can suppress animation
+    # frames. Poll the computed style by timer while the other CSS arrives.
+    page.wait_for_function("getComputedStyle(document.querySelector('main')).paddingLeft === '16px'", polling=50)
     assert pending, 'The base stylesheet must still be held for this regression check'
     assert page.evaluate('document.readyState') != 'complete'
     assert page.evaluate('document.documentElement.scrollWidth > innerWidth')
