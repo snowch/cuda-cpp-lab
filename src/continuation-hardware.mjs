@@ -6,6 +6,7 @@ import {recordingLink} from './recording-view.mjs';
 import {renderSmWalkthrough} from './sm-walkthrough-view.mjs';
 import {renderSmHardware} from './sm-hardware-view.mjs';
 import { renderSchedulingRelationships } from './scheduling-relationships.mjs';
+import {renderDivergenceConcept} from './divergence-concept.mjs';
 
 const scaleSource = `import torch
 
@@ -112,7 +113,7 @@ export const chapters = [
           ['Lane mask', 'The set of lanes participating in one issued operation. A lane outside that mask does no work for that operation.'],
         ],
         body: `<p>All 32 lanes begin with the same sign. The positive path doubles an input; the negative path negates it. A path runs only if a lane needs it. In this first experiment each path has one operation, so changing from all positive to all negative changes the selected arithmetic without creating mixed participation.</p>
-          <p>Open “Inspect the PyTorch example for these settings” to see the chosen inputs and expressions. After Run, the lane cards highlight the selected operation’s mask and show each input’s final output.</p>`,
+          <p>Open “Inspect the PyTorch example for these settings” to see the chosen inputs and expressions. After Run, the lane cards highlight the selected operation’s mask and show each input’s final output.</p>${renderDivergenceConcept()}`,
         task: 'Predict how many paths are needed when all inputs are positive. Run and inspect the mask. Change only the signs to all negative, run again, and explain whether two paths are now needed.',
         experiment: {
           model: 'divergence', defaults: { pattern: 'positive', activeLanes: 32, negativeOps: 1 }, focus: 'uniform',

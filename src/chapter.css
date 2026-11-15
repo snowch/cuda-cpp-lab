@@ -113,6 +113,7 @@
 .concept-node p { margin:10px 0 0; }
 .concept-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
 .concept-pair>div { min-width:0; }
+.concept-pair.concept-alternatives { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .concept-connector { margin:12px 0; color:var(--accent); text-align:center; }
 .concept-flow-label { margin:24px 0 14px; font-weight:650; }
 .concept-flow { display:flex; align-items:stretch; gap:30px; list-style:none; padding:0; margin:0; }
