@@ -71,24 +71,25 @@ function renderFirstKernel(workbenchHref, program) {
     ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable one-thread CUDA kernel and output') :
       codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}
     ${workbenchHref ? `<noscript>${codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}</noscript>` : ''}
-    <details class="more-settings">
+    ${!workbenchHref ? `<details class="more-settings">
       <summary>Show host code</summary>
       <p>This complete CUDA program shows the allocation, launch and copy back. Its <code>printf</code> runs on the CPU.</p>
       ${codePanel({id: 'v2-first-program', label: 'CUDA C++ · complete program', source: program, explainedLocally: true})}
-    </details>
+    </details>` : ''}
     <p>With five threads running the same function, how does each thread know which element to write?</p>
   </section>`;
 }
 
 function renderWorkbench(mode, href) {
-  const task = mode === 'scale'
-    ? 'Change 2.0f to 3.0f. Predict the output at index 2, then compile and run. Try adding 1.0f to the result.'
-    : 'Keep output[i] and replace input[i] with input[threadIdx.x]. Predict what the first thread of block 1 reads and where it writes. Restore the starter, then change i < n to i < n - 1 and predict which output stays unwritten.';
-  return `<h3>Worked kernel</h3>
-    <p>Clang compiles your CUDA device code. GPGPU-Sim runs it with five inputs and a fixed launch of two blocks of four threads.</p>
-    ${readerTask(task, 'Try it')}
-    ${workbenchEditor(mode, href, 'Editable CUDA kernel and output')}
-    ${href === 'bundled' ? '' : `<p><a href="${href}">Open workbench in its own page</a></p>`}`;
+  const tasks = {
+    scale: 'Change 2.0f to 3.0f. Predict the output at index 2, then compile and run.',
+    bounds: 'In main(), change threadsPerBlock from 4 to 3. Predict how many threads launch. Run, then open Trace CUDA calls to check.',
+    copies: 'Add 6.0f, 7.0f, 8.0f and 9.0f to x in main(). Run and open Trace CUDA calls. Compare the copy sizes and launch with the five-input run.',
+  };
+  return `<h3>Run the CUDA program</h3>
+    <p>Edit the kernel or main(). Clang compiles the program. The browser runs main() and launches the kernel in GPGPU-Sim.</p>
+    ${readerTask(tasks[mode], 'Try it')}
+    ${workbenchEditor(mode, href, 'Editable CUDA program and output')}`;
 }
 
 function renderActivity({mode, slug}, legacy, workbenchHref) {
@@ -105,8 +106,8 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     ${v2Diagram(slug)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
-    <h2 id="v2-activity">${mode !== 'copies' && workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
-    ${mode !== 'copies' && workbenchHref ? renderWorkbench(mode, workbenchHref) + '<h3>Trace the worked example</h3>' : ''}
+    <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
+    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. To compile the complete program, use the downloaded file with the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
@@ -130,6 +131,7 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
       ${codePanel({ id: 'v2-full', label: 'CUDA C++ · complete program', source: initial.source, explainedLocally: true })}
       <button id="v2-download" type="button" disabled>Download hello.cu</button>
     </details>
+    ${workbenchHref ? '</details>' : ''}
   </section>
   <section class="book-section" aria-labelledby="v2-apply">
     <h2 id="v2-apply">Apply what you saw</h2>
@@ -220,6 +222,6 @@ ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}
 <header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
 <div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson?.mode ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
 </body></html>`;
 }

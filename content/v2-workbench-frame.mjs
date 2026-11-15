@@ -1,7 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html) {
-  if (!html.includes('lab.firstKernel')) throw new Error('The CUDA workbench must support the first-kernel exercise.');
+  if (!html.includes('lab.arrayProgram')) throw new Error('This workbench must support complete CUDA programs.');
   return html.replace('</head>', `<style>
 html[data-inline] body { min-height:0; background:transparent; }
 html[data-inline] main { width:100%; padding:2px; }
@@ -19,7 +19,8 @@ html[data-inline] .card { border:0; border-radius:0; background:transparent; pad
 html[data-inline] .card+.card { border-top:1px solid #49615c; background:#192f2a; }
 html[data-inline] .editor-label span,html[data-inline] .sub,html[data-inline] .card .note { color:#b8cdc4; }
 html[data-inline] textarea { min-height:240px; background:#0f211d; border-color:#49615c; }
-html[data-inline="hello"] textarea { min-height:110px; height:110px; }
+html[data-inline][data-program] textarea { min-height:280px; height:340px; }
+html[data-inline] .workbench-version,html[data-inline]:not([data-show-licences]) #software-licences { display:none; }
 html[data-inline] button { background:#223d35; border-color:#557268; color:#edf8f1; }
 html[data-inline] button.primary { background:#a7e3c8; color:#172f29; border-color:#a7e3c8; }
 html[data-inline] :focus-visible { outline-color:#a7e3c8; }
@@ -38,7 +39,10 @@ html[data-inline] .kernel-shortcut { font-size:.82rem; color:#b8cdc4; }
 <script>
 const inlineMode = new URLSearchParams(location.search).get('embed') ||
   document.documentElement.dataset.inline;
-if (['hello', 'scale', 'bounds'].includes(inlineMode)) document.documentElement.dataset.inline = inlineMode;
+if (['hello', 'scale', 'bounds', 'copies'].includes(inlineMode)) {
+  document.documentElement.dataset.inline = inlineMode;
+  document.documentElement.dataset.program = 'true';
+}
 </script></head>`)
     .replace('</body>', `<script>
 if (document.documentElement.dataset.inline) {

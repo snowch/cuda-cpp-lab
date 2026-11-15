@@ -35,15 +35,16 @@ models. Links to the V1 course require a connection.
 
 ## Edit and run CUDA in WebAssembly
 
-Lessons 1 and 2 include an editor and console in the page. Each lesson saves
-its own draft. Use Ctrl or Command + Enter to run, Restore starter to undo
-edits, and Export .cu to save the current source. Clang in WebAssembly compiles
-the exact editor text to CUDA LLVM IR. A lesson-specific backend lowers the
-supported instructions to PTX and GPGPU-Sim runs them in WebAssembly. The
-first kernel runs as one block with one thread and one output value. The array
-workbench uses two blocks of four threads with five inputs.
-Learners can vary arithmetic, local and global indexing, and the bounds check.
-Compiler diagnostics and generated PTX are visible in the browser.
+The first three lessons place the complete CUDA C++ program in the editor.
+Clang compiles the host program to WebAssembly and the kernel to NVPTX LLVM IR.
+The workbench lowers the supported device instructions to PTX for GPGPU-Sim.
+The browser runtime handles the allocations, transfers and launch requested by
+`main()`. The console shows program output and a trace of CUDA calls.
+Each exercise saves its own draft. Use Ctrl or Command + Enter to run, Restore
+starter to undo edits, and Export .cu to save the current source.
+
+The browser runtime supports the one-dimensional launches and FP32 buffers used
+in these lessons. The following lessons use guided architecture models and code excerpts.
 
 The hosted workbench downloads about 127 MiB of pinned compiler assets on
 first run. The standalone workbench bundles these assets. Source and build

@@ -72,9 +72,10 @@ function route() {
   const frames = main.querySelectorAll('[data-kernel-workbench]');
   if (frames.length) {
     const workbench = JSON.parse(document.getElementById('offline-workbench').textContent);
-    for (const frame of frames) {
-      frame.srcdoc = workbench.replace('<html ', '<html data-inline="' + frame.dataset.kernelWorkbench + '" ');
-    }
+    frames.forEach((frame, index) => {
+      const attributes = index === 0 ? 'data-show-licences ' : '';
+      frame.srcdoc = workbench.replace('<html ', '<html ' + attributes + 'data-inline="' + frame.dataset.kernelWorkbench + '" ');
+    });
   }
   const title = main.querySelector('h1').textContent;
   document.title = title + ' · GPU Lab V2';

@@ -169,7 +169,7 @@ await writeFile('dist/index.html', renderV2Page(undefined, versionMarkup, { home
 await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
 const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'utf8');
 await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(cudaWorkbench).replace(
-  '</main>', `<footer>${versionMarkup}</footer></main>`));
+  '</main>', `<footer class="workbench-version">${versionMarkup}</footer></main>`));
 const firstProgram = await readFile('examples/first-kernel.cu', 'utf8');
 for (const lesson of v2Course) {
   await writeFile(`dist/v2/${lesson.slug}.html`, renderV2Page(lesson, versionMarkup, { firstProgram }));

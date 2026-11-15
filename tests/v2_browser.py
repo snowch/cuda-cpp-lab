@@ -23,7 +23,7 @@ def check_v2(browser, url):
         expect(page).to_have_url(url)
         routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 20
-        for route, mode in zip(routes[:2], ('scale', 'bounds')):
+        for route, mode in zip(routes[:3], ('scale', 'bounds', 'copies')):
             page.goto(route)
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile('runKernel'))
@@ -31,11 +31,15 @@ def check_v2(browser, url):
             if mode == 'scale':
                 first = page.frame_locator('[data-kernel-workbench="hello"]')
                 expect(first.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'output\[0\] = 42\.0f'))
-                expect(first.locator('#values tr')).to_have_count(1)
-                page.get_by_text('Show host code', exact=True).click()
-                expect(page.locator('#v2-first-program')).to_contain_text('hello<<<1, 1>>>(output)')
+                expect(first.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'hello<<<1, 1>>>'))
+            expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'int main\(\)'))
+            expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
+            expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
         for route in routes:
             page.goto(route)
+            model = page.get_by_text('Explore a model of the starter program', exact=True)
+            if model.count():
+                model.click()
             activity = page.locator('.v2-experiment')
             run = activity.get_by_role('button', name='Run model')
             choice = activity.locator('#v2-choice')
