@@ -104,3 +104,24 @@
  .book-chapter .lesson-forward { gap:12px; }
 }
 @media(forced-colors:active) { .section-cue-icon { color:CanvasText; } .book-chapter :is(.book-pager,.lesson-pagination)>.lesson-forward>a { border-color:LinkText; color:LinkText; } }
+
+/* Visible relationship diagrams share text sizes, surfaces and responsive flow. */
+.concept-figure { container:concept / inline-size; margin:28px 0; padding:20px; border:1px solid var(--line); border-radius:8px; background:var(--soft); font-size:16px; line-height:1.65; }
+.concept-figure>figcaption { margin-bottom:20px; color:var(--ink); font-size:18px; font-weight:650; }
+.concept-node { min-width:0; padding:14px; border:1px solid var(--line); border-radius:6px; background:var(--panel); }
+.concept-node-title { display:block; color:var(--ink); font-size:18px; line-height:1.45; }
+.concept-node p { margin:10px 0 0; }
+.concept-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.concept-pair>div { min-width:0; }
+.concept-connector { margin:12px 0; color:var(--accent); text-align:center; }
+.concept-flow-label { margin:24px 0 14px; font-weight:650; }
+.concept-flow { display:flex; align-items:stretch; gap:30px; list-style:none; padding:0; margin:0; }
+.concept-flow>li { position:relative; flex:1; min-width:0; margin:0; }
+.concept-flow .concept-node { height:100%; }
+.concept-flow>li:not(:last-child)::after { content:'→'; position:absolute; right:-24px; top:30px; color:var(--accent); font-size:24px; line-height:1; }
+.concept-figure>.concept-scope { margin:18px 0 0; color:var(--muted); }
+@container concept (max-width:740px) {
+ .concept-pair { grid-template-columns:minmax(0,1fr); gap:4px; }
+ .concept-flow { flex-direction:column; }
+ .concept-flow>li:not(:last-child)::after { content:'↓'; top:auto; right:50%; bottom:-27px; transform:translateX(50%); }
+}
