@@ -22,8 +22,15 @@ The concept diagrams use original layouts and data from the lessons.
 Traces are teaching models of addresses, dependencies, arithmetic or operation
 counts. The workbench below compiles a supported subset of CUDA device code.
 
-To use the course and compiler offline on a tablet, generate an HTML file with
-the standalone workbench and open it in Chromium.
+For the hosted course, open **App status** and choose **Download for offline use**
+or **Update**. Both save the complete course, including the CUDA compiler. After
+an update, choose **Restart to update**; no separate offline download is needed.
+The displayed package size includes the compiler assets. A restart preserves
+editor drafts, console results, diagnostics and generated PTX. A compile/run in
+progress blocks the restart until it finishes.
+
+For a separate file that opens without hosting on a tablet, generate an HTML file
+with the standalone workbench and open it in Chromium.
 
 ```sh
 node scripts/build-v2-preview.mjs GPU-Lab-V2.html GPU-Lab-CUDA-workbench.html
@@ -46,8 +53,16 @@ starter to undo edits, and Export .cu to save the current source.
 The browser runtime supports the one-dimensional launches and FP32 buffers used
 in these lessons. The coalescing program groups the indices it reads into 32-byte sectors. The following lessons use guided architecture models and code excerpts.
 
-The hosted workbench downloads about 127 MiB of pinned compiler assets on
-first run. The standalone workbench bundles these assets. Source and build
+The hosted build includes about 127 MiB of pinned compiler assets under its
+immutable release URL. A complete App status download makes the first compile/run
+work offline. Without that download, first run fetches the compiler from the
+same site. The standalone workbench bundles these assets.
+
+The first hosted build downloads the three compiler assets into the ignored
+`vendor/v2-compiler/` cache, checking their SHA-256 hashes against the workbench
+metadata. Later builds verify and reuse that cache; a missing or corrupt asset is
+fetched again. Publish the whole `dist/`, including `assets/v2-compiler/` and its
+immutable release copy. Source and build
 instructions are in the
 [cuda-sim-wasm workbench](https://github.com/snowch/cuda-sim-wasm/tree/experiment/editable-cuda/workbench).
 

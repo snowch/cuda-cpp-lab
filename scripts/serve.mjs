@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 const root = resolve(process.argv.includes('--dist') ? 'dist' : '.');
 const types = { '.mp4':'video/mp4', '.vtt':'text/vtt; charset=utf-8', '.jpg':'image/jpeg', '.pdf':'application/pdf', '.txt':'text/plain; charset=utf-8', '.woff2':'font/woff2', '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.cu': 'text/plain', '.py': 'text/plain', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png' };
+types['.wasm'] = 'application/wasm';
 const server = createServer(async (req, res) => {
   try {
     let pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
