@@ -53,7 +53,10 @@ lesson saves its own draft. Use Ctrl or Command + Enter to run, Restore
 starter to undo edits, and Export .cu to save the current source.
 
 The hosted build includes about 127 MiB of pinned Clang assets and about 5 MiB
-of additional architecture runtime assets under its immutable release URL. A complete App status download makes the first compile/run
+of additional architecture runtime assets under its immutable release URL.
+The compiler is shipped in small compressed parts; the panel counts those
+download bytes. Each reconstructed compiler file is checked against its original
+SHA-256 before use. A complete App status download makes the first compile/run
 work offline. Without that download, first run fetches the compiler from the
 same site. The standalone workbench bundles these assets.
 

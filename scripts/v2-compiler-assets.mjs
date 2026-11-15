@@ -2,6 +2,7 @@
 import {createHash} from 'node:crypto';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {gzipSync} from 'node:zlib';
 
 const names = ['Compiler.js', 'Compiler.wasm', 'Compiler.data'];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -40,4 +41,22 @@ export async function cacheCompilerAssets(html, {directory = 'vendor/v2-compiler
     asset.path = path;
   }
   return assets;
+}
+
+// Small compressed parts keep slow downloads within the worker's per-file
+// deadline and let cancellation resume without fetching one large WASM again.
+export async function publishCompilerAssets(assets, directory) {
+  await mkdir(directory, {recursive: true});
+  const inventory = [];
+  for (const asset of assets) {
+    const compressed = gzipSync(await readFile(asset.path), {level: 9});
+    const parts = [];
+    for (let start = 0; start < compressed.length; start += 900000) {
+      const name = `${asset.name}-${parts.length}.bin`;
+      await writeFile(join(directory, name), compressed.subarray(start, start + 900000));
+      parts.push(name);
+    }
+    inventory.push(parts);
+  }
+  return inventory;
 }

@@ -92,6 +92,72 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             options = {'headless':True}
             if os.environ.get('CHROMIUM_PATH'): options['executable_path'] = os.environ['CHROMIUM_PATH']
             browser = p.chromium.launch(**options)
+            # A V2 Update is also the offline download, including the real compiler.
+            CourseHandler.revision='one'
+            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
+            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
+            expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
+            expect(tab.locator('#save-offline')).to_be_visible()
+            CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
+            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_hidden()
+            tab.locator('#later-update').click();tab.reload()
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
+            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
+            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
+            editor=hello.get_by_role('textbox',name='CUDA source')
+            draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
+            reason=hello.locator('#run').evaluate("button=>{button.click();const detail={reason:''};dispatchEvent(new CustomEvent('gpu-lab:before-restart',{detail}));return detail.reason;}")
+            assert 'CUDA' in reason,reason
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
+            ctx.set_offline(True);tab.locator('#restart-update').click()
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
+            panel(tab);ready(tab)
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_visible()
+            tab.locator('#app-status-close').click()
+            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
+            expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.')
+            expect(hello.locator('#ptx')).to_contain_text('.entry')
+            expect(hello.locator('#program-operations pre')).to_contain_text('cudaMalloc')
+            urls=hello.locator('html').evaluate('()=>lab.assets.compiler.flatMap(a=>a.parts)')
+            assert len(urls)>3 and all(url+'releases/'+releases['two']['id']+'/assets/v2-compiler/' in asset for asset in urls),urls
+            hello.locator('#run').click()
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            tab.goto(url+'v2/more-threads-than-elements.html')
+            bounds=tab.frame_locator('[data-kernel-workbench="bounds"]');bounds.locator('#run').click()
+            expect(bounds.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(bounds.locator('#program-output')).to_contain_text('Output: [2, 4, 6, 8, 10]')
+            tab.goto(url+'v2/reduction.html')
+            reduction=tab.frame_locator('[data-kernel-workbench="reduction"]')
+            reduction.locator('#run').click()
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 10.0')
+            source=reduction.get_by_role('textbox',name='CUDA source')
+            source.fill(source.input_value().replace('threads = 4','threads = 8'));source.press('Control+Enter')
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 36.0')
+            # Older complete updates without their saved flag are recognised offline.
+            tab.evaluate('''async base => {
+              const cache = await caches.open(`gpu-lab:${base}:status-v1`);
+              const key = new URL('__app_status_state__', base);
+              const state = await (await cache.match(key)).json();
+              state.saved = false;
+              await cache.put(key, new Response(JSON.stringify(state)));
+            }''',url)
+            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
+            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
+            tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
+            ctx.close()
+            print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
                 CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
@@ -368,72 +434,6 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 assert not errors,errors
                 context.close();CourseHandler.requests=[]
                 print(f'PASS {prefix} {width}px {theme}: opt-in, real bytes, cancel/resume, all offline assets/pages, failed replacement, deployed update, Later, composition guard, three-tab restart and restored experiments, eviction/repair, scoped removal')
-            # A V2 Update is also the offline download, including the real compiler.
-            CourseHandler.revision='one'
-            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
-            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
-            expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
-            expect(tab.locator('#save-offline')).to_be_visible()
-            CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
-            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
-            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
-            expect(tab.locator('#save-offline')).to_be_hidden()
-            expect(tab.locator('#offline-size')).to_be_hidden()
-            tab.locator('#later-update').click();tab.reload()
-            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
-            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
-            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
-            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
-            editor=hello.get_by_role('textbox',name='CUDA source')
-            draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
-            reason=hello.locator('#run').evaluate("button=>{button.click();const detail={reason:''};dispatchEvent(new CustomEvent('gpu-lab:before-restart',{detail}));return detail.reason;}")
-            assert 'CUDA' in reason,reason
-            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
-            expect(hello.locator('#program-output')).to_contain_text('7.0')
-            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
-            ctx.set_offline(True);tab.locator('#restart-update').click()
-            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
-            panel(tab);ready(tab)
-            expect(tab.locator('#save-offline')).to_be_hidden()
-            expect(tab.locator('#offline-size')).to_be_visible()
-            tab.locator('#app-status-close').click()
-            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
-            expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
-            expect(hello.locator('#program-output')).to_contain_text('7.0')
-            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.')
-            expect(hello.locator('#ptx')).to_contain_text('.entry')
-            expect(hello.locator('#program-operations pre')).to_contain_text('cudaMalloc')
-            urls=hello.locator('html').evaluate('()=>lab.assets.compiler.map(a=>a.url)')
-            assert len(urls)==3 and all(url+'releases/'+releases['two']['id']+'/assets/v2-compiler/' in asset for asset in urls),urls
-            hello.locator('#run').click()
-            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
-            expect(hello.locator('#program-output')).to_contain_text('7.0')
-            tab.goto(url+'v2/more-threads-than-elements.html')
-            bounds=tab.frame_locator('[data-kernel-workbench="bounds"]');bounds.locator('#run').click()
-            expect(bounds.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
-            expect(bounds.locator('#program-output')).to_contain_text('Output: [2, 4, 6, 8, 10]')
-            tab.goto(url+'v2/reduction.html')
-            reduction=tab.frame_locator('[data-kernel-workbench="reduction"]')
-            reduction.locator('#run').click()
-            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
-            expect(reduction.locator('#program-output')).to_contain_text('Sum: 10.0')
-            source=reduction.get_by_role('textbox',name='CUDA source')
-            source.fill(source.input_value().replace('threads = 4','threads = 8'));source.press('Control+Enter')
-            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
-            expect(reduction.locator('#program-output')).to_contain_text('Sum: 36.0')
-            # Older complete updates without their saved flag are recognised offline.
-            tab.evaluate('''async base => {
-              const cache = await caches.open(`gpu-lab:${base}:status-v1`);
-              const key = new URL('__app_status_state__', base);
-              const state = await (await cache.match(key)).json();
-              state.saved = false;
-              await cache.put(key, new Response(JSON.stringify(state)));
-            }''',url)
-            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
-            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
-            tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
-            ctx.close()
-            print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             # A persistent installed profile: closing every window does NOT apply
             # a prepared release. Reopen completely offline, then explicitly restart.
             CourseHandler.revision='one';CourseHandler.requests=[]
