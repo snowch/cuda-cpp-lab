@@ -3,6 +3,7 @@ import {recordingLink} from '../src/recording-view.mjs';
 import {openingCode,codePanel,definitions,readerTask} from '../src/chapter-view.mjs';
 import {deviceOpening} from '../src/book-code.mjs';
 import {table} from '../src/continuation-ui.mjs';
+import {renderLaunchConcept} from '../src/launch-concept.mjs';
 
 // Excerpts come from the runnable download, so edits have one source of truth.
 export function launchExcerpt(source,name) {
@@ -51,6 +52,7 @@ ${code('LAUNCH','CPU launch for the existing input')}
 ${code('COPY_OUT','GPU-to-CPU result copy')}
 <p>In this program, this blocking device-to-host copy waits for the preceding kernel and returns with the CPU result available: <code>[2.0, 4.0, 6.0, 8.0, 10.0]</code>. Allocating output storage alone would not copy the result.</p>
 <h3>Release the GPU allocations after the copy</h3>${code('FREE','CPU cleanup after result read-back')}<p><code>cudaFree</code> releases the GPU input and output storage. The CPU result remains in <code>output</code>. C++ releases the CPU vectors when they leave their scope at the end of the program.</p>
+${renderLaunchConcept()}
 <details><summary>Read the complete CUDA program</summary><p>The surrounding program supplies headers, error checking, empty-input and size checks, output verification and cleanup. Its tiny four-thread blocks are for tracing, rather than a performance recommendation.</p>${codePanel({id:'launch-complete',source,label:'CUDA C++ · complete program',explainedLocally:true})}</details>
 <p><a href="../examples/launch-from-input.cu" download>Download the complete CUDA program</a>. Installation and execution commands are in the <a href="desktop.html#first-cuda">desktop setup appendix</a>.</p></section>
 

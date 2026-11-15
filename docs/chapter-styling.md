@@ -53,6 +53,11 @@ colours, type sizes or spacing into another stylesheet.
   References list followed by documentation exercises. Its catalogue in
   `src/reference-tasks.mjs` supplies each page’s sources, questions and local answers.
   Its label and decorative icon identify the action; colour supplements the text.
+- Concept diagrams: use `conceptFigure`, `conceptNode` and `conceptFlow` from
+  `src/concept-view.mjs` for visible relationships. Shared `concept-*` styles keep
+  labels at body size and turn ordered arrows downward on narrow containers.
+  Name each connection; a stacked dependency branch must still identify its source.
+  Keep numeric data model-derived and exercise answers hidden until Run.
 
 The shared rules are loaded after chapter-specific styles. Keep model-specific
 layouts in their own stylesheets and put common visual decisions in `chapter.css`.

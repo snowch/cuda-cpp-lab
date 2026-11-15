@@ -64,8 +64,81 @@ requires JavaScript or a disclosure. Changed-multiplier and regrouping paths kee
 the fixed example distinct from each experiment's result; the complete CUDA
 function and launch-completion explanation remain visible.
 
+## Whole-book baseline and decisions
+
+Reviewed all twenty built pages at 390px dark and 1440px light after their
+local guided Runs and initial trace steps; inspected the resulting figures and
+the preceding/changed/following source explanations. No baseline page overflow
+was found. This is author inspection, not observed learner testing.
+
+| Chapter | Decision | Relationship to make visible, or reason to retain |
+| --- | --- | --- |
+| 1 | Add; PR #137 | Separate thread values use shared SM arithmetic; GPU arrays sit outside the compute chip. |
+| 2 | Retain; PR #136 | Existing opening architecture locates processor/storage peers and labels transfer directions. |
+| 3 | Add | One input count drives matching storage and launch coverage; copying results back establishes CPU availability. |
+| 4 | Retain | Highlighted source coordinates map to selected values and their individual results. Extra storage detail belongs in chapter 5. |
+| 5 | Add | Original tensor and column view share storage; packing this strided column creates separate storage. |
+| 6 | Add | Warp lane reads generate addresses that are grouped into aligned sectors; several reads can share a sector. |
+| 7 | Retain | Existing visible hardware/data-flow figure distinguishes working values from shared units; warp readiness and block ownership have dedicated diagrams. |
+| 8 | Add | Condition membership selects positive/negative lane masks; paths only run for non-empty masks. |
+| 9 | Add | Shared writes precede partner reads through a barrier reached by all block threads, including threads that do not add. |
+| 10 | Add | Shared input tiles feed distinct threads' partial output sums, so a loaded input serves several outputs. |
+| 11 | Add | A cooperating warp supplies matrix tiles to supported multiply-and-accumulate hardware; numeric format and hardware execution are separate choices. |
+| 12 | Add | Full score/weight intermediates versus repeated key tiles and running normalisation/weighted totals. |
+| 13 | Add | Paired key/value rows are extended per sequence/layer and reused by the new query; this is model data, separate from hardware caches. |
+| 14 | Add | Correctness and model counts support a hypothesis; controlled completion-aware hardware measurements support a recommendation. |
+| 15 | Retain | Input-category contributions map to counter bins, with selected updates and block-partial merging. |
+| 16 | Retain | Previous and new scan snapshots show partner dependencies without mixing stage values. |
+| 17 | Retain | Flags and exclusive offsets map surviving tokens into distinct stable output slots. |
+| 18 | Retain | Fork ownership/request arrows expose wait dependencies; barrier participation and resident-block progress have separate states. |
+| 19 | Retain | Shared copy/compute timeline shows ready/consumed events and slot lifetimes on a synthetic time axis. |
+| 20 | Retain | Count-only and stable-grouping diagrams connect bin starts and ranks to disjoint output regions. |
+
+The main continuation lessons in chapters 8–14 currently use numerical cards and
+tables. Related diagrams in legacy explorers or companion recordings do not
+replace a local diagram of the relationship needed for the main exercise.
+All twenty chapters already have recorded recaps, captions, transcripts and PDF
+slides. The planned inline additions visualise existing explanations; matching
+recordings remain relevant without a new topic or blanket media regeneration.
+
+Change gates remain chapter-specific: build/model checks, full browser suite,
+focused six-layout/theme and reading-order review, PR/production CI, merge, then
+public release/figure/interaction verification before the next changed chapter.
+
 ## Remaining review
 
 The remaining chapters are reviewed in reading order, with each changed chapter
 committed, merged and verified publicly before the next chapter is changed.
 Review findings and release evidence are added here as that work completes.
+
+
+### Chapter 1 release evidence
+
+[PR #137](https://github.com/snowch/gpu-lab/pull/137) merged as
+`c7aa4e95ee76da460d8c9749f698a5dee6a64c2d`. PR and production checks passed,
+including offline packaging, the full browser suite and CPU example validation.
+Public release metadata and page footer matched that SHA. Inspected the live
+phone/dark and desktop/light figures, confirmed their hierarchy and values,
+changed the original multiplier and verified the visible complete CUDA function
+and launch-completion explanation before starting chapter 3.
+
+### Chapter 3 reading and design review
+
+Connect the already-explained input count to matching CPU/GPU storage and to
+launch coverage, then distinguish a queued launch from the blocking result copy.
+The fixed worked figure follows the result-copy and cleanup explanation and
+precedes the complete reference and nine-input transfer exercise. Its counts
+come from the existing five-input and launch models; it exposes no new-case
+answer. A different block count never changes the kernel's element count.
+
+The existing recap already narrates the count/storage/launch/copy relationship.
+The new inline diagram provides a local overview rather than adding another
+concept, exercise or recording. Shared diagram styles apply only to the new
+concept components; existing chapters retain their presentation.
+
+Inspected the built sequence and figure at 390/820/1440px in both themes.
+Ordered arrows turn downward in the stacked layout; both storage/launch
+branches explicitly name n as their source. No overflow or small-text workaround.
+Focused browser checks passed keyboard answers, exact-source download, preserved
+chapter-2 return state and visible no-JavaScript content. The nine-input answer
+stays collapsed until the reader opens the comparison.
