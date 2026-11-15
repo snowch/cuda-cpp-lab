@@ -173,3 +173,33 @@ arrow changes direction and the packed tensor leads to separate storage.
 Focused checks passed unknown offsets/results, independent column/packed runs,
 changed-column invalidation, keyboard Run and no-JavaScript visibility. No page
 overflow, hover-only content, new controls or reduced diagram text size.
+
+
+### Chapter 5 release evidence
+
+[PR #139](https://github.com/snowch/gpu-lab/pull/139) merged as
+`6bd7721c5a5d21d89673ad3c2c0c9aa8e18b377e`. Local/PR/production checks passed,
+and public metadata/footer matched the merged release. Inspected actual public
+phone/dark and desktop/light figures; shared/separate storage, unknown offsets
+and outputs, independent changed-column/packed runs and keyboard operation passed.
+
+### Chapter 6 reading and design review
+
+The warp/lane and sector definitions precede the experiment's aligned-allocation
+assumption. The new diagram follows that assumption, before the prediction:
+element offset to byte offset, sector number by division/rounding down, then
+group matching sector numbers. The unit constants come from the existing model.
+It exposes no particular read pattern's addresses, sector count or output.
+
+The existing task still compares row, column and packed reads, then applies the
+rule to a row crossing a boundary. Initial sector cards/results remain unknown
+until Run. The figure describes one input read's addressed regions; physical
+DRAM traffic and time remain outside the model. The recap already narrates this
+relationship and needs no new topic or talk track.
+
+Inspected the built assumptions → diagram → task/source/results sequence on
+390/820/1440px in both themes. Shared flow arrows turn downward on narrow
+layouts, without overflow or reduced text. Keyboard and no-JavaScript checks
+passed. Initial/changed answers remain unknown; row, column, packed and
+boundary-crossing runs agree with the model. A row wholly in sector 1 confirms
+that a sector number is distinct from the count of sectors.
