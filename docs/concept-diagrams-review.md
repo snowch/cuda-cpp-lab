@@ -275,3 +275,37 @@ initial writes and barrier, partial contribution stages, four/eight-input sums,
 independent invalidation and keyboard Run/step. The diagnostic never acquires a
 numeric output or contribution tree, even after late writes. The rule remains
 visible with JavaScript disabled.
+
+### Chapter 9 release evidence
+
+[PR #144](https://github.com/snowch/gpu-lab/pull/144) merged as
+`cca178582d5942f4c938967283f13f098f200720`. Local/PR/production checks and
+deployment passed. Public release/footer matched the SHA. Inspected actual
+phone/dark and desktop/light ordering figures and current-event memory cards;
+unwritten values, barrier/partial stages, four/eight contributions, keyboard and
+the diagnostic's missing numeric result passed before chapter 10 began.
+
+### Chapter 10 reading and design review
+
+The preceding dot product defines K, input row/column pairs and a private sum for
+each output thread. Tile and K-phase definitions then introduce shared inputs,
+including the separate direct-load T = 1 path. The new two-dimensional map follows
+that explanation, before the assumptions and prediction. The complete tiled CUDA
+reference and the new 8 × 8 comparison follow the experiment.
+
+A shared A header serves its output row; a shared B header serves its output
+column. Their intersections are four private C sums. The tile width and index
+ranges come from the existing model's fixed width-2 example. The map shows one K
+index, then repeats within a phase. It is a data dependency map, with no C values,
+load-count answers, hardware placement or execution timing. The fixed label stays
+applicable while the independent experiment changes to widths 1 or 4. The existing
+recap already explains the same sharing.
+
+Inspected the built preceding/changed/following sequence, 390/820/1440px in both
+themes and both 320px layouts. Input and output roles remain separate; clarified
+“output thread” and “C cell” so input headers cannot be mistaken for private sums.
+Row/column relationships and 16px text remain intact without page or figure
+overflow. No new controls or disclosures. Focused checks passed initial/changed
+hidden results, four/eight dot products, identical final C for widths 2/1/4,
+correct model counts, the zero-shared-storage direct path, independent
+invalidation, keyboard Run/step and no-JavaScript visibility.
