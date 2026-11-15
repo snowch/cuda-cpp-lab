@@ -4,6 +4,7 @@ import { fp32, v2Experiments, v2Run } from '../src/v2-model.mjs';
 import { guidedLessons } from '../src/v2-guided.mjs';
 import { escape } from '../src/continuation-ui.mjs';
 import { v2Course } from './v2-course.mjs';
+import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
 
 const teaching = {
@@ -149,12 +150,13 @@ function renderGuided(slug, workbenchHref) {
     ${definitions(lesson.terms)}
     ${v2Diagram(slug)}
   </section>
-  ${slug === 'coalescing' && workbenchHref ? `<section class="book-section" aria-labelledby="coalescing-editor">
-    <h2 id="coalescing-editor">Change the stride in CUDA</h2>
-    <p>Each input stores its own index. The kernel returns the indices it read. The host groups those indices into 32-byte sectors, assuming an aligned input. The count describes the addresses touched by this load.</p>
-    ${readerTask('Predict the sector count at stride 1. Run the program, change stride inside runKernel to 2, then try 32.', 'Try it')}
-    ${workbenchEditor('coalescing', workbenchHref, 'Editable CUDA coalescing program and output')}
-  </section>` : ''}
+  ${workbenchHref ? `<section class="book-section" aria-labelledby="v2-cuda-editor">
+    <h2 id="v2-cuda-editor">Edit and run CUDA</h2>
+    ${programNotes[slug] ? `<p>${programNotes[slug]}</p>` : ''}
+    ${readerTask(programTasks[slug], 'Try it')}
+    ${workbenchEditor(slug, workbenchHref, 'Editable CUDA program and output')}
+  </section>
+  <details class="more-settings v2-starter-model"><summary>Explore the architecture model</summary>` : ''}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
     ${readerTask(lesson.task, 'Try it')}
@@ -185,6 +187,7 @@ function renderGuided(slug, workbenchHref) {
       <div data-trace></div>
     </div>
   </section>
+  ${workbenchHref ? '</details>' : ''}
   <section class="book-section" aria-labelledby="v2-apply">
     <h2 id="v2-apply">Apply what you saw</h2>
     <p>${lesson.transfer}</p>
@@ -228,6 +231,6 @@ ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}
 <header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
 <div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson?.mode || lesson?.slug === 'coalescing' ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
 </body></html>`;
 }

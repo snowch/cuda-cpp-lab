@@ -1,0 +1,31 @@
+{
+  "nvptxGlue": {
+    "parts": [
+      "nvptxGlue-0.bin"
+    ],
+    "sha256": "f92127b1a7ece5a3d2d7c60c3898747f48ab16bd826f2bd3a81b12785feeea5a"
+  },
+  "nvptxWasm": {
+    "parts": [
+      "nvptxWasm-0.bin",
+      "nvptxWasm-1.bin",
+      "nvptxWasm-2.bin",
+      "nvptxWasm-3.bin",
+      "nvptxWasm-4.bin",
+      "nvptxWasm-5.bin"
+    ],
+    "sha256": "b0f8b20f9c9500cade2afd7925235323232f12ed821de8e0c328407c2e4f2f00"
+  },
+  "simGlue": {
+    "parts": [
+      "simGlue-0.bin"
+    ],
+    "sha256": "fdc787d13622f972f89a93ede2835d5ddba4db1992d3f7df360fe3735ad4ee7d"
+  },
+  "simWasm": {
+    "parts": [
+      "simWasm-0.bin"
+    ],
+    "sha256": "59fa21ccd1a1f3b4e82e51a7436c925aad72e1b8f415eabee81fbac231708919"
+  }
+}
