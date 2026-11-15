@@ -13,7 +13,8 @@ npm run dev
 ```
 
 Open `http://localhost:5173/gpu-lab/` and start with **One thread, one element**.
-The first three lessons share one complete downloadable CUDA program. The
+Lesson 1 begins with one thread writing one value. The first three lessons
+then share a complete downloadable CUDA program that processes an array. The
 later lessons use focused CUDA excerpts or algorithm outlines. Their controls
 change the displayed source and run a deterministic teaching trace. Enter a
 prediction before running, step through the result and explain a new case.
@@ -39,7 +40,8 @@ its own draft. Use Ctrl or Command + Enter to run, Restore starter to undo
 edits, and Export .cu to save the current source. Clang in WebAssembly compiles
 the exact editor text to CUDA LLVM IR. A lesson-specific backend lowers the
 supported instructions to PTX and GPGPU-Sim runs them in WebAssembly. The
-workbench fixes the launch at two blocks of four threads with five inputs.
+first kernel runs as one block with one thread and one output value. The array
+workbench uses two blocks of four threads with five inputs.
 Learners can vary arithmetic, local and global indexing, and the bounds check.
 Compiler diagnostics and generated PTX are visible in the browser.
 

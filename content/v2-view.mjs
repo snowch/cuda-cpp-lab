@@ -8,9 +8,8 @@ import { v2Diagram } from './v2-diagrams.mjs';
 
 const teaching = {
   scale: {
-    before: 'Start with five input values. Each thread reads one input and writes the result to the same index in the output array.',
-    terms: [['CUDA kernel', 'A function launched from the CPU that runs on the GPU.'],
-      ['Thread', 'One execution of the kernel.'], ['FP32', 'A floating-point value stored in four bytes.']],
+    before: 'Now give the kernel five input values. Each thread reads one input and writes the result to the same index in the output array.',
+    terms: [['FP32', 'A floating-point value stored in four bytes.']],
     inspect: 'In runKernel, the index i selects both the input and the output. The f on 2.0f makes the multiplier an FP32 value.',
     task: 'Run with a multiplier of 2.0. Change it to 3.0 and predict what thread 2 will write. Run again and follow that row.',
     transfer: 'If you change the multiplier to 0.5, do the threads pick different inputs?',
@@ -57,15 +56,38 @@ export function renderV2Contents(href) {
   </section>`).join('')}`;
 }
 
+function workbenchEditor(mode, href, title) {
+  const source = href === 'bundled' ? '' : ` src="${href}?embed=${mode}"`;
+  return `<iframe class="v2-inline-workbench" data-kernel-workbench="${mode}"${source} title="${title}"></iframe>`;
+}
+
+function renderFirstKernel(workbenchHref, program) {
+  const kernel = program.slice(program.indexOf('__global__'), program.indexOf('\n\nvoid check'));
+  return `<section class="book-section" aria-labelledby="v2-first-kernel">
+    <h2 id="v2-first-kernel">Write your first GPU value</h2>
+    <p>A CUDA kernel is a function that runs on the GPU. Each GPU thread runs the function once. This example launches just one thread to write a single value.</p>
+    <p>The CPU allocates a GPU buffer for one <code>float</code>. The launch <code>hello&lt;&lt;&lt;1, 1&gt;&gt;&gt;(output)</code> asks for one block with one thread. After the kernel writes <code>output[0]</code>, the CPU copies that value back for the console.</p>
+    ${workbenchHref ? readerTask('Run the kernel. Change 42.0f to 7.0f and run again. Which value does the console show?', 'Try it') : ''}
+    ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable one-thread CUDA kernel and output') :
+      codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}
+    ${workbenchHref ? `<noscript>${codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}</noscript>` : ''}
+    <details class="more-settings">
+      <summary>Show host code</summary>
+      <p>This complete CUDA program shows the allocation, launch and copy back. Its <code>printf</code> runs on the CPU.</p>
+      ${codePanel({id: 'v2-first-program', label: 'CUDA C++ · complete program', source: program, explainedLocally: true})}
+    </details>
+    <p>With five threads running the same function, how does each thread know which element to write?</p>
+  </section>`;
+}
+
 function renderWorkbench(mode, href) {
   const task = mode === 'scale'
     ? 'Change 2.0f to 3.0f. Predict the output at index 2, then compile and run. Try adding 1.0f to the result.'
     : 'Keep output[i] and replace input[i] with input[threadIdx.x]. Predict what the first thread of block 1 reads and where it writes. Restore the starter, then change i < n to i < n - 1 and predict which output stays unwritten.';
-  const source = href === 'bundled' ? '' : ` src="${href}?embed=${mode}"`;
   return `<h3>Worked kernel</h3>
     <p>Clang compiles your CUDA device code. GPGPU-Sim runs it with five inputs and a fixed launch of two blocks of four threads.</p>
     ${readerTask(task, 'Try it')}
-    <iframe class="v2-inline-workbench" data-kernel-workbench="${mode}"${source} title="Editable CUDA kernel and output"></iframe>
+    ${workbenchEditor(mode, href, 'Editable CUDA kernel and output')}
     ${href === 'bundled' ? '' : `<p><a href="${href}">Open workbench in its own page</a></p>`}`;
 }
 
@@ -162,7 +184,7 @@ function renderGuided(slug) {
   </section>`;
 }
 
-export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
+export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram = '') {
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
@@ -170,6 +192,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
+  ${lesson.mode === 'scale' && firstProgram ? renderFirstKernel(workbenchHref, firstProgram) : ''}
   ${lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
   <p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>
   <nav class="v2-pager" aria-label="Lesson sequence">
@@ -179,7 +202,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
 }
 
 export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'v2.css'];
-export function renderV2Page(lesson, versionMarkup = '', { home = false } = {}) {
+export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '' } = {}) {
   const base = home ? './' : '../';
   const href = slug => slug === 'contents' ? base : `${home ? './v2/' : './'}${slug}.html`;
   const legacy = slug => `${base}lessons/${slug}.html`;
@@ -197,6 +220,6 @@ ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}
 <header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
 <div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html') : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
 </body></html>`;
 }
