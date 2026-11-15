@@ -3,7 +3,10 @@
 Copyright © 2026 Christopher Snow.
 
 Chapter 2 links to this optional recap after its new-case exercise. Eight slides
-follow CPU input storage, GPU copy, GPU calculation and CPU result copy. They
+open with a processor/memory overview, then follow CPU input storage, GPU copy,
+GPU calculation and CPU result copy. The overview shares its labels with the
+chapter opening in `src/device-architecture.mjs`: CPU and system RAM are peers;
+the GPU device includes a compute chip and separate dedicated memory. They
 distinguish zero inter-device transfer from GPU memory activity, then ask about
 an eight-value result. All buffers, values and payload counts come from
 `deviceJourney` in `src/foundations-model.mjs`. This chosen separate-memory example
@@ -22,8 +25,9 @@ Use the pinned Linux
 [record-demo workflow](https://github.com/snowch/claude-skills/tree/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo):
 Kokoro-82M v1.0 ONNX CPU, `af_heart`, speed 1.0. The following assumes that revision
 is checked out at `/tmp/gpu-authoring-skills`. FFmpeg, Chromium and `uv` are needed.
-The deck writer supplies CUDA's pronunciation for speech while captions retain
-ordinary text.
+The deck writer supplies CUDA's pronunciation and spells RAM as R–A–M for speech
+while captions retain ordinary text. `devicesSpeechText` pins the three letter
+sounds rather than relying on acronym heuristics.
 
 ```sh
 node scripts/render-devices-recording.mjs
