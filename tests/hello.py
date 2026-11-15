@@ -33,6 +33,15 @@ def hello_flow(page,url):
     expect(page.locator('[id^=hello-factor-]')).to_have_count(1)
     expect(page.locator('[id^=hello-run-]')).to_have_count(1)
     expect(page.locator('#hello-map-0 .hello-result')).to_have_text(['?']*5)
+    hardware=page.locator('.hello-hardware-concept')
+    expect(hardware).to_be_visible()
+    assert hardware.evaluate('el=>!el.closest("details")')
+    # Array storage is a peer of the chip, while thread working values and
+    # shared arithmetic are inside its SM. The example is fixed and model-derived.
+    expect(hardware.locator('.hello-hardware-chip .hello-hardware-storage')).to_have_count(0)
+    expect(hardware.locator('.hello-hardware-sm .hello-hardware-working tbody th')).to_have_text(['Thread 0','Thread 1'])
+    expect(hardware.locator('.hello-hardware-working tbody td')).to_have_text(['1.0','2.0','2.0','4.0'])
+    expect(hardware.locator('.hello-hardware-math')).to_contain_text('× 2')
     page.locator('#hello-run-0').click()
     expect(page.locator('#hello-output-0')).to_contain_text('[2.0, 4.0, 6.0, 8.0, 10.0]')
     page.locator('#hello-factor-0').fill('4')
