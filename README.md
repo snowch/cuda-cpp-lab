@@ -6,9 +6,13 @@ An interactive book and set of labs for AI practitioners who want to understand 
 operations. Familiarity with Python, arrays and basic tensor shapes is enough to start.
 CUDA arrives through small programs tied to the hardware model.
 
-Course URL: <https://snowch.github.io/gpu-lab/>
+[GPU Lab V2](https://snowch.github.io/gpu-lab/) is the default course. Its first two
+lessons let you edit, compile and run CUDA kernels in the browser.
 
-## Current scope
+## GPU Lab V1
+
+The [V1 course overview](https://snowch.github.io/gpu-lab/v1.html) leads to the
+original book and labs below.
 
 [Repair a kernel](https://snowch.github.io/gpu-lab/lessons/kernel.html) is a hands-on
 workshop for understanding and debugging CUDA kernels. Repair the kernel,

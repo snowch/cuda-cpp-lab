@@ -53,7 +53,7 @@ def check_course_flow(browser, url, root):
                     expect(page.locator('#cuda-wmma')).to_be_visible()
                     page.locator('#cuda-wmma-connection').screenshot(path=str(root / f'test-results/cuda-wmma-{width}-{theme}.png'))
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (slug, width, theme)
-            page.goto(url)
+            page.goto(url + 'v1.html')
             expect(page.locator('.roadmap h3')).to_have_count(14)
             expect(page.locator('.roadmap a[data-completion-lesson="launch-from-input"]')).to_have_attribute('data-done', 'true')
             context.close()

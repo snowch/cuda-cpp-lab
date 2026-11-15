@@ -8,7 +8,7 @@ export function readingReturn(pageURL){
   const chapter=chapters.findIndex(c=>c.slug===from)+1 || parallelChapters.find(c=>c.slug===from)?.number || 0;
   const recap=parallelRecordings.find(r=>r.slug+'-video'===from);
   if(!chapter&&!recap&&!Object.hasOwn(appendices,from))return null;
-  const fallback=new URL(from==='index'?'../index.html':from+'.html',page);
+  const fallback=new URL(from==='index'?'../v1.html':from+'.html',page);
   if(from==='hello')fallback.hash='hello-sm-title';
   if(from==='scheduling')fallback.hash='sm-hardware-basics';
   const label=chapter?`Return to Chapter ${chapter}`:recap?`Return to Chapter ${recap.chapter} recap`:`Return to ${appendices[from]}`;
@@ -17,7 +17,10 @@ export function readingReturn(pageURL){
   if(raw){
     try{
       const url=new URL(raw,page),indexPath=new URL('../',page).pathname;
-      if(url.origin===page.origin&&(url.pathname===fallback.pathname||(from==='index'&&url.pathname===indexPath)))return result(url.href);
+      if (url.origin === page.origin && from === 'index' && [indexPath, indexPath + 'index.html'].includes(url.pathname)) {
+        url.pathname = fallback.pathname;
+      }
+      if (url.origin === page.origin && url.pathname === fallback.pathname) return result(url.href);
     }catch{/* Use the local book link. */}
   }
   return result(fallback.href);
