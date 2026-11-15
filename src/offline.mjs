@@ -14,6 +14,11 @@ let remembered = false, remembering, connected = false;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
 function error(message = '') { $('app-status-error').textContent = message; }
 function render() {
+  const progress = $('download-progress');
+  const feedback = $(mode === 'update' ? 'update-download-feedback' : 'offline-download-feedback');
+  // Move the single progress/cancel group only when its owning action changes.
+  // Repeated status refreshes must preserve focus inside the group.
+  if (progress.parentElement !== feedback) feedback.append(progress);
   const pending = snapshot.pending && snapshot.pending !== running;
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
