@@ -203,3 +203,40 @@ layouts, without overflow or reduced text. Keyboard and no-JavaScript checks
 passed. Initial/changed answers remain unknown; row, column, packed and
 boundary-crossing runs agree with the model. A row wholly in sector 1 confirms
 that a sector number is distinct from the count of sectors.
+
+### Chapter 6 release evidence
+
+[PR #141](https://github.com/snowch/gpu-lab/pull/141) merged as
+`d6c889921445cd9c2f7b01e5dd4d81d50422b955`. Local and PR checks passed.
+Production checks/deploy passed on retry after a local test-server connection
+reset while fetching a download. Public release/footer matched the merged SHA;
+inspected actual phone/dark and desktop/light figures and verified keyboard
+row/column/packed/boundary cases before continuing.
+
+The separate user-requested Chapter 1 menu removal landed in
+[PR #142](https://github.com/snowch/gpu-lab/pull/142), release
+`415d8387a0f75b10e26036f1f5e90c9b4f88314d`. Full local/PR/production checks and
+actual public phone/desktop, keyboard, direct-section-link and static checks
+passed. The five section targets and visible complete CUDA function remain.
+
+### Chapter 8 reading and design review
+
+The opening distinguishes the chosen branch model from Python's evaluation of
+both expressions supplied to `torch.where`. The lane-mask definition and the
+first experiment's two possible operations precede the new condition-to-mask
+figure. The prediction and independent source/Run controls follow it. The next
+section introduces mixed paths and its separate three-operation negative case.
+The figure is explicitly scoped to the first experiment's non-zero inputs.
+
+True and false masks select different arithmetic; each included lane retains its
+own output. No participant indices/counts, output values or new-case answers are
+shown. The scope note excludes simultaneous execution and dedicated units. The
+existing recap explains these same masks and remains aligned.
+
+Inspected 390/820/1440px in both themes and read the built preceding/changed/
+following sequence. The first phone draft stacked alternatives like a sequence;
+the revised pair stays side by side at readable shared text sizes. Condensed
+labels avoid awkward hyphenated wrapping. No page overflow or new controls.
+Focused checks passed uniform signs, alternating masks, a rare three-operation
+negative path, unused positions, independent invalidation, keyboard Run/step and
+no-JavaScript visibility. Results remain hidden until Run.
