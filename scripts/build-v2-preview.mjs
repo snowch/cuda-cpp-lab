@@ -3,9 +3,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Contents, renderV2Lesson, v2Styles } from '../content/v2-view.mjs';
+import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
 
 const output = process.argv[2];
 if (!output) throw new Error('Pass the preview output path.');
+const workbench = process.argv[3] ? workbenchFrame(await readFile(process.argv[3], 'utf8')) : '';
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8');
 const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
 const href = slug => '#' + slug;
@@ -33,7 +35,7 @@ const licenses = await Promise.all(licenseNames.map(name =>
   readFile(new URL('../assets/fonts/' + name, import.meta.url), 'utf8')));
 const templates = [
   ['contents', renderV2Contents(href)],
-  ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy, './GPU-Lab-CUDA-workbench.html')]),
+  ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy, workbench ? 'bundled' : undefined)]),
 ].map(([slug, markup]) => `<template id="page-${slug}">${markup}</template>`).join('\n');
 
 await writeFile(output, `<!doctype html>
@@ -52,6 +54,7 @@ await writeFile(output, `<!doctype html>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main" tabindex="-1">${renderV2Contents(href)}</main>
 ${templates}
+${workbench ? `<script id="offline-workbench" type="application/json">${JSON.stringify(workbench).replaceAll('<', '\\u003c')}</script>` : ''}
 <!-- Embedded font licences
 ${licenses.map(escapeText).join('\n\n').replaceAll('--', '—')}
 -->
@@ -65,6 +68,11 @@ function route() {
   const template = document.getElementById('page-' + slug) ?? document.getElementById('page-contents');
   main.replaceChildren(template.content.cloneNode(true));
   mountV2(main);
+  const frame = main.querySelector('[data-kernel-workbench]');
+  if (frame) {
+    const workbench = JSON.parse(document.getElementById('offline-workbench').textContent);
+    frame.srcdoc = workbench.replace('<html ', '<html data-inline="' + frame.dataset.kernelWorkbench + '" ');
+  }
   const title = main.querySelector('h1').textContent;
   document.title = title + ' · GPU Lab V2';
   window.scrollTo({ top: 0, behavior: 'instant' });

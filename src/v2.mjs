@@ -38,6 +38,15 @@ function copiesResult(model, step) {
   </div>`;
 }
 
+// The editor runs in its own document so its compiler and styles stay independent.
+window.addEventListener('message', event => {
+  const frame = [...document.querySelectorAll('[data-kernel-workbench]')].find(
+    candidate => candidate.contentWindow === event.source,
+  );
+  const height = event.data?.gpuLabWorkbenchHeight;
+  if (frame && Number.isFinite(height) && height > 0) frame.style.height = Math.min(height, 1600) + 'px';
+});
+
 export function mountV2(root = document) {
   mountGuided(root);
   const activity = root.querySelector('[data-v2-mode]');

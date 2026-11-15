@@ -33,6 +33,7 @@ import { renderConcepts, warpConcepts } from '../src/concepts.mjs';
 import { buildOffline } from './offline.mjs';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Page } from '../content/v2-view.mjs';
+import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
 import { renderChapterReferences } from '../src/reference-tasks.mjs';
 import {chapters,renderBookNav,renderRoadmap,renderBookPage} from '../content/book.mjs';
 import {renderDeviceSections,renderReadingSections} from '../src/foundations-view.mjs';
@@ -166,7 +167,7 @@ for (const path of ['dist/index.html', ...(await readdir('dist/lessons')).filter
 await mkdir('dist/v2', { recursive: true });
 await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
 const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'utf8');
-await writeFile('dist/v2/cuda-source-workbench.html', cudaWorkbench.replace(
+await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(cudaWorkbench).replace(
   '</main>', `<footer>${versionMarkup}</footer></main>`));
 for (const lesson of v2Course) {
   await writeFile(`dist/v2/${lesson.slug}.html`, renderV2Page(lesson, versionMarkup));

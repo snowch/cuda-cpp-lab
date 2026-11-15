@@ -1,5 +1,7 @@
 # Copyright © 2026 Christopher Snow.
 """Exercise the completed CUDA-first course through its built entry point."""
+import re
+
 from playwright.sync_api import expect
 
 
@@ -15,6 +17,11 @@ def check_v2(browser, url):
         expect(page.get_by_role('link', name='Contents', exact=True)).to_be_visible()
         routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 20
+        for route in routes[:2]:
+            page.goto(route)
+            workbench = page.frame_locator('[data-kernel-workbench]')
+            expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile('runKernel'))
+            expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
         for route in routes:
             page.goto(route)
             activity = page.locator('.v2-experiment')

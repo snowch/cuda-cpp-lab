@@ -20,20 +20,22 @@ The concept diagrams use original layouts and data from the lessons.
 Traces are teaching models of addresses, dependencies, arithmetic or operation
 counts. The workbench below compiles a supported subset of CUDA device code.
 
-To use the course models offline on a tablet, generate an HTML file and open
-it in Chromium.
+To use the course and compiler offline on a tablet, generate an HTML file with
+the standalone workbench and open it in Chromium.
 
 ```sh
-node scripts/build-v2-preview.mjs GPU-Lab-V2.html
+node scripts/build-v2-preview.mjs GPU-Lab-V2.html GPU-Lab-CUDA-workbench.html
 ```
 
-The file includes all lessons, their controls, styles and fonts. To use the
-offline editable CUDA workbench too, put `GPU-Lab-CUDA-workbench.html` alongside
-it. Links to the V1 course require a connection.
+The file includes all lessons, their controls, styles, fonts and the offline
+compiler. Omit the second argument to build a smaller preview of the teaching
+models. Links to the V1 course require a connection.
 
 ## Edit and run CUDA in WebAssembly
 
-Lessons 1 and 2 link to the editable workbench. Clang in WebAssembly compiles
+Lessons 1 and 2 include an editor and console in the page. Each lesson saves
+its own draft. Use Ctrl or Command + Enter to run, Restore starter to undo
+edits, and Export .cu to save the current source. Clang in WebAssembly compiles
 the exact editor text to CUDA LLVM IR. A lesson-specific backend lowers the
 supported instructions to PTX and GPGPU-Sim runs them in WebAssembly. The
 workbench fixes the launch at two blocks of four threads with five inputs.

@@ -80,3 +80,5 @@
   .v2-step-actions button { padding-inline:6px; }
   .v2-book .v2-topbar .top-actions>a,.v2-book .v2-topbar .top-actions button { font-size:.77rem; }
 }
+.v2-inline-workbench { display:block; width:100%; height:750px; border:0; margin:14px 0; }
+.v2-experiment .v2-inline-workbench+h3,.v2-experiment p+h3 { margin-top:30px; }

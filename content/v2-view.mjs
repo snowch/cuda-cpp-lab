@@ -57,6 +57,18 @@ export function renderV2Contents(href) {
   </section>`).join('')}`;
 }
 
+function renderWorkbench(mode, href) {
+  const task = mode === 'scale'
+    ? 'Change 2.0f to 3.0f. Predict the output at index 2, then compile and run. Try adding 1.0f to the result.'
+    : 'Keep output[i] and replace input[i] with input[threadIdx.x]. Predict what the first thread of block 1 reads and where it writes. Restore the starter, then change i < n to i < n - 1 and predict which output stays unwritten.';
+  const source = href === 'bundled' ? '' : ` src="${href}?embed=${mode}"`;
+  return `<h3>Worked kernel</h3>
+    <p>Clang compiles your CUDA device code. GPGPU-Sim runs it with five inputs and a fixed launch of two blocks of four threads.</p>
+    ${readerTask(task, 'Try it')}
+    <iframe class="v2-inline-workbench" data-kernel-workbench="${mode}"${source} title="Editable CUDA kernel and output"></iframe>
+    ${href === 'bundled' ? '' : `<p><a href="${href}">Open workbench in its own page</a></p>`}`;
+}
+
 function renderActivity({mode, slug}, legacy, workbenchHref) {
   const lesson = teaching[mode];
   const experiment = v2Experiments[mode];
@@ -71,17 +83,8 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     ${v2Diagram(slug)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
-    <h2 id="v2-activity">Change hello.cu</h2>
-    ${mode === 'scale' && workbenchHref ? `<p><a class="v2-start" href="${workbenchHref}">Edit, compile and run the CUDA kernel →</a></p>` : ''}
-    ${mode === 'bounds' && workbenchHref ? `<details class="more-settings">
-      <summary>Try two source edits in the CUDA workbench</summary>
-      <p>Restore the starter first. Its fixed launch is two blocks of four threads and five inputs.</p>
-      <ol>
-        <li>Keep <code>output[i]</code> and replace <code>input[i]</code> with <code>input[threadIdx.x]</code>. Predict what the first thread of block 1 reads and where it writes.</li>
-        <li>Restore the starter. Change the guard to <code>i &lt; n - 1</code>. Predict which output stays unwritten and run to check.</li>
-      </ol>
-      <p><a href="${workbenchHref}">Open the CUDA workbench →</a></p>
-    </details>` : ''}
+    <h2 id="v2-activity">${mode !== 'copies' && workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
+    ${mode !== 'copies' && workbenchHref ? renderWorkbench(mode, workbenchHref) + '<h3>Trace the worked example</h3>' : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. To compile the complete program, use the downloaded file with the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
