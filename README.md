@@ -6,8 +6,8 @@ An interactive book and set of labs for AI practitioners who want to understand 
 operations. Familiarity with Python, arrays and basic tensor shapes is enough to start.
 CUDA arrives through small programs tied to the hardware model.
 
-[GPU Lab V2](https://snowch.github.io/gpu-lab/) is the default course. Its first two
-lessons let you edit, compile and run CUDA kernels in the browser.
+[GPU Lab V2](https://snowch.github.io/gpu-lab/) is the default course. Its first four
+lessons let you edit, compile and run complete CUDA programs in the browser.
 
 ## GPU Lab V1
 
