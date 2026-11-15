@@ -109,6 +109,8 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 CourseHandler.slow=True
                 page.locator('#save-offline').click()
                 expect(page.locator('#download-progress')).to_be_visible()
+                expect(page.locator('#offline-download-feedback #download-progress')).to_be_visible()
+                assert page.locator('#download-progress').evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'offline-title'
                 page.wait_for_function('document.getElementById("asset-progress").value > 0')
                 page.locator('#cancel-download').click()
                 expect(page.locator('#save-offline')).to_have_text('Resume download')
@@ -194,6 +196,22 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 context.set_offline(False);CourseHandler.revision='two';check(page)
                 expect(page.locator('#version-status')).to_have_text('Update available')
                 expect(page.locator('#app-status-summary')).to_contain_text('Update available')
+                # Update progress and cancellation belong next to Update, rather
+                # than below the separate offline-access explanation.
+                CourseHandler.slow=True
+                page.locator('#download-update').click()
+                progress=page.locator('#download-progress')
+                expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
+                assert progress.evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'version-title'
+                button=page.locator('#download-update').bounding_box()
+                gap=progress.bounding_box()['y']-(button['y']+button['height'])
+                assert 0<=gap<=24, f'Update progress is separated from Update by {gap}px'
+                page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-updating.png'))
+                page.locator('#cancel-download').focus();page.keyboard.press('Enter')
+                expect(progress).to_be_hidden()
+                expect(page.locator('#version-status')).to_have_text('Update available')
+                ready(page)
+                CourseHandler.slow=False
                 # Real browser quota failure cannot overwrite a complete release.
                 cdp=context.new_cdp_session(page)
                 cdp.send('Storage.overrideQuotaForOrigin', {'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc,'quotaSize':1})

@@ -19,12 +19,13 @@ const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title"
 <section aria-labelledby="version-title"><h3 id="version-title">Version</h3><p id="running-version"></p>
 <p id="version-status" role="status">Checking for updates</p><p id="version-detail"></p>
 <div class="status-actions"><button id="check-update" type="button">Check for updates</button><button id="download-update" type="button" hidden>Update</button><button id="restart-update" type="button" hidden>Restart to update</button><button id="later-update" type="button" hidden>Later</button></div>
+<div id="update-download-feedback"></div>
 <p id="restart-note" hidden>Restart reloads all open GPU Lab tabs and app windows. Their routes, experiment inputs and results are restored. A window that is busy or cannot save its work will block the restart.</p></section>
 <section aria-labelledby="offline-title"><h3 id="offline-title">Offline access</h3><p id="offline-status" role="status">Not saved for offline use</p>
 <p id="offline-size"></p><p>Save all lessons, browser simulators, diagrams and example files. Desktop execution needs separate PyTorch or CUDA/GPGPU-Sim tools; their installations are not part of this offline download. External links need internet access.</p>
 <div class="status-actions"><button id="save-offline" type="button">Download for offline use</button><button id="remove-offline" type="button" hidden>Remove offline copy</button></div>
+<div id="offline-download-feedback"><div id="download-progress" hidden><label for="asset-progress">Verified download progress</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><button id="cancel-download" type="button">Cancel download</button></div></div>
 <div id="remove-confirmation" hidden><p>Remove GPU Lab’s downloaded files from this browser? Your experiment work, preferences and other apps will be kept.</p><button id="confirm-remove" type="button">Remove downloaded files</button><button id="cancel-remove" type="button">Keep offline copy</button></div></section>
-<div id="download-progress" hidden><label for="asset-progress">Verified download progress</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><button id="cancel-download" type="button">Cancel download</button></div>
 <p id="app-status-error" role="status"></p>
 </dialog>`;
 export async function buildOffline(directory, identity = { commit: null, date: null }) {
