@@ -11,7 +11,7 @@ def check_navigation(browser, base_url, root, errors):
             mock_version(context)
             page = context.new_page()
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.goto(base_url)
+            page.goto(base_url + 'v1.html')
             toggle = page.get_by_role('button', name='Course contents')
             navigation = page.locator('.sidebar nav')
             expect(toggle).to_be_visible()
@@ -49,7 +49,7 @@ def check_navigation(browser, base_url, root, errors):
             expect(page).to_have_url(base_url + 'lessons/meet-gpu.html')
             expect(page.locator('.sidebar')).to_be_hidden()
             page.locator('.gpu-map-link').click()
-            expect(page).to_have_url(base_url+'index.html')
+            expect(page).to_have_url(base_url+'v1.html')
             toggle.click()
             navigation.get_by_role('heading',name='Appendices',exact=True).scroll_into_view_if_needed()
             navigation.locator('[aria-labelledby=nav-appendices]').get_by_role('link',name='Run on your desktop',exact=True).click()
@@ -65,7 +65,7 @@ def check_navigation(browser, base_url, root, errors):
 
     context = browser.new_context(viewport={'width': 360, 'height': 800}, java_script_enabled=False)
     page = context.new_page()
-    for path in ['', 'lessons/memory.html', 'lessons/scheduling.html']:
+    for path in ['v1.html', 'lessons/memory.html', 'lessons/scheduling.html']:
         page.goto(base_url + path)
         expect(page.locator('.sidebar nav')).to_be_visible()
         for link in page.locator('.sidebar nav a').all():

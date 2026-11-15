@@ -19,7 +19,8 @@ document.addEventListener('click',event=>{
     saveReadingState();
     if(appendix&&!link.matches('[data-reading-return]')){
       url.searchParams.set('return',location.pathname+location.search+location.hash);
-      url.searchParams.set('from',location.pathname.split('/').at(-1)?.replace('.html','')||'index');
+      url.searchParams.set('from',location.pathname.endsWith('/v1.html') ? 'index' :
+        location.pathname.split('/').at(-1)?.replace('.html','') || 'index');
     }
     location.assign(url.href);
   }catch(error){

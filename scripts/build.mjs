@@ -43,10 +43,10 @@ import {renderMap} from '../src/gpu-map-view.mjs';
 import {explainHTML} from '../src/code-explanations-view.mjs';
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
-for (const path of ['index.html', 'src', 'examples', 'assets', 'manifest.webmanifest']) {
+for (const path of ['src', 'examples', 'assets', 'manifest.webmanifest']) {
   await cp(path, `dist/${path}`, { recursive: true });
 }
-await writeFile('dist/index.html', (await readFile('index.html', 'utf8'))
+await writeFile('dist/v1.html', (await readFile('index.html', 'utf8'))
   .replace('<!-- BOOK_ROADMAP -->', renderRoadmap()));
 await mkdir('dist/lessons', { recursive: true });
 const desktopExamples=await exportDesktop('dist/examples/desktop');
@@ -149,8 +149,8 @@ try {
 } catch {
   // Source archives may have no Git metadata; keep them buildable without inventing a version.
 }
-for (const path of ['dist/index.html', ...(await readdir('dist/lessons')).filter(name => name.endsWith('.html')).map(name => `dist/lessons/${name}`)]) {
-  const current=path==='dist/index.html'?'index':path.split('/').at(-1).replace('.html','');
+for (const path of ['dist/v1.html', ...(await readdir('dist/lessons')).filter(name => name.endsWith('.html')).map(name => `dist/lessons/${name}`)]) {
+  const current=path==='dist/v1.html'?'index':path.split('/').at(-1).replace('.html','');
   const html = explainHTML(await readFile(path, 'utf8'))
     .replace(/<nav class="(?:course-nav|lesson-nav)"[^>]*>[\s\S]*?<\/nav>/,renderBookNav(current))
     .replace('<!-- LESSON_COMPLETION -->',renderLessonCompletion(current))
@@ -162,9 +162,10 @@ for (const path of ['dist/index.html', ...(await readdir('dist/lessons')).filter
     .replace('</head>', '<script type="module" src="'+(current==='index'?'./':'../')+'src/desktop.mjs"></script><script type="module" src="'+(current==='index'?'./':'../')+'src/reading-links.mjs"></script></head>')
     .replace('</head>', '<link rel="stylesheet" href="'+(current==='index'?'./':'../')+'src/code-explanations.css"><script type="module" src="'+(current==='index'?'./':'../')+'src/code-explanations.mjs"></script></head>');
   const fontBase=current==='index'?'./':'../';
-  await writeFile(path, html.replace('</head>', `<link rel="preload" href="${fontBase}assets/fonts/plex-sans.woff2" as="font" type="font/woff2" crossorigin></head>`).replace('</footer>', `${versionMarkup}</footer>`));
+  await writeFile(path, html.replace(/href="(\.\.?\/)index\.html(?=["#])/g, 'href="$1v1.html').replace('</head>', `<link rel="preload" href="${fontBase}assets/fonts/plex-sans.woff2" as="font" type="font/woff2" crossorigin></head>`).replace('</footer>', `${versionMarkup}</footer>`));
 }
 await mkdir('dist/v2', { recursive: true });
+await writeFile('dist/index.html', renderV2Page(undefined, versionMarkup, { home: true }));
 await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
 const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'utf8');
 await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(cudaWorkbench).replace(

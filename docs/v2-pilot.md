@@ -1,9 +1,10 @@
 # GPU Lab V2
 
-The CUDA-first course lives under `/gpu-lab/v2/`. Its 20 lessons progress from
+The CUDA-first course opens at `/gpu-lab/`. Lesson URLs stay under `/gpu-lab/v2/`.
+V2's 20 lessons progress from
 per-thread arithmetic and CPU–GPU copies to warp execution, matrix operations,
-attention, inference and stable token routing. V2 is developed on the
-`v2/cuda-first-pilot` branch. Each lesson links to the related V1 lesson.
+attention, inference and stable token routing. The V1 course overview is at
+`/gpu-lab/v1.html`. Each V2 lesson links to the related V1 lesson.
 
 ## Run the course
 
@@ -11,7 +12,7 @@ attention, inference and stable token routing. V2 is developed on the
 npm run dev
 ```
 
-Open `http://localhost:5173/gpu-lab/v2/` and start with **One thread, one element**.
+Open `http://localhost:5173/gpu-lab/` and start with **One thread, one element**.
 The first three lessons share one complete downloadable CUDA program. The
 later lessons use focused CUDA excerpts or algorithm outlines. Their controls
 change the displayed source and run a deterministic teaching trace. Enter a

@@ -171,7 +171,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
   ${lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
-  <p><a href="${legacy(lesson.current)}">Explore this topic in the current course →</a></p>
+  <p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
     <a href="${href(next?.slug ?? 'contents')}">${next?.title ?? 'Contents'} →</a>
@@ -179,21 +179,23 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
 }
 
 export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'v2.css'];
-export function renderV2Page(lesson, versionMarkup = '') {
-  const href = slug => slug === 'contents' ? './' : `./${slug}.html`;
-  const legacy = slug => `../lessons/${slug}.html`;
+export function renderV2Page(lesson, versionMarkup = '', { home = false } = {}) {
+  const base = home ? './' : '../';
+  const href = slug => slug === 'contents' ? base : `${home ? './v2/' : './'}${slug}.html`;
+  const legacy = slug => `${base}lessons/${slug}.html`;
   const title = lesson ? lesson.title + ' · GPU Lab V2' : 'GPU Lab V2';
-  const styles = v2Styles.map(name => `<link rel="stylesheet" href="../src/${name}">`).join('');
+  const styles = v2Styles.map(name => `<link rel="stylesheet" href="${base}src/${name}">`).join('');
   return `<!doctype html>
 <!-- Copyright © 2026 Christopher Snow. -->
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>${title}</title>${styles}
-<script type="module" src="../src/theme.mjs"></script>
-${lesson ? '<script type="module" src="../src/v2.mjs"></script>' : ''}</head>
+<script type="module" src="${base}src/theme.mjs"></script>
+${lesson ? `<script type="module" src="${base}src/v2.mjs"></script>` : ''}
+${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}</head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
-<header class="topbar v2-topbar"><a class="brand" href="./">GPU Lab V2</a>
-<div class="top-actions"><a href="./">Contents</a><a href="../index.html">Current course</a>
+<header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
+<div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html') : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
 </body></html>`;

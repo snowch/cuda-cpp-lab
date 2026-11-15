@@ -32,7 +32,7 @@ def check_lesson_completion(browser, base_url, root, errors):
             page.locator('.lesson-forward a').last.click()
             expect(page.locator('h1')).to_have_text('Where are tensor values stored?')
             page.locator('#lesson-complete').check()
-            overview=context.new_page();overview.goto(base_url)
+            overview=context.new_page();overview.goto(base_url + 'v1.html')
             for slug in ['hello','devices']:
                 expect(overview.locator(f'.roadmap a[data-completion-lesson={slug}] .lesson-done-tick')).to_be_visible()
             # A second tab can undo the same mark; stale tabs also keep other lessons.

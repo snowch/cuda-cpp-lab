@@ -367,13 +367,13 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # An online-only update does not grant permanent offline consent.
             CourseHandler.revision='one'
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
-            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url);panel(tab)
+            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v1.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
             tab.locator('#later-update').click();tab.reload()
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
-            tab.close();tab=ctx.new_page();tab.goto(url)
+            tab.close();tab=ctx.new_page();tab.goto(url+'v1.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
             panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
             tab.locator('#restart-update').click()
@@ -389,14 +389,14 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             profile=temp/'profile'
             ctx=p.chromium.launch_persistent_context(str(profile),**options)
-            tab=ctx.pages[0];tab.goto(url);panel(tab);tab.locator('#save-offline').click();ready(tab)
+            tab=ctx.pages[0];tab.goto(url+'v1.html');panel(tab);tab.locator('#save-offline').click();ready(tab)
             manifest=ctx.new_cdp_session(tab).send('Page.getAppManifest')
             assert not manifest['errors'],manifest
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
             tab.locator('#later-update').click();ctx.close()
             ctx=p.chromium.launch_persistent_context(str(profile),**options);ctx.set_offline(True)
-            tab=ctx.pages[0];tab.goto(url)
+            tab=ctx.pages[0];tab.goto(url+'v1.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
             panel(tab);ready(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
             started=time.monotonic();tab.locator('#restart-update').click()
@@ -420,7 +420,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             CourseHandler.revision='one';CourseHandler.legacy=True
             legacy_profile=temp/'legacy-profile'
             ctx=p.chromium.launch_persistent_context(str(legacy_profile),**options)
-            tab=ctx.pages[0];tab.goto(url)
+            tab=ctx.pages[0];tab.goto(url+'v1.html')
             tab.wait_for_function('navigator.serviceWorker.controller !== null')
             legacy_key=f'gpu-lab:{url}:legacy-complete'
             assert legacy_key in tab.evaluate('caches.keys()')
@@ -429,7 +429,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             tab.wait_for_function('''async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting)''')
             ctx.close()
             ctx=p.chromium.launch_persistent_context(str(legacy_profile),**options)
-            tab=ctx.pages[0];tab.goto(url);panel(tab)
+            tab=ctx.pages[0];tab.goto(url+'v1.html');panel(tab)
             expect(tab.locator('html')).to_have_attribute('data-test-release','two')
             expect(tab.locator('#offline-status')).to_have_text('Offline download incomplete')
             assert legacy_key in tab.evaluate('caches.keys()')

@@ -20,7 +20,7 @@ def check_map_loading(browser, url):
         color_scheme='dark', service_workers='block',
     )
     page = context.new_page()
-    page.goto(url)
+    page.goto(url + 'v1.html')
     pending = []
     # Delay only the base stylesheet. The map's width/padding rules then arrive
     # before the shared border-box rule, reproducing the failed deployment run.
