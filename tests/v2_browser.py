@@ -26,7 +26,7 @@ def check_v2(browser, url):
         expect(page.get_by_role('link', name='Start with your first kernel')).to_have_attribute('href', './v2/first-kernel.html')
         assert routes[0] == url + 'v2/first-kernel.html'
         assert routes[1] == url + 'v2/one-thread-one-element.html'
-        for route, mode in zip(routes[:4], ('hello', 'scale', 'bounds', 'copies')):
+        for route, mode in zip(routes[:5], ('hello', 'scale', 'bounds', 'copies', 'coalescing')):
             page.goto(route)
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
