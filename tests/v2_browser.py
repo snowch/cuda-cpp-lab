@@ -26,7 +26,8 @@ def check_v2(browser, url):
         expect(page.get_by_role('link', name='Start with your first kernel')).to_have_attribute('href', './v2/first-kernel.html')
         assert routes[0] == url + 'v2/first-kernel.html'
         assert routes[1] == url + 'v2/one-thread-one-element.html'
-        for route, mode in zip(routes[:5], ('hello', 'scale', 'bounds', 'copies', 'coalescing')):
+        modes = ['hello', 'scale', 'bounds', 'copies'] + [route.rsplit('/', 1)[1][:-5] for route in routes[4:]]
+        for route, mode in zip(routes, modes):
             page.goto(route)
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
@@ -35,13 +36,13 @@ def check_v2(browser, url):
                 expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'hello<<<1, 1>>>'))
                 expect(page.locator('.v2-pager a').last).to_have_attribute('href', './one-thread-one-element.html')
             else:
-                expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile('runKernel'))
+                expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'__global__'))
             expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'int main\(\)'))
             expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
             expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
         for route in routes[1:]:
             page.goto(route)
-            model = page.get_by_text('Explore a model of the starter program', exact=True)
+            model = page.locator('.v2-starter-model > summary')
             if model.count():
                 model.click()
             activity = page.locator('.v2-experiment')
@@ -66,6 +67,7 @@ def check_v2(browser, url):
             expect(page.get_by_text('Compare your explanation')).to_be_visible()
 
         page.goto(url + 'v2/reduction.html')
+        page.get_by_text('Explore the architecture model').click()
         expect(page.locator('.v2-diagram')).to_contain_text('All threads arrive before any partner read.')
         choice = page.locator('#v2-choice')
         choice.select_option('0')
@@ -92,6 +94,7 @@ def check_v2(browser, url):
     page.get_by_role('link', name='GPU Lab V1', exact=True).click()
     expect(page).to_have_url(url + 'v1.html')
     page.goto(url + 'v2/reduction.html')
+    page.get_by_text('Explore the architecture model').click()
     expect(page.locator('#v2-source')).to_be_visible()
     expect(page.get_by_role('button', name='Run model')).to_be_disabled()
     expect(page.locator('#v2-result')).to_be_hidden()

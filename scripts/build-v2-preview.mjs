@@ -4,11 +4,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Contents, renderV2Lesson, v2Styles } from '../content/v2-view.mjs';
 import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
+import { insertProgramStarters } from '../content/v2-programs.mjs';
 
 const output = process.argv[2];
 if (!output) throw new Error('Pass the preview output path.');
 const firstProgram = await readFile(new URL('../examples/first-kernel.cu', import.meta.url), 'utf8');
-const workbench = process.argv[3] ? workbenchFrame(await readFile(process.argv[3], 'utf8')) : '';
+const workbench = process.argv[3] ? workbenchFrame(await insertProgramStarters(await readFile(process.argv[3], 'utf8'))) : '';
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8');
 const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
 const href = slug => '#' + slug;

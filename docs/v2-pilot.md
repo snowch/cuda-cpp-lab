@@ -14,13 +14,11 @@ npm run dev
 
 Open `http://localhost:5173/gpu-lab/` and start with **Write your first GPU value**.
 Lesson 1 runs one thread that writes one value. Lessons 2–4 share a complete
-downloadable CUDA program that processes an array. The
-later lessons use focused CUDA excerpts or algorithm outlines. Their controls
-change the displayed source and run a deterministic teaching trace. Enter a
-prediction before running, step through the result and explain a new case.
-The concept diagrams use original layouts and data from the lessons.
-Traces are teaching models of addresses, dependencies, arithmetic or operation
-counts. The workbench below compiles a supported subset of CUDA device code.
+CUDA program that processes an array. Every subsequent lesson opens with an
+editable CUDA program that exercises its concept. The architecture models
+below the editors let readers predict, step through and inspect selected
+cases. They use original diagrams and data. Their address groupings,
+dependencies and timing explanations are teaching models.
 
 For the hosted course, open **App status** and choose **Download for offline use**
 or **Update**. Both save the complete course, including the CUDA compiler. After
@@ -42,27 +40,28 @@ models. Links to the V1 course require a connection.
 
 ## Edit and run CUDA in WebAssembly
 
-The first five lessons place the complete CUDA C++ program in the editor.
-Clang compiles the host program to WebAssembly and the kernel to NVPTX LLVM IR.
-The workbench lowers the supported device instructions to PTX for GPGPU-Sim.
-The browser runtime handles the allocations, transfers and launch requested by
-`main()`. The console shows program output and a trace of CUDA calls.
-Each exercise saves its own draft. Use Ctrl or Command + Enter to run, Restore
+Every lesson includes a complete CUDA C++ program. The compiler builds
+`main()` as WebAssembly and emits PTX for the device code. GPGPU-Sim executes
+the compiled kernels. CUDA calls in `main()` control device allocation,
+transfers, and launch dimensions. Architecture examples also exercise shared
+memory barriers, atomics, WMMA, successive kernels, stream queues and events.
+
+The browser workbench uses functional simulation. Its console shows the
+program's output and CUDA call trace. Operation counts calculated by programs
+and timing in the teaching models have their own stated assumptions. Each
+lesson saves its own draft. Use Ctrl or Command + Enter to run, Restore
 starter to undo edits, and Export .cu to save the current source.
 
-The browser runtime supports the one-dimensional launches and FP32 buffers used
-in these lessons. The coalescing program groups the indices it reads into 32-byte sectors. The following lessons use guided architecture models and code excerpts.
-
-The hosted build includes about 127 MiB of pinned compiler assets under its
-immutable release URL. A complete App status download makes the first compile/run
+The hosted build includes about 127 MiB of pinned Clang assets and about 5 MiB
+of additional architecture runtime assets under its immutable release URL. A complete App status download makes the first compile/run
 work offline. Without that download, first run fetches the compiler from the
 same site. The standalone workbench bundles these assets.
 
 The first hosted build downloads the three compiler assets into the ignored
 `vendor/v2-compiler/` cache, checking their SHA-256 hashes against the workbench
 metadata. Later builds verify and reuse that cache; a missing or corrupt asset is
-fetched again. Publish the whole `dist/`, including `assets/v2-compiler/` and its
-immutable release copy. Source and build
+fetched again. Publish the whole `dist/`, including `assets/v2-compiler/`, `assets/cuda-workbench/`
+and their immutable release copies. Source and build
 instructions are in the
 [cuda-sim-wasm workbench](https://github.com/snowch/cuda-sim-wasm/tree/experiment/editable-cuda/workbench).
 
@@ -76,11 +75,10 @@ instructions are in the
   every supported guided case. `python tests/browser.py` exercises navigation,
   result invalidation, persistence, keyboard input, no-script reading and
   phone, tablet and desktop layouts in both themes.
-- The supplied hello.cu variants previously compiled with NVIDIA CUDA
-  13.2.51 targeting sm_80. The Lenovo offline run verified the starter.
-  The indexing and bounds edits were checked with the pinned WebAssembly
-  compiler and functional simulator. Forty wrapped CUDA excerpt variants
-  compiled with the same NVIDIA toolkit and target. The attention outline is
-  pseudocode. Performance examples use synthetic models.
+- `python tests/v2_editor.py` compiles and runs every starter and a source
+  edit in Chromium. It checks the console or launch trace and the generated
+  PTX. Set `CUDA_TEST_COMPILER_DIR` to a local mirror of the pinned
+  Compiler.js, Compiler.wasm and Compiler.data files when testing in an
+  environment that restricts access to the compiler host.
 - Numerical model assumptions are documented in [model.md](model.md). CUDA
   mechanism references are in [sources.md](sources.md).

@@ -35,6 +35,7 @@ import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Page } from '../content/v2-view.mjs';
 import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
 import { cacheCompilerAssets } from './v2-compiler-assets.mjs';
+import { insertProgramStarters } from '../content/v2-programs.mjs';
 import { renderChapterReferences } from '../src/reference-tasks.mjs';
 import {chapters,renderBookNav,renderRoadmap,renderBookPage} from '../content/book.mjs';
 import {renderDeviceSections,renderReadingSections} from '../src/foundations-view.mjs';
@@ -172,7 +173,7 @@ const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'u
 const compilerAssets = await cacheCompilerAssets(cudaWorkbench);
 await mkdir('dist/assets/v2-compiler', {recursive: true});
 for (const asset of compilerAssets) await cp(asset.path, `dist/assets/v2-compiler/${asset.name}`);
-await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(cudaWorkbench, {
+await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(await insertProgramStarters(cudaWorkbench), {
   compilerBase: '../releases/__BUILD_ID__/assets/v2-compiler/',
 }).replace(
   '</main>', `<footer class="workbench-version">${versionMarkup}</footer></main>`));

@@ -412,6 +412,15 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             bounds=tab.frame_locator('[data-kernel-workbench="bounds"]');bounds.locator('#run').click()
             expect(bounds.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
             expect(bounds.locator('#program-output')).to_contain_text('Output: [2, 4, 6, 8, 10]')
+            tab.goto(url+'v2/reduction.html')
+            reduction=tab.frame_locator('[data-kernel-workbench="reduction"]')
+            reduction.locator('#run').click()
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 10.0')
+            source=reduction.get_by_role('textbox',name='CUDA source')
+            source.fill(source.input_value().replace('threads = 4','threads = 8'));source.press('Control+Enter')
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 36.0')
             # Older complete updates without their saved flag are recognised offline.
             tab.evaluate('''async base => {
               const cache = await caches.open(`gpu-lab:${base}:status-v1`);
@@ -424,7 +433,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
             tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
             ctx.close()
-            print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited and array compilation, no second save, older complete copies recognised offline')
+            print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             # A persistent installed profile: closing every window does NOT apply
             # a prepared release. Reopen completely offline, then explicitly restart.
             CourseHandler.revision='one';CourseHandler.requests=[]
