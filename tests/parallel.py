@@ -75,7 +75,9 @@ def check_parallel(browser,url,root,errors):
                     frame.get_by_role('link',name='Optional appendix: Inside an SM').first.click()
                     back=page.locator('[data-reading-return]').first
                     expect(back).to_have_text(f"Return to Chapter {chapter['number']}")
+                    page.wait_for_load_state('load')
                     back.click()
+                    page.wait_for_load_state('load')
                     expect(page.locator('h1')).to_have_text(chapter['title'])
                     page.get_by_role('button',name='Close map',exact=True).click()
                     expect(first.locator('[data-result]')).to_have_text(saved,use_inner_text=True)
