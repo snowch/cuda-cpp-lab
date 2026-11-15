@@ -209,7 +209,8 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-updating.png'))
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter')
                 expect(progress).to_be_hidden()
-                expect(page.locator('#version-status')).to_have_text('Update available')
+                # Cancellation refreshes the verified cache status before render.
+                expect(page.locator('#version-status')).to_have_text('Update available',timeout=30000)
                 ready(page)
                 CourseHandler.slow=False
                 # Real browser quota failure cannot overwrite a complete release.
