@@ -14,6 +14,16 @@ def check_book_opening(browser,url,root,errors):
         expect(page.locator('h1')).to_have_text('Where are tensor values stored?')
         expect(page.locator('[data-book-experiment]')).to_have_count(3)
         expect(page.locator('#device-run-0')).to_be_enabled()
+        architecture=page.locator('.device-architecture')
+        expect(architecture).to_be_visible()
+        sides=architecture.locator('.device-architecture-side')
+        expect(sides.nth(0).locator('h4')).to_have_text(['CPU processor','System RAM'])
+        expect(sides.nth(1).locator('h4')).to_have_text(['GPU compute chip','GPU memory (VRAM)'])
+        expect(architecture.locator('.device-architecture-copies')).to_contain_text('System RAM → GPU memory')
+        expect(architecture.locator('.device-architecture-copies')).to_contain_text('GPU memory → system RAM')
+        # The orientation must precede the operations and never reveal their results.
+        assert architecture.evaluate('el=>Boolean(el.compareDocumentPosition(document.getElementById("device-0"))&Node.DOCUMENT_POSITION_FOLLOWING)')
+        expect(architecture.locator('.device-buffer')).to_have_count(0)
         for stage,buffers in [(0,1),(1,2),(2,3)]:
             expect(page.locator(f'#device-feedback-{stage}')).to_contain_text('Run')
             expect(page.locator(f'#device-map-{stage} .device-buffer')).to_have_count(buffers)
@@ -109,6 +119,7 @@ def check_book_opening(browser,url,root,errors):
     page=context.new_page()
     for slug,count in [('devices',3),('reading',2),('layout',3),('requests',1)]:
         page.goto(url+'lessons/'+slug+'.html')
+        if slug=='devices':expect(page.locator('.device-architecture')).to_be_visible()
         expect(page.locator('[data-book-experiment]')).to_have_count(count)
         expect(page.locator('.sidebar nav')).to_be_visible()
         expect(page.locator('noscript .notice')).to_be_visible()
@@ -123,7 +134,7 @@ def check_chapter_styles(browser,url,root):
         page=context.new_page();baseline=None
         for slug in ['hello','devices','reading','layout','requests']:
             page.goto(url+'lessons/'+slug+'.html')
-            if slug in ['devices','reading']:
+            if slug=='reading':
                 expect(page.locator('.chapter-definition')).to_have_count(0)
             else:
                 expect(page.locator('.chapter-definition').first).to_be_visible()

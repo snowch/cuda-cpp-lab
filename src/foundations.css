@@ -10,6 +10,21 @@
 .device-map,.book-read-map { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:20px; }
 .device-memory,.book-read-map>div { min-width:0; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
 .device-memory h3,.book-read-map h3 { margin-top:0; }
+.device-architecture { margin:24px 0; padding:20px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.device-architecture figcaption { font-weight:600; font-size:20px; }
+.device-architecture-system { margin:12px 0; color:var(--muted); }
+.device-architecture-sides { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.device-architecture-side { min-width:0; display:grid; grid-template-rows:auto 1fr auto 1fr; border:1px solid var(--accent); border-radius:6px; padding:14px; background:var(--accent-soft); }
+.device-architecture-side h3 { margin:0 0 12px; }
+.device-architecture-component { padding:14px; border:1px solid var(--line); border-radius:4px; background:var(--panel); }
+.device-architecture-component h4 { margin:0 0 6px; font-size:18px; }
+.device-architecture-component p { margin:0; }
+.device-architecture-local { margin:12px 0; text-align:center; font-size:16px; }
+.device-architecture-local span { display:block; font-size:24px; }
+.device-architecture-copies { margin-top:16px; border-top:1px solid var(--line); }
+.device-architecture-copies p { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px 16px; margin:12px 0; }
+.device-architecture>.book-note { margin-bottom:0; }
+@media(max-width:650px) { .device-architecture-sides { grid-template-columns:minmax(0,1fr); } .device-architecture { padding:16px; } }
 .device-buffer { padding:8px 0; border-top:1px solid var(--line); }
 .book-values { display:flex; flex-wrap:wrap; gap:6px; }
 .book-values span { padding:8px 12px; border:1px solid var(--line); border-radius:4px; font-weight:600; }

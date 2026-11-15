@@ -2,7 +2,7 @@
 // Compact build/runtime catalogue; checked against the measured media metadata.
 export const recordingDurations={
   "hello": 172,
-  "devices": 188,
+  "devices": 192,
   "launch-from-input": 191,
   "reading": 174,
   "layout": 186,

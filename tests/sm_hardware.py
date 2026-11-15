@@ -80,6 +80,7 @@ def check_sm_hardware(browser,url,root,errors):
     result=page.locator('#reading-feedback-row').inner_text()
     page.locator('.lesson-nav a[href="inside-sm.html"]').click()
     expect(page.locator('#sm-return')).to_have_text('Return to Chapter 4')
+    page.wait_for_load_state('load')
     page.locator('#sm-return').click()
     expect(page).to_have_url(url+'lessons/reading.html?keep=sidebar')
     expect(page.locator('#reading-index-row')).to_have_value('2')
@@ -90,7 +91,11 @@ def check_sm_hardware(browser,url,root,errors):
     map_.locator('#gpu > summary').click();map_.locator('#sm-0 > summary').click()
     map_.locator('#sm-0 a[href="inside-sm.html"]').click()
     expect(page.locator('h1')).to_have_text('Inside an SM')
-    page.locator('#sm-return').click();expect(page.locator('.gpu-map-link')).to_have_text('Close map')
+    # A frame link can reveal the new page before its poster finishes loading.
+    # Save the loaded recording, then wait for the parent's restore-on-load hook.
+    page.wait_for_load_state('load')
+    page.locator('#sm-return').click();page.wait_for_load_state('load')
+    expect(page.locator('.gpu-map-link')).to_have_text('Close map')
     page.locator('.gpu-map-link').click()
     expect(page.locator('#hello-output-0')).to_contain_text('[2.0, 4.0, 6.0, 8.0, 10.0]')
     # Retired inspector controls and warp snapshots do not block updates to the recording.

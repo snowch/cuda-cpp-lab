@@ -55,6 +55,9 @@ def check_section_cues(browser, url, root):
                 page.locator(f'[data-section-kind="{kind}"]>summary').click()
             link=page.locator('#hello-watch');link.focus();page.keyboard.press('Enter')
             expect(page.locator('#hello-video')).to_be_visible()
+            # Visibility can precede the poster's load event. Returning saves the
+            # document state, which intentionally requires a fully loaded page.
+            page.wait_for_load_state('load')
             page.locator('#hello-return').click()
             expect(page.locator('#hello-factor-0')).to_have_value('3')
             expect(page.locator('#hello-output-0')).to_have_text('Output: [3.0, 6.0, 9.0, 12.0, 15.0]')
