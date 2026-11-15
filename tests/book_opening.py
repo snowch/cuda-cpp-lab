@@ -78,6 +78,12 @@ def check_book_opening(browser,url,root,errors):
         page.get_by_role('link',name='Chapter 5: How are tensor values arranged in memory? →',exact=True).click()
         expect(page.locator('[data-book-experiment]')).to_have_count(3)
         expect(page.locator('.book-storage')).to_have_count(3)
+        sharing = page.locator('#layout-concept')
+        expect(sharing).to_be_visible()
+        assert sharing.evaluate('el => !el.closest("details")')
+        expect(sharing.locator('.layout-concept-refs .concept-node')).to_have_count(2)
+        expect(sharing.locator('.layout-concept-new')).to_be_visible()
+        expect(sharing.locator('.layout-concept-original .layout-concept-new')).to_have_count(0)
         for key in ['row','column','packed']:
             expect(page.locator(f'#reading-map-{key} .book-storage')).to_be_hidden()
             expect(page.locator(f'#reading-map-{key} .book-reads li>span:nth-child(2)')).to_have_text(['Element ?Byte offset ?']*5)
@@ -120,6 +126,7 @@ def check_book_opening(browser,url,root,errors):
     for slug,count in [('devices',3),('reading',2),('layout',3),('requests',1)]:
         page.goto(url+'lessons/'+slug+'.html')
         if slug=='devices':expect(page.locator('.device-architecture')).to_be_visible()
+        if slug=='layout':expect(page.locator('#layout-concept')).to_be_visible()
         expect(page.locator('[data-book-experiment]')).to_have_count(count)
         expect(page.locator('.sidebar nav')).to_be_visible()
         expect(page.locator('noscript .notice')).to_be_visible()

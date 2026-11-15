@@ -142,3 +142,34 @@ branches explicitly name n as their source. No overflow or small-text workaround
 Focused browser checks passed keyboard answers, exact-source download, preserved
 chapter-2 return state and visible no-JavaScript content. The nine-input answer
 stays collapsed until the reader opens the comparison.
+
+
+### Chapter 3 release evidence
+
+[PR #138](https://github.com/snowch/gpu-lab/pull/138) merged as
+`a75ecfcd5229b47c1aee2c2bf065bb08a37a80e9`. Local, PR and production checks
+passed. Public release metadata and footer matched that SHA; automated checks
+and actual phone/dark and desktop/light inspection confirmed the diagram,
+count/launch/completion wording and keyboard comparison before chapter 5 began.
+
+### Chapter 5 reading and design review
+
+The column view follows the existing row/view/stride explanation. The new
+storage-reference diagram sits after the packed-copy explanation and before its
+prediction task. Two tensor references share one original storage; packing this
+strided column copies its selected values into new storage. Both originals
+remain available. This is a logical storage relationship before multiplication,
+not a device floor plan or an assertion that every `.contiguous()` call copies.
+
+No offsets, byte totals, tensor values or new-column answers appear in the
+figure. The interactive memory strip still reveals those only after Run. The
+existing recap already explains sharing and packing, so its narration remains
+applicable without adding another topic or exercise.
+
+Inspected the preceding column section, packed explanation/diagram, task and
+current source/result states in the built page at 390/820/1440px in both themes.
+References stay paired on phones; both lead to original storage, while the copy
+arrow changes direction and the packed tensor leads to separate storage.
+Focused checks passed unknown offsets/results, independent column/packed runs,
+changed-column invalidation, keyboard Run and no-JavaScript visibility. No page
+overflow, hover-only content, new controls or reduced diagram text size.
