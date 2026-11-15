@@ -1,5 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 export const v2Course = [
+  { slug: 'first-kernel', title: 'Write your first GPU value', mode: 'hello',
+    goal: 'Launch one thread, write one value, and read it back in main().', current: 'hello' },
   { slug: 'one-thread-one-element', title: 'One thread, one element', mode: 'scale',
     goal: 'Change a CUDA multiplier and follow each input to its output.', current: 'hello' },
   { slug: 'more-threads-than-elements', title: 'More threads than elements', mode: 'bounds',

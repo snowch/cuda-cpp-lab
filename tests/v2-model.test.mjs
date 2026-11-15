@@ -64,10 +64,10 @@ const expected = {
   'token-routing': [5, 4],
 };
 
-test('all 20 routes have exercises, transfer prompts and links to the related course', () => {
-  assert.equal(new Set(v2Course.map(lesson => lesson.slug)).size, 20);
+test('the 20 model lessons have exercises, transfer prompts and links to the related course', () => {
+  assert.equal(new Set(v2Course.map(lesson => lesson.slug)).size, 21);
   assert.equal(Object.keys(guidedLessons).length, 17);
-  for (const lesson of v2Course) {
+  for (const lesson of v2Course.slice(1)) {
     const page = renderV2Lesson(lesson, slug => slug + '.html', slug => '../lessons/' + slug + '.html');
     assert.doesNotMatch(page, /Planned lesson/);
     assert.match(page, /id="v2-run"/);
@@ -75,6 +75,16 @@ test('all 20 routes have exercises, transfer prompts and links to the related co
     assert.match(page, /Compare your explanation/);
     assert.ok(page.includes('../lessons/' + lesson.current + '.html'));
   }
+});
+
+test('the first lesson introduces a single launch before array indexing', () => {
+  const [first, second] = v2Course;
+  const page = renderV2Lesson(first, slug => slug + '.html', slug => '../lessons/' + slug + '.html',
+    './cuda-source-workbench.html', '__global__ void hello(float* output) {}');
+  assert.equal(first.slug, 'first-kernel');
+  assert.match(page, /data-kernel-workbench="hello"/);
+  assert.doesNotMatch(page, /data-kernel-workbench="scale"|id="v2-run"/);
+  assert.ok(page.includes(second.slug + '.html'));
 });
 
 test('every guided source variant produces its expected prediction and trace', () => {

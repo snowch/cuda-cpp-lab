@@ -36,16 +36,16 @@ const teaching = {
 };
 
 const groups = [
-  ['CUDA foundations', 0, 3],
-  ['GPU execution and AI workloads', 3, 14],
-  ['Parallel patterns', 14, 20],
+  ['CUDA foundations', 0, 4],
+  ['GPU execution and AI workloads', 4, 15],
+  ['Parallel patterns', 15, 21],
 ];
 
 export function renderV2Contents(href) {
   return `<header class="intro">
     <h1>Learn the GPU through CUDA</h1>
     <p class="lead">Start with one small CUDA program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
-    <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with one thread, one element →</a></p>
+    <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
   </header>
   ${groups.map(([title, start, end]) => `<section class="v2-list">
     <h2>${title}</h2>
@@ -64,7 +64,7 @@ function workbenchEditor(mode, href, title) {
 function renderFirstKernel(workbenchHref, program) {
   const kernel = program.slice(program.indexOf('__global__'), program.indexOf('\n\nvoid check'));
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
-    <h2 id="v2-first-kernel">Write your first GPU value</h2>
+    <h2 id="v2-first-kernel">Launch one CUDA thread</h2>
     <p>A CUDA kernel is a function that runs on the GPU. Each GPU thread runs the function once. This example launches just one thread to write a single value.</p>
     <p>The CPU allocates a GPU buffer for one <code>float</code>. The launch <code>hello&lt;&lt;&lt;1, 1&gt;&gt;&gt;(output)</code> asks for one block with one thread. After the kernel writes <code>output[0]</code>, the CPU copies that value back for the console.</p>
     ${workbenchHref ? readerTask('Run the kernel. Change 42.0f to 7.0f and run again. Which value does the console show?', 'Try it') : ''}
@@ -194,8 +194,8 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
-  ${lesson.mode === 'scale' && firstProgram ? renderFirstKernel(workbenchHref, firstProgram) : ''}
-  ${lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
+  ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
+    lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
   <p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>

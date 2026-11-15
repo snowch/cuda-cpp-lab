@@ -1,7 +1,7 @@
 # GPU Lab V2
 
 The CUDA-first course opens at `/gpu-lab/`. Lesson URLs stay under `/gpu-lab/v2/`.
-V2's 20 lessons progress from
+V2's 21 lessons progress from
 per-thread arithmetic and CPU–GPU copies to warp execution, matrix operations,
 attention, inference and stable token routing. The V1 course overview is at
 `/gpu-lab/v1.html`. Each V2 lesson links to the related V1 lesson.
@@ -12,9 +12,9 @@ attention, inference and stable token routing. The V1 course overview is at
 npm run dev
 ```
 
-Open `http://localhost:5173/gpu-lab/` and start with **One thread, one element**.
-Lesson 1 begins with one thread writing one value. The first three lessons
-then share a complete downloadable CUDA program that processes an array. The
+Open `http://localhost:5173/gpu-lab/` and start with **Write your first GPU value**.
+Lesson 1 runs one thread that writes one value. Lessons 2–4 share a complete
+downloadable CUDA program that processes an array. The
 later lessons use focused CUDA excerpts or algorithm outlines. Their controls
 change the displayed source and run a deterministic teaching trace. Enter a
 prediction before running, step through the result and explain a new case.
@@ -35,7 +35,7 @@ models. Links to the V1 course require a connection.
 
 ## Edit and run CUDA in WebAssembly
 
-The first three lessons place the complete CUDA C++ program in the editor.
+The first four lessons place the complete CUDA C++ program in the editor.
 Clang compiles the host program to WebAssembly and the kernel to NVPTX LLVM IR.
 The workbench lowers the supported device instructions to PTX for GPGPU-Sim.
 The browser runtime handles the allocations, transfers and launch requested by
