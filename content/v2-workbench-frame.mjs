@@ -39,7 +39,7 @@ html[data-inline] .kernel-shortcut { font-size:.82rem; color:#b8cdc4; }
 <script>
 const inlineMode = new URLSearchParams(location.search).get('embed') ||
   document.documentElement.dataset.inline;
-if (['hello', 'scale', 'bounds', 'copies'].includes(inlineMode)) {
+if (['hello', 'scale', 'bounds', 'copies', 'coalescing'].includes(inlineMode)) {
   document.documentElement.dataset.inline = inlineMode;
   document.documentElement.dataset.program = 'true';
 }
@@ -55,7 +55,7 @@ if (document.documentElement.dataset.inline) {
     const url = URL.createObjectURL(new Blob([editor.value], { type: 'text/plain' }));
     const link = document.createElement('a');
     link.href = url;
-    link.download = profile === 'hello' ? 'hello.cu' : 'runKernel.cu';
+    link.download = profile === 'hello' ? 'hello.cu' : inlineMode === 'coalescing' ? 'coalescing.cu' : 'runKernel.cu';
     link.hidden = true;
     document.body.append(link);
     link.click();
@@ -64,7 +64,7 @@ if (document.documentElement.dataset.inline) {
   });
   toolbar.append(reset, exportSource);
   const label = document.querySelector('.editor-label');
-  label.querySelector('label').textContent = profile === 'hello' ? 'hello.cu' : 'runKernel.cu';
+  label.querySelector('label').textContent = profile === 'hello' ? 'hello.cu' : inlineMode === 'coalescing' ? 'coalescing.cu' : 'runKernel.cu';
   editor.setAttribute('aria-label', 'CUDA source');
   label.querySelector('span').replaceWith(toolbar);
   document.querySelector('#output-title').textContent = 'Console · simulated output';

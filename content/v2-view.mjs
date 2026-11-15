@@ -140,7 +140,7 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
   </section>`;
 }
 
-function renderGuided(slug) {
+function renderGuided(slug, workbenchHref) {
   const lesson = guidedLessons[slug];
   const codeLabel = slug === 'attention' ? 'CUDA algorithm outline' : 'CUDA C++ excerpt';
   return `<section aria-labelledby="v2-setup">
@@ -149,6 +149,12 @@ function renderGuided(slug) {
     ${definitions(lesson.terms)}
     ${v2Diagram(slug)}
   </section>
+  ${slug === 'coalescing' && workbenchHref ? `<section class="book-section" aria-labelledby="coalescing-editor">
+    <h2 id="coalescing-editor">Change the stride in CUDA</h2>
+    <p>Each input stores its own index. The kernel returns the indices it read. The host groups those indices into 32-byte sectors, assuming an aligned input. The count describes the addresses touched by this load.</p>
+    ${readerTask('Predict the sector count at stride 1. Run the program, change stride inside runKernel to 2, then try 32.', 'Try it')}
+    ${workbenchEditor('coalescing', workbenchHref, 'Editable CUDA coalescing program and output')}
+  </section>` : ''}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
     ${readerTask(lesson.task, 'Try it')}
@@ -195,7 +201,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
   ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
-    lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug)}
+    lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug, workbenchHref)}
   <p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
@@ -222,6 +228,6 @@ ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}
 <header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
 <div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson?.mode ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson?.mode || lesson?.slug === 'coalescing' ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
 </body></html>`;
 }

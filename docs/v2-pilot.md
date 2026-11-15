@@ -35,7 +35,7 @@ models. Links to the V1 course require a connection.
 
 ## Edit and run CUDA in WebAssembly
 
-The first four lessons place the complete CUDA C++ program in the editor.
+The first five lessons place the complete CUDA C++ program in the editor.
 Clang compiles the host program to WebAssembly and the kernel to NVPTX LLVM IR.
 The workbench lowers the supported device instructions to PTX for GPGPU-Sim.
 The browser runtime handles the allocations, transfers and launch requested by
@@ -44,7 +44,7 @@ Each exercise saves its own draft. Use Ctrl or Command + Enter to run, Restore
 starter to undo edits, and Export .cu to save the current source.
 
 The browser runtime supports the one-dimensional launches and FP32 buffers used
-in these lessons. The following lessons use guided architecture models and code excerpts.
+in these lessons. The coalescing program groups the indices it reads into 32-byte sectors. The following lessons use guided architecture models and code excerpts.
 
 The hosted workbench downloads about 127 MiB of pinned compiler assets on
 first run. The standalone workbench bundles these assets. Source and build
