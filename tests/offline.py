@@ -364,13 +364,17 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 assert not errors,errors
                 context.close();CourseHandler.requests=[]
                 print(f'PASS {prefix} {width}px {theme}: opt-in, real bytes, cancel/resume, all offline assets/pages, failed replacement, deployed update, Later, composition guard, three-tab restart and restored experiments, eviction/repair, scoped removal')
-            # An online-only update does not grant permanent offline consent.
+            # Update is also the offline download, with no second save action.
             CourseHandler.revision='one'
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v1.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
+            expect(tab.locator('#save-offline')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#later-update').click();tab.reload()
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
             tab.close();tab=ctx.new_page();tab.goto(url+'v1.html')
@@ -380,9 +384,24 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # Verification includes the complete recording set. Match the cold
             # restart budget below: the app RPC permits 15 s, then navigation.
             expect(tab.locator('html')).to_have_attribute('data-test-release','two',timeout=20000)
-            panel(tab);expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
-            tab.locator('#save-offline').click();ready(tab);ctx.close()
-            print('PASS online-only update: prepare/restart succeeds without opting into offline access; explicit save remains available')
+            panel(tab);ready(tab)
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_visible()
+            # Reproduce a complete copy from the previous Update behaviour. The
+            # unchanged worker understands save=true; recognising it must work
+            # entirely offline, without another book download or user action.
+            tab.evaluate('''async base => {
+              const cache = await caches.open(`gpu-lab:${base}:status-v1`);
+              const key = new URL('__app_status_state__', base);
+              const state = await (await cache.match(key)).json();
+              state.saved = false;
+              await cache.put(key, new Response(JSON.stringify(state)));
+            }''',url)
+            ctx.set_offline(True);tab.close();tab=ctx.new_page();tab.goto(url+'v1.html')
+            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
+            tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
+            ctx.close()
+            print('PASS update includes offline access: deferred refresh/reopen, restart, no second save, and older complete copies recognised offline with the existing worker')
             # A persistent installed profile: closing every window does NOT apply
             # a prepared release. Reopen completely offline, then explicitly restart.
             CourseHandler.revision='one';CourseHandler.requests=[]

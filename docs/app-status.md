@@ -51,8 +51,8 @@ about response age; the deployment must honour the network-only contract.
 Worker installation fetches no course assets. Once a document has loaded, its
 already-visited HTML and resource URLs are retained and verified as a small
 visited-page cache. Later visits are cached on demand. This pins the running
-release across refresh/reopen even for online-only tabs; it neither downloads
-unvisited lessons nor grants offline consent. Initial retention can require a
+release across refresh/reopen even for online-only tabs. It does not download
+unvisited lessons or claim that a partial copy is available offline. Initial retention can require a
 repeat request when the browser has no reusable HTTP response. Explicit Download for offline use
 or Update prepares the selected manifest, checks every file's length and SHA-256,
 and reports verified bytes. Cancellation/failure retains valid partial files for
@@ -74,12 +74,20 @@ Preparing an update sets `pending`; only Restart to update changes `active`.
 Closing all tabs, reopening the browser, visibility changes and ordinary refresh
 never select a pending release. Later dismisses the dialog, not its badge.
 
-Preparing an online-only update also stages a complete small snapshot to make
-activation coherent, but does not set the durable offline-consent flag. Its
-status remains Not saved for offline use. A previously saved installation keeps
-that intent across updates and reports Available offline only after verifying
-its selected manifest against all cached file bodies. Focus/reopen rechecks
-completeness; eviction becomes Offline download incomplete with a repair action.
+Both download actions save a complete offline copy, including recordings.
+Update selects the latest release; Download for offline use selects the running
+release. A prepared update reports Available after restarting update when the
+running copy is incomplete, and hides the redundant save action. Restart selects
+the update and reports Available offline after verifying its cached file bodies.
+There is no second download or separate offline opt-in after Update.
+
+Earlier updates could leave a complete cache without its saved flag. On loading,
+the page checks whether every running-release file is already present, then asks
+the existing worker to verify and retain that copy using the same save protocol.
+This works offline with an already-installed worker. Partial visited-page caches
+do not pass the presence check and never trigger a background book download.
+Focus/reopen still rechecks completeness; eviction becomes Offline download
+incomplete with a repair action.
 
 Before committing, every supported open course window must acknowledge a
 snapshot saved to its own session storage. Controls, visual selections, outputs,
@@ -121,7 +129,8 @@ fixture is the actual worker from commit `4875086`, not a mock worker API.
   workers. Explicit save, measured size, cancel/resume, every offline asset/page,
   real quota failure, failed replacement, Later, input composition, unsaved guard,
   denied snapshot storage, non-responsive tab, multi-tab route/input/result/trace
-  restoration, eviction/repair, confirmed scoped removal, online-only deferred refresh/reopen, persistent cold offline
+  restoration, eviction/repair, confirmed scoped removal, update-as-offline deferred refresh/reopen,
+  recognition of older complete copies without network access, persistent cold offline
   startup, no activation on closing windows, and legacy-worker migration.
 - Screenshots: [before phone](app-status/before-mobile.png),
   [after phone](app-status/after-mobile.png),
