@@ -30,12 +30,13 @@ function render() {
   $('restart-note').hidden = !ready;
   $('check-update').disabled = Boolean(checking);
   $('check-update').textContent = version === 'Couldn’t check for updates' ? 'Retry' : 'Check for updates';
-  let offline = unavailable ? 'Offline access unavailable' : downloading && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
+  let offline = unavailable ? 'Offline access unavailable' : downloading && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
   $('offline-status').textContent = offline;
   $('offline-status').dataset.state = snapshot.offlineReady ? 'ready' : 'unavailable';
   const release = runningRelease;
   $('offline-size').textContent = release ? `Complete app: ${bytes(release.bytes)}. Includes all required files; browser storage overhead is additional.` : 'The download size is unavailable. Connect to the internet and retry.';
-  $('save-offline').hidden = Boolean(snapshot.offlineReady) || !supported;
+  $('offline-size').hidden = Boolean(ready && !snapshot.offlineReady);
+  $('save-offline').hidden = Boolean(snapshot.offlineReady || ready) || !supported;
   $('save-offline').disabled = downloading || !release;
   $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
   $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
@@ -124,12 +125,29 @@ async function connect() {
   } catch (failure) { unavailable = true; error(failure.message); render(); }
 }
 async function remember() {
-  if (remembered || remembering || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
-  if (snapshot.active === running) { remembered = true; return; }
+  if (remembered || remembering || downloading || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
   const prefix = new URL(`releases/${running}/`, base).href;
   const paths = performance.getEntriesByType('resource').map(entry => entry.name).filter(url => url.startsWith(prefix)).map(url => url.slice(prefix.length).split('?')[0]);
   paths.push(location.pathname.slice(base.pathname.length) || 'index.html');
-  remembering = rpc('REMEMBER_PAGE', { release: runningRelease, paths }).then(() => { remembered = true; }).catch(() => {
+  remembering = (async () => {
+    if (snapshot.active !== running) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
+    // Earlier updates cached the whole release without marking it available
+    // offline. Recognise those copies through the existing worker protocol.
+    // A visited-page cache with missing files must never trigger a book download.
+    if (!snapshot.saved && !snapshot.offlineReady && !snapshot.busy && !removed &&
+        (!snapshot.active || snapshot.active === running)) {
+      const name = `gpu-lab:${base.href}:release-${running}`;
+      if (await caches.has(name)) {
+        const cache = await caches.open(name);
+        const present = new Set((await cache.keys()).map(request => request.url));
+        if (runningRelease.files.every(file => present.has(new URL(file.path, base).href))) {
+          const result = await rpc('PREPARE', { release: runningRelease, save: true });
+          ++refreshGeneration; snapshot = result; render();
+        }
+      }
+    }
+    remembered = true;
+  })().catch(() => {
     // Storage is optional for normal online use; an explicit save/update reports
     // its own error. Never claim offline readiness for this best-effort cache.
   }).finally(() => { remembering = null; });
@@ -139,6 +157,7 @@ async function download(save) {
   const release = save ? runningRelease : latest;
   if (!release || downloading) return;
   await remembering;
+  if (save && snapshot.offlineReady) return;
   if (!worker || removed || unavailable) await connect();
   downloading = true; mode = save ? 'offline' : 'update'; error();
   $('download-progress').hidden = false; $('asset-progress').value = 0; $('asset-progress').max = release.bytes;
@@ -146,7 +165,9 @@ async function download(save) {
   render();
   let prepared = false;
   try {
-    const result = await rpc('PREPARE', { release, save }, p => {
+    // Both actions prepare a complete offline copy. Keep save=true compatible
+    // with already-installed workers as well as fresh installations.
+    const result = await rpc('PREPARE', { release, save: true }, p => {
       $('asset-progress').max = p.total; $('asset-progress').value = p.bytes;
       $('progress-text').textContent = `${bytes(p.bytes)} of ${bytes(p.total)} verified`;
     });
@@ -177,7 +198,7 @@ $('restart-update').addEventListener('click', async () => {
 $('remove-offline').addEventListener('click', () => { $('remove-confirmation').hidden = false; $('cancel-remove').focus(); });
 $('cancel-remove').addEventListener('click', () => { $('remove-confirmation').hidden = true; $('remove-offline').focus(); });
 $('confirm-remove').addEventListener('click', async () => {
-  try { await rpc('REMOVE'); snapshot = {}; removed = true; $('remove-confirmation').hidden = true; error('Downloaded files removed. Your experiment work and preferences have been kept.'); render(); $('save-offline').focus(); }
+  try { await remembering; await rpc('REMOVE'); snapshot = {}; removed = true; $('remove-confirmation').hidden = true; error('Downloaded files removed. Your experiment work and preferences have been kept.'); render(); $('save-offline').focus(); }
   catch (failure) { error(failure.message); }
 });
 navigator.serviceWorker?.addEventListener('message', ({ data }) => {
