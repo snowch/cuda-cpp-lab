@@ -49,3 +49,21 @@ current course point to the published site.
 All eight supported `hello.cu` variants compiled to objects with NVIDIA CUDA
 13.2.51, targeting `sm_80`. Physical GPU execution
 is outside this pilot's verification.
+
+## Editable CUDA source workbench
+
+Lesson 1 links to the editable workbench. Clang running in WebAssembly compiles
+the exact editor text to CUDA LLVM IR. A lesson-specific backend lowers the
+supported instructions to PTX and GPGPU-Sim runs the result in WebAssembly. The
+lesson supplies the input and launch. Learners can vary the FP32 expression or
+bounds check, see compiler diagnostics, and inspect emitted PTX.
+
+The hosted workbench downloads about 127 MiB of pinned compiler assets on the
+first run. The separate standalone workbench bundles those assets for offline
+use. The source and build instructions live in the
+[cuda-sim-wasm workbench](https://github.com/snowch/cuda-sim-wasm/tree/experiment/editable-cuda/workbench).
+
+Browser checks covered starter and edited outputs, a malformed edit, an
+unsupported operation, and restoring the starter. The link from lesson 1 and
+return link were tested against the built V2 routes. Offline runs were tested
+at phone and tablet widths in Chromium.

@@ -55,7 +55,7 @@ export function renderV2Contents(href) {
   </section>`).join('')}`;
 }
 
-function renderActivity(mode, legacy) {
+function renderActivity(mode, legacy, workbenchHref) {
   const lesson = teaching[mode];
   const experiment = v2Experiments[mode];
   const initial = v2Run(mode, experiment.initial);
@@ -69,6 +69,7 @@ function renderActivity(mode, legacy) {
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Change hello.cu</h2>
+    ${mode === 'scale' && workbenchHref ? `<p><a class="v2-start" href="${workbenchHref}">Edit, compile and run the CUDA kernel →</a></p>` : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. To compile the complete program, use the downloaded file with the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
@@ -100,7 +101,7 @@ function renderActivity(mode, legacy) {
   </section>`;
 }
 
-export function renderV2Lesson(lesson, href, legacy) {
+export function renderV2Lesson(lesson, href, legacy, workbenchHref) {
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
@@ -108,7 +109,7 @@ export function renderV2Lesson(lesson, href, legacy) {
     <p class="eyebrow">Lesson ${number}${lesson.mode ? '' : ' · Planned'}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
-  ${lesson.mode ? renderActivity(lesson.mode, legacy) : `<section class="v2-stub">
+  ${lesson.mode ? renderActivity(lesson.mode, legacy, workbenchHref) : `<section class="v2-stub">
     <h2>Planned lesson</h2>
     <p>For now, see the <a href="${legacy(lesson.current)}">related lesson in the current course</a>.</p>
   </section>`}
@@ -135,6 +136,6 @@ ${lesson?.mode ? '<script type="module" src="../src/v2.mjs"></script>' : ''}</he
 <header class="topbar v2-topbar"><a class="brand" href="./">GPU Lab V2</a>
 <div class="top-actions"><a href="./">Contents</a><a href="../index.html">Current course</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html') : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${versionMarkup}</footer></main>
 </body></html>`;
 }

@@ -165,6 +165,9 @@ for (const path of ['dist/index.html', ...(await readdir('dist/lessons')).filter
 }
 await mkdir('dist/v2', { recursive: true });
 await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
+const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'utf8');
+await writeFile('dist/v2/cuda-source-workbench.html', cudaWorkbench.replace(
+  '</main>', `<footer>${versionMarkup}</footer></main>`));
 for (const lesson of v2Course) {
   await writeFile(`dist/v2/${lesson.slug}.html`, renderV2Page(lesson, versionMarkup));
 }
