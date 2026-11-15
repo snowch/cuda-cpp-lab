@@ -1,0 +1,50 @@
+/* Copyright © 2026 Christopher Snow. */
+.v2-book .v2-main { width:min(100%,1120px); margin:auto; padding:clamp(24px,5vw,64px) clamp(16px,4vw,44px); }
+.v2-main .intro { margin-bottom:32px; padding-bottom:26px; }
+.v2-main .intro h1 { max-width:19ch; margin:8px 0 16px; }
+.v2-main .intro .lead { max-width:66ch; }
+.v2-main section>p { max-width:72ch; }
+.v2-main .chapter-definition dl { display:grid; grid-template-columns:max-content minmax(0,1fr); gap:6px 14px; }
+.v2-main .chapter-definition dt,.v2-main .chapter-definition dd { margin:0; }
+.v2-main .v2-start { display:inline-block; padding:9px 13px; border-radius:6px; background:var(--accent); color:var(--bg); text-decoration:none; font-weight:650; }
+.v2-list { margin-bottom:32px; }
+.v2-list ol { padding-left:2rem; }
+.v2-list li { padding:12px 2px; border-bottom:1px solid var(--line); }
+.v2-list li>a { font-weight:650; }
+.v2-list li>p { margin:2px 0 0; color:var(--muted); }
+.v2-status { display:inline-block; margin-left:6px; padding:0 6px; border-radius:4px; border:1px solid var(--line); color:var(--muted); font-size:.8em; }
+.v2-workbench { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); align-items:start; gap:clamp(14px,3vw,24px); }
+.v2-workbench .chapter-code-panel { margin-top:0; min-width:0; }
+.v2-workbench .chapter-code-panel pre { font-size:15px; }
+.v2-note { color:var(--muted); font-size:.94rem; line-height:1.55; }
+.v2-controls { display:grid; gap:8px; padding:16px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.v2-controls label { font-weight:650; }
+.v2-controls p { margin:4px 0 0; }
+.v2-controls select { font-size:1rem; }
+.v2-controls #v2-feedback { min-height:3em; color:var(--accent); }
+.v2-input code { overflow-wrap:anywhere; }
+#v2-result { margin:16px 0; }
+.v2-result-table { width:100%; border-collapse:collapse; background:var(--panel); }
+.v2-result-table caption { text-align:left; padding:8px 0; font-weight:700; }
+.v2-result-table th,.v2-result-table td { border-block-end:1px solid var(--line); padding:8px; text-align:left; }
+.v2-result-table tr[data-skipped] td { color:var(--muted); background:var(--soft); }
+.v2-step-actions,.v2-pager { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px 16px; }
+.v2-step-actions { margin:10px 0; }
+.v2-pager { margin-top:36px; padding-top:18px; border-top:1px solid var(--line); }
+.v2-pager a { color:var(--accent); text-decoration:underline; font-size:1rem; }
+.v2-pager a:last-child { margin-left:auto; }
+.v2-memory { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+.v2-memory>div { min-width:0; padding:12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.v2-memory p { margin:6px 0 0; }
+.v2-memory code { overflow-wrap:anywhere; }
+.v2-stub { border:1px solid var(--line); border-radius:8px; padding:20px; background:var(--panel); }
+.v2-stub p { margin-bottom:0; }
+@media(max-width:720px) {
+  .v2-workbench { grid-template-columns:minmax(0,1fr); }
+  .v2-book .v2-main { padding-top:24px; }
+}
+@media(max-width:440px) {
+  .v2-book .v2-main h1 { font-size:2.4rem; letter-spacing:-.055em; }
+  .v2-result-table th,.v2-result-table td { padding:6px; font-size:.86rem; }
+  .v2-memory { grid-template-columns:1fr; }
+}

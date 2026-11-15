@@ -31,6 +31,8 @@ import { renderTensorStep,renderTensorSlice,renderStrideExample,viewCopyComparis
 import { lessons, renderLesson } from '../content/lessons.mjs';
 import { renderConcepts, warpConcepts } from '../src/concepts.mjs';
 import { buildOffline } from './offline.mjs';
+import { v2Course } from '../content/v2-course.mjs';
+import { renderV2Page } from '../content/v2-view.mjs';
 import { renderChapterReferences } from '../src/reference-tasks.mjs';
 import {chapters,renderBookNav,renderRoadmap,renderBookPage} from '../content/book.mjs';
 import {renderDeviceSections,renderReadingSections} from '../src/foundations-view.mjs';
@@ -160,6 +162,11 @@ for (const path of ['dist/index.html', ...(await readdir('dist/lessons')).filter
     .replace('</head>', '<link rel="stylesheet" href="'+(current==='index'?'./':'../')+'src/code-explanations.css"><script type="module" src="'+(current==='index'?'./':'../')+'src/code-explanations.mjs"></script></head>');
   const fontBase=current==='index'?'./':'../';
   await writeFile(path, html.replace('</head>', `<link rel="preload" href="${fontBase}assets/fonts/plex-sans.woff2" as="font" type="font/woff2" crossorigin></head>`).replace('</footer>', `${versionMarkup}</footer>`));
+}
+await mkdir('dist/v2', { recursive: true });
+await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
+for (const lesson of v2Course) {
+  await writeFile(`dist/v2/${lesson.slug}.html`, renderV2Page(lesson, versionMarkup));
 }
 await buildOffline('dist', identity);
 console.log('Built static course in dist/ with explicit, verified offline downloads (all asset paths are relative).');

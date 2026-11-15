@@ -1,0 +1,79 @@
+// Copyright © 2026 Christopher Snow.
+// Export the V2 course as one browser-readable file for review on a tablet.
+import { readFile, writeFile } from 'node:fs/promises';
+import { v2Course } from '../content/v2-course.mjs';
+import { renderV2Contents, renderV2Lesson, v2Styles } from '../content/v2-view.mjs';
+
+const output = process.argv[2];
+if (!output) throw new Error('Pass the preview output path.');
+const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8');
+const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
+const href = slug => '#' + slug;
+const current = 'https://snowch.github.io/gpu-lab/';
+const legacy = slug => current + 'lessons/' + slug + '.html';
+const imports = {};
+const localImport = /^(import .*?['"])\.\/([\w-]+\.mjs)(['"];?)$/gm;
+async function embedModule(name) {
+  const specifier = 'gpu-lab/' + name;
+  if (imports[specifier]) return;
+  const script = await source(name);
+  imports[specifier] = encode('text/javascript', script.replace(localImport, '$1gpu-lab/$2$3'));
+  for (const [, , dependency] of script.matchAll(localImport)) await embedModule(dependency);
+}
+for (const entry of ['theme.mjs', 'v2.mjs']) await embedModule(entry);
+let styling = (await Promise.all(v2Styles.map(source))).join('\n');
+const fontNames = [...new Set([...styling.matchAll(/\/fonts\/([\w-]+\.woff2)/g)].map(match => match[1]))];
+for (const name of fontNames) {
+  const font = await readFile(new URL('../assets/fonts/' + name, import.meta.url));
+  styling = styling.replaceAll('../assets/fonts/' + name, encode('font/woff2', font));
+}
+const escapeText = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
+const licenseNames = ['ibmplexmono-OFL.txt', 'ibmplexsans-OFL.txt'];
+const licenses = await Promise.all(licenseNames.map(name =>
+  readFile(new URL('../assets/fonts/' + name, import.meta.url), 'utf8')));
+const templates = [
+  ['contents', renderV2Contents(href)],
+  ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy)]),
+].map(([slug, markup]) => `<template id="page-${slug}">${markup}</template>`).join('\n');
+
+await writeFile(output, `<!doctype html>
+<!-- Copyright © 2026 Christopher Snow. -->
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark"><title>GPU Lab V2 preview</title>
+<style>${styling}</style>
+<script type="importmap">${JSON.stringify({ imports })}</script>
+</head>
+<body class="book-chapter v2-book">
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar v2-topbar"><a class="brand" href="#contents">GPU Lab V2</a>
+<div class="top-actions"><a href="#contents">Contents</a><a href="${current}">Current course</a>
+<button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
+<main id="main" class="v2-main" tabindex="-1">${renderV2Contents(href)}</main>
+${templates}
+<!-- Embedded font licences
+${licenses.map(escapeText).join('\n\n').replaceAll('--', '—')}
+-->
+<script type="module">
+import 'gpu-lab/theme.mjs';
+import { mountV2 } from 'gpu-lab/v2.mjs';
+const main = document.querySelector('#main');
+function route() {
+  const slug = location.hash.slice(1);
+  if (slug === 'main') return;
+  const template = document.getElementById('page-' + slug) ?? document.getElementById('page-contents');
+  main.replaceChildren(template.content.cloneNode(true));
+  mountV2(main);
+  const title = main.querySelector('h1').textContent;
+  document.title = title + ' · GPU Lab V2';
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+addEventListener('hashchange', () => {
+  route();
+  if (location.hash !== '#main') main.focus({ preventScroll: true });
+});
+route();
+</script>
+</body>
+</html>`);
