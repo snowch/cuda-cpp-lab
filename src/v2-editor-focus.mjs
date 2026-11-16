@@ -10,11 +10,19 @@ export function mountFirstKernelFocus(editor, reset) {
     <button type="button" data-show-launch>Show launch</button>
     <p id="source-focus-missing" hidden>The output assignment in hello could not be found. Restore starter to return to the example.</p>`;
   editor.before(guidance);
+  const surface = document.createElement('div');
+  surface.className = 'source-editor';
+  editor.before(surface);
+  surface.append(editor);
   editor.setAttribute('aria-describedby', 'source-focus-help source-focus-missing');
   const show = guidance.querySelector('button');
   const showLaunch = guidance.querySelector('[data-show-launch]');
   const missing = guidance.querySelector('#source-focus-missing');
   let target, launch;
+
+  function syncScroll() {
+    editor.style.setProperty('--source-focus-scroll-top', -editor.scrollTop + 'px');
+  }
 
   function update() {
     // Follow the assignment after edits, rather than a fixed line number or value.
@@ -48,17 +56,30 @@ export function mountFirstKernelFocus(editor, reset) {
     const style = view.getComputedStyle(editor);
     const height = parseFloat(style.lineHeight);
     const padding = parseFloat(style.paddingTop);
-    function band(name, start, end) {
+    const ranges = [];
+    function band(name, start, end, ink) {
       const top = start == null ? 0 : padding + (code.slice(0, start).split('\n').length - 1) * height;
       const bottom = end == null ? 0 : padding + code.slice(0, end).split('\n').length * height;
       editor.style.setProperty('--' + name + '-focus-top', top + 'px');
       editor.style.setProperty('--' + name + '-focus-bottom', bottom + 'px');
+      if (start != null) ranges.push({top, bottom, ink});
       return top;
     }
-    const top = band('source', target, target === null ? null : target + assignment[0].length);
-    band('kernel', kernel?.index, kernel?.end);
-    band('launch', launch?.index, launch && launch.index + launch[0].length);
-    editor.style.setProperty('--source-focus-height', Math.max(editor.scrollHeight, editor.clientHeight) + 'px');
+    band('kernel', kernel?.index, kernel?.end, 'var(--source-lesson-ink)');
+    band('launch', launch?.index, launch && launch.index + launch[0].length, 'var(--source-lesson-ink)');
+    // Last range wins: the editable assignment has its own font colour inside
+    // the complete kernel. Clip these colours to native textarea glyphs so
+    // editing, selection, accessibility and scrolling remain browser-native.
+    const top = band('source', target, target === null ? null : target + assignment[0].length, 'var(--source-target-ink)');
+    const contentHeight = Math.max(editor.scrollHeight, editor.clientHeight);
+    const boundaries = [...new Set([0, contentHeight, ...ranges.flatMap(range => [range.top, range.bottom])])].sort((a, b) => a - b);
+    const colours = boundaries.slice(0, -1).map((start, index) => {
+      const ink = ranges.reduce((ink, range) => range.top <= start && start < range.bottom ? range.ink : ink, 'var(--source-neutral-ink)');
+      return ink + ' ' + start + 'px ' + boundaries[index + 1] + 'px';
+    });
+    editor.style.setProperty('--source-focus-ink', 'linear-gradient(to bottom, ' + colours.join(', ') + ')');
+    editor.style.setProperty('--source-focus-height', contentHeight + 'px');
+    syncScroll();
     return {top, height};
   }
 
@@ -76,11 +97,13 @@ export function mountFirstKernelFocus(editor, reset) {
       // Setting the caret can scroll a textarea; keep its context visible.
       editor.scrollTop = Math.max(0, top - position.height * 2);
     }
+    syncScroll();
   }
 
   show.addEventListener('click', () => reveal(true));
   showLaunch.addEventListener('click', () => reveal(true, 'launch'));
   editor.addEventListener('input', update);
+  editor.addEventListener('scroll', syncScroll);
   editor.addEventListener('gpu-lab:source-restored', () => reveal());
   reset.addEventListener('click', () => reveal());
   new view.ResizeObserver(update).observe(editor);

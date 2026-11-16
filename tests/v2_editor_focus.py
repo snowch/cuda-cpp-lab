@@ -38,7 +38,14 @@ def check_v2_editor_focus(browser, url, root):
                     return top >= e.scrollTop && top + height <= e.scrollTop + e.clientHeight;
                 }'''
                 assert editor.evaluate(target_visible), (width, theme, 'initial target')
-                assert editor.evaluate('e => getComputedStyle(e).backgroundImage.includes("gradient")')
+                assert editor.evaluate('''e => {
+                    const s=getComputedStyle(e);
+                    return s.backgroundClip === 'text' && s.color === 'rgba(0, 0, 0, 0)' &&
+                        s.backgroundImage.includes('rgb(143, 203, 255)') &&
+                        s.backgroundImage.includes('rgb(255, 224, 154)') &&
+                        s.caretColor === 'rgb(237, 248, 241)' &&
+                        getComputedStyle(e.parentElement).backgroundColor === 'rgb(15, 33, 29)';
+                }'''), 'Colour the code glyphs on one uniform background, with a visible native caret.'
                 assert show.evaluate('e => e.getBoundingClientRect().height >= 44')
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 assert frame.locator('html').evaluate('e => e.scrollWidth <= innerWidth')
@@ -49,6 +56,7 @@ def check_v2_editor_focus(browser, url, root):
                 # Review preceding task, guidance/editor and following output in context.
                 page.locator('[aria-labelledby="v2-first-kernel"]').screenshot(
                     path=str(root / f'test-results/v2-editor-focus-{width}-{theme}.png'))
+                editor.screenshot(path=str(root / f'test-results/v2-editor-font-kernel-{width}-{theme}.png'))
                 show_launch.focus()
                 show_launch.press('Enter')
                 expect(editor).to_be_focused()
@@ -57,6 +65,7 @@ def check_v2_editor_focus(browser, url, root):
                     const bottom = parseFloat(e.style.getPropertyValue('--launch-focus-bottom'));
                     return top >= e.scrollTop && bottom <= e.scrollTop + e.clientHeight;
                 }'''), 'The launch should be reachable from the keyboard.'
+                assert editor.evaluate('e=>Math.abs(parseFloat(getComputedStyle(e).backgroundPositionY)+e.scrollTop)<1'), 'Font colours follow the scrolled source.'
                 editor.screenshot(path=str(root / f'test-results/v2-editor-launch-{width}-{theme}.png'))
                 show.click()
 
@@ -139,4 +148,36 @@ def check_v2_editor_focus(browser, url, root):
                 assert not errors, errors
                 page.goto(url + 'v2/one-thread-one-element.html')
                 expect(page.frame_locator('[data-kernel-workbench]').locator('.source-focus')).to_have_count(0)
-    print('PASS: first-kernel focus cue, six layouts, keyboard reveal, edits, missing target, export, reset and restart restoration')
+    with browser.new_context(viewport={'width':390,'height':1000}, forced_colors='active') as context:
+        page=context.new_page()
+        page.goto(url+'v2/cuda-source-workbench.html?embed=hello')
+        editor=page.get_by_role('textbox',name='CUDA source')
+        expect(editor).to_have_class('has-source-focus')
+        assert editor.evaluate('''e=>{
+            const style=getComputedStyle(e);
+            return style.backgroundImage==='none' && style.color!=='rgba(0, 0, 0, 0)' &&
+                style.caretColor!=='rgba(0, 0, 0, 0)';
+        }'''), 'High-contrast mode must retain readable source and caret without the coloured gradient.'
+        page.get_by_role('button',name='Show target line').press('Enter')
+        expect(editor).to_be_focused()
+        editor.screenshot(path=str(root/'test-results/v2-editor-forced-colours.png'))
+    with browser.new_context(viewport={'width':390,'height':1000}) as context:
+        page=context.new_page()
+        page.goto(url+'v2/cuda-source-workbench.html?embed=hello')
+        editor=page.get_by_role('textbox',name='CUDA source')
+        starter=editor.input_value()
+        edited=starter.replace('    output[0] = 42.0f;', '    output[0] = 42.0f; // '+'horizontal text '*30+'rightEdgeFocus')
+        editor.fill(edited)
+        page.get_by_role('button',name='Show target line').press('Enter')
+        editor.evaluate('e=>e.scrollLeft=e.scrollWidth-e.clientWidth')
+        assert editor.evaluate('e=>e.scrollLeft>1000')
+        editor.screenshot(path=str(root/'test-results/v2-editor-font-horizontal.png'))
+        page.get_by_role('button',name='Show target line').press('Enter')
+        assert editor.evaluate('e=>e.scrollLeft===0')
+        editor.evaluate('''e=>{
+            const start=e.value.indexOf('output[0]');
+            e.focus();e.setSelectionRange(start,start+'output[0] = 42.0f;'.length);
+        }''')
+        editor.screenshot(path=str(root/'test-results/v2-editor-font-selection.png'))
+        assert editor.input_value()==edited
+    print('PASS: first-kernel font colours, six layouts, native selection/scrolling, forced colours, edits, export, reset and restart restoration')
