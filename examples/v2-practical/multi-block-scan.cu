@@ -63,13 +63,21 @@ int main() {
     }
     constexpr int blocks = (count + 31) / 32;
     int flags[count ? count : 1], actual[count ? count : 1];
-    for (int i = 0; i < count; ++i) flags[i] = i % 3 == 0;
+    int pending[blocks ? blocks : 1];
+    for (int i = 0; i < count; ++i) {
+        flags[i] = i % 3 == 0;
+        actual[i] = -1;
+    }
+    for (int b = 0; b < blocks; ++b) pending[b] = -1;
     int *input, *offsets, *totals, *starts;
     check(cudaMalloc(&input, sizeof(flags)));
     check(cudaMalloc(&offsets, sizeof(actual)));
     check(cudaMalloc(&totals, (blocks ? blocks : 1) * sizeof(int)));
     check(cudaMalloc(&starts, (blocks ? blocks : 1) * sizeof(int)));
     check(cudaMemcpy(input, flags, sizeof(flags), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(offsets, actual, sizeof(actual), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(totals, pending, sizeof(pending), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(starts, pending, sizeof(pending), cudaMemcpyHostToDevice));
     localScan<<<blocks, 32>>>(input, offsets, totals, count);
     check(cudaGetLastError());
     scanTotals<<<1, 32>>>(totals, starts, blocks);

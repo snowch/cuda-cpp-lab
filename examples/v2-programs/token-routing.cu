@@ -40,12 +40,14 @@ int main() {
     int values[] = {0, 1, 0, 2, 1, 0, 3, 0};
     if (hot) for (int& value : values) value = 0;
     int counts[4] = {};
+    int unwritten[8] = {-1,-1,-1,-1,-1,-1,-1,-1};
     int *input, *histogram, *positions;
     check(cudaMalloc(&input, sizeof(values)));
     check(cudaMalloc(&histogram, sizeof(counts)));
     check(cudaMalloc(&positions, sizeof(values)));
     check(cudaMemcpy(input, values, sizeof(values), cudaMemcpyHostToDevice));
     check(cudaMemcpy(histogram, counts, sizeof(counts), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(positions, unwritten, sizeof(unwritten), cudaMemcpyHostToDevice));
     count<<<1, 8>>>(input, histogram);
     check(cudaGetLastError());
     route<<<1, 8>>>(input, histogram, positions);
@@ -54,7 +56,10 @@ int main() {
     for (int c = 0; c < 4; ++c) for (int t = 0; t < 8; ++t)
         if (values[t] == c) expected[next++] = t;
     check(cudaMemcpy(values, positions, sizeof(values), cudaMemcpyDeviceToHost));
-    for (int i = 0; i < 8; ++i) if (values[i] != expected[i]) return EXIT_FAILURE;
+    for (int i = 0; i < 8; ++i) if (values[i] != expected[i]) {
+        std::printf("Routing verification failed at slot %d\n", i);
+        return EXIT_FAILURE;
+    }
     for (int i = 0; i < 8; ++i) std::printf("Slot %d: token %d\n", i, values[i]);
     check(cudaFree(input));
     check(cudaFree(histogram));

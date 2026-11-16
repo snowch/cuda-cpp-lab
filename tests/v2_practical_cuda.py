@@ -8,8 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 CASES = [
  ('verify-every-output', None, 'mismatches: 0'),
  ('verify-every-output', [('correctIndex = true','correctIndex = false')], 'mismatches: 33'),
+ ('grid-stride-loops', [('output[i] = input[i] * 2.5f;', 'if (i != 6) output[i] = input[i] * 2.5f;')], 'mismatches: 1'),
  ('grid-stride-loops', [('count = 70','count = 0')], 'no allocation or launch'),
  ('grid-stride-loops', [('count = 70','count = 129'),('blocks = 2','blocks = 1')], 'mismatches: 0'),
+ ('multi-block-scan', [('if (i < n) offsets[i] =', 'if (i < n && i != 0) offsets[i] =')], 'mismatches: 1'),
  ('multi-block-scan', [('count = 70','count = 0')], 'no allocation or launch'),
  ('multi-block-scan', [('count = 70','count = 65')], 'mismatches: 0'),
  ('multi-block-scan', [('count = 70','count = 1024')], 'mismatches: 0'),
@@ -41,7 +43,7 @@ def check(browser,url,compiler):
         output=page.locator('#program-output').inner_text()
         assert expected in output,(slug,changes,page.locator('#status').inner_text(),page.locator('#diagnostics').inner_text(),output)
         # Deliberately failing programs must also report a non-zero process exit.
-        if expected in ['mismatches: 33','mismatches: 102']:
+        if expected in ['mismatches: 33','mismatches: 102','mismatches: 1']:
             assert 'Ran main() and the kernel' not in page.locator('#status').inner_text()
         else:
             assert page.locator('#status').inner_text()=='Ran main() and the kernel in GPGPU-Sim.'

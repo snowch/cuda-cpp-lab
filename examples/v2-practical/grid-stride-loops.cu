@@ -36,11 +36,15 @@ int main() {
         return 0;
     }
     float input[count ? count : 1], actual[count ? count : 1];
-    for (int i = 0; i < count; ++i)
+    volatile float zero = 0.0f;
+    for (int i = 0; i < count; ++i) {
         input[i] = static_cast<float>(i % 13 - 6) * 0.25f;
+        actual[i] = zero / zero;
+    }
     float *x, *y;
     check(cudaMalloc(&x, sizeof(input))); check(cudaMalloc(&y, sizeof(actual)));
     check(cudaMemcpy(x, input, sizeof(input), cudaMemcpyHostToDevice));
+    check(cudaMemcpy(y, actual, sizeof(actual), cudaMemcpyHostToDevice));
     scale<<<blocks, 32>>>(x, y, count);
     check(cudaGetLastError());
     check(cudaMemcpy(actual, y, sizeof(actual), cudaMemcpyDeviceToHost));

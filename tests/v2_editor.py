@@ -144,6 +144,12 @@ def check(browser, url, compiler_url, selected):
             frame.locator('#run:enabled').wait_for(timeout=95_000)
             assert frame.locator('#status').inner_text() == 'Ran main() and the kernel in GPGPU-Sim.', frame.locator('#diagnostics').text_content()
             assert f'Checked {tail * tail} matrix values; mismatches: 0' in console.inner_text()
+        if slug == 'token-routing':
+            editor.fill(code.replace('positions[start + rank] = t;', 'if (t != 0) positions[start + rank] = t;'))
+            run.click()
+            frame.locator('#run:enabled').wait_for(timeout=95_000)
+            assert frame.locator('#status').inner_text() == 'main() returned 1.'
+            assert 'Routing verification failed at slot 0' in console.inner_text()
         context.close()
         print(f'PASS {slug} starter and edit', flush=True)
 
