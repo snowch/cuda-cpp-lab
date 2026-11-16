@@ -1,7 +1,18 @@
 // Copyright © 2026 Christopher Snow.
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
-export function workbenchFrame(html) {
+export function workbenchFrame(html, {compilerBase, compilerParts} = {}) {
   if (!html.includes('lab.arrayProgram')) throw new Error('This workbench must support complete CUDA programs.');
+  if (compilerBase) {
+    const marker = "\nconst editor = document.querySelector('#source');";
+    if (!html.includes(marker)) throw new Error('The CUDA workbench initialisation changed.');
+    html = html.replace(marker, `
+for (const [index, asset] of lab.assets.compiler.entries()) {
+  asset.parts = ${JSON.stringify(compilerParts)}[index].map(name => new URL(${JSON.stringify(compilerBase)} + name, location.href).href);
+  delete asset.url;
+}${marker}`).replace('The first run downloads about 127 MiB of compiler assets.',
+      'Compiler assets are included in App status downloads and updates.')
+      .replace('</body>', '<script type="module" src="../src/v2-workbench-state.mjs"></script></body>');
+  }
   return html.replace('</head>', `<style>
 html[data-inline] body { min-height:0; background:transparent; }
 html[data-inline] main { width:100%; padding:2px; }

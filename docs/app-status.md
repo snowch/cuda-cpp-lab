@@ -74,7 +74,9 @@ Preparing an update sets `pending`; only Restart to update changes `active`.
 Closing all tabs, reopening the browser, visibility changes and ordinary refresh
 never select a pending release. Later dismisses the dialog, not its badge.
 
-Both download actions save a complete offline copy, including recordings.
+Both download actions save a complete offline copy, including recordings and
+V2’s pinned CUDA compiler assets. The package byte count includes those assets;
+V2’s first compile/run needs no additional connection after a complete save.
 Update selects the latest release; Download for offline use selects the running
 release. A prepared update reports Available after restarting update when the
 running copy is incomplete, and hides the redundant save action. Restart selects
@@ -92,7 +94,9 @@ incomplete with a repair action.
 Before committing, every supported open course window must acknowledge a
 snapshot saved to its own session storage. Controls, visual selections, outputs,
 trace positions, challenge state, expanded details, scroll position and routes
-are restored. Composition, registered busy/unsaved guards, missing experiment
+are restored. V2’s embedded CUDA editors also restore their source, console
+results, diagnostics and generated PTX. An active compile/run blocks restart;
+the parent lesson reloads its embedded editors once after activation. Composition, registered busy/unsaved guards, missing experiment
 initialisation, inaccessible session storage and non-responsive windows block
 the whole restart. Prepared participants lock their controls, unlock on abort,
 and reload only after the selection record is committed. Navigation requests
@@ -130,7 +134,8 @@ fixture is the actual worker from commit `4875086`, not a mock worker API.
   real quota failure, failed replacement, Later, input composition, unsaved guard,
   denied snapshot storage, non-responsive tab, multi-tab route/input/result/trace
   restoration, eviction/repair, confirmed scoped removal, update-as-offline deferred refresh/reopen,
-  recognition of older complete copies without network access, persistent cold offline
+  recognition of older complete copies without network access, real V2 compiler
+  execution and editor restoration across an offline update, persistent cold offline
   startup, no activation on closing windows, and legacy-worker migration.
 - Screenshots: [before phone](app-status/before-mobile.png),
   [after phone](app-status/after-mobile.png),

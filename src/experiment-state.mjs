@@ -56,7 +56,11 @@ navigator.serviceWorker?.addEventListener('message', ({ data, ports }) => {
     } catch (error) { ports[0].postMessage({ ready: false, error: error.message }); }
   }
   if (data?.type === 'ABORT_RESTART' && data.token === lock) { releaseLock(); sessionStorage.removeItem(snapshotKey()); }
-  if (data?.type === 'COMMIT_RESTART' && data.token === lock) location.reload();
+  if (data?.type === 'COMMIT_RESTART' && data.token === lock) {
+    // The lesson reloads its editor frames. A separate frame reload can consume
+    // its saved state before the parent's replacement frame has loaded.
+    if (!self.frameElement?.hasAttribute('data-kernel-workbench')) location.reload();
+  }
 });
 function restore() {
   const key = incomingSnapshotKey;

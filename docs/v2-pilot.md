@@ -20,8 +20,15 @@ below the editors let readers predict, step through and inspect selected
 cases. They use original diagrams and data. Their address groupings,
 dependencies and timing explanations are teaching models.
 
-To use the course and compiler offline on a tablet, generate an HTML file with
-the standalone workbench and open it in Chromium.
+For the hosted course, open **App status** and choose **Download for offline use**
+or **Update**. Both save the complete course, including the CUDA compiler. After
+an update, choose **Restart to update**; no separate offline download is needed.
+The displayed package size includes the compiler assets. A restart preserves
+editor drafts, console results, diagnostics and generated PTX. A compile/run in
+progress blocks the restart until it finishes.
+
+For a separate file that opens without hosting on a tablet, generate an HTML file
+with the standalone workbench and open it in Chromium.
 
 ```sh
 node scripts/build-v2-preview.mjs GPU-Lab-V2.html GPU-Lab-CUDA-workbench.html
@@ -45,9 +52,19 @@ and timing in the teaching models have their own stated assumptions. Each
 lesson saves its own draft. Use Ctrl or Command + Enter to run, Restore
 starter to undo edits, and Export .cu to save the current source.
 
-The hosted workbench downloads about 127 MiB of pinned Clang assets the first
-time it runs and about 5 MiB of additional assets for the architecture lessons.
-The standalone workbench can embed all of those assets. Source and build
+The hosted build includes about 127 MiB of pinned Clang assets and about 5 MiB
+of additional architecture runtime assets under its immutable release URL.
+The compiler is shipped in small compressed parts; the panel counts those
+download bytes. Each reconstructed compiler file is checked against its original
+SHA-256 before use. A complete App status download makes the first compile/run
+work offline. Without that download, first run fetches the compiler from the
+same site. The standalone workbench bundles these assets.
+
+The first hosted build downloads the three compiler assets into the ignored
+`vendor/v2-compiler/` cache, checking their SHA-256 hashes against the workbench
+metadata. Later builds verify and reuse that cache; a missing or corrupt asset is
+fetched again. Publish the whole `dist/`, including `assets/v2-compiler/`, `assets/cuda-workbench/`
+and their immutable release copies. Source and build
 instructions are in the
 [cuda-sim-wasm workbench](https://github.com/snowch/cuda-sim-wasm/tree/experiment/editable-cuda/workbench).
 

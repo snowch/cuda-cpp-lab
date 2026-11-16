@@ -34,6 +34,7 @@ import { buildOffline } from './offline.mjs';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Page } from '../content/v2-view.mjs';
 import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
+import { cacheCompilerAssets, publishCompilerAssets } from './v2-compiler-assets.mjs';
 import { insertProgramStarters } from '../content/v2-programs.mjs';
 import { renderChapterReferences } from '../src/reference-tasks.mjs';
 import {chapters,renderBookNav,renderRoadmap,renderBookPage} from '../content/book.mjs';
@@ -169,7 +170,11 @@ await mkdir('dist/v2', { recursive: true });
 await writeFile('dist/index.html', renderV2Page(undefined, versionMarkup, { home: true }));
 await writeFile('dist/v2/index.html', renderV2Page(undefined, versionMarkup));
 const cudaWorkbench = await readFile('content/v2-cuda-source-workbench.html', 'utf8');
-await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(await insertProgramStarters(cudaWorkbench)).replace(
+const compilerAssets = await cacheCompilerAssets(cudaWorkbench);
+const compilerParts = await publishCompilerAssets(compilerAssets, 'dist/assets/v2-compiler');
+await writeFile('dist/v2/cuda-source-workbench.html', workbenchFrame(await insertProgramStarters(cudaWorkbench), {
+  compilerBase: '../releases/__BUILD_ID__/assets/v2-compiler/', compilerParts,
+}).replace(
   '</main>', `<footer class="workbench-version">${versionMarkup}</footer></main>`));
 const firstProgram = await readFile('examples/first-kernel.cu', 'utf8');
 for (const lesson of v2Course) {

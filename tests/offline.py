@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import shutil
 import subprocess
-from threading import Thread
+from threading import Event, Thread
 from tempfile import TemporaryDirectory
 import time
 from urllib.parse import unquote, urlsplit
@@ -26,6 +26,7 @@ class CourseHandler(BaseHTTPRequestHandler):
     slow = False
     legacy = False
     corrupt = None
+    pause = None
     def log_message(self, *_): pass
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
@@ -44,12 +45,17 @@ class CourseHandler(BaseHTTPRequestHandler):
         if self.fail and path.endswith(self.fail): self.send_error(503); return
         if not file.is_relative_to(root) or not file.is_file(): self.send_error(404); return
         body = file.read_bytes()
+        # Hold one real response while checking progress/cancel, within the
+        # worker's 15-second per-file deadline. Release it immediately on cancel.
+        pause = self.pause
+        if pause and path == pause[0]: pause[1].wait(12)
         if self.corrupt and path.endswith(self.corrupt): body += b'corrupt'
         if self.legacy and path == 'sw.js':
             legacy=(ROOT/'tests/fixtures/legacy-worker.js').read_text()
             files=json.loads((root/'release.json').read_text())['files']
             body=legacy.replace('__VERSION__',json.dumps('legacy-complete')).replace('__FILES__',json.dumps([f['path'] for f in files])).encode()
         types = {'.mp4':'video/mp4', '.vtt':'text/vtt', '.jpg':'image/jpeg', '.pdf':'application/pdf', '.woff2':'font/woff2', '.html':'text/html', '.js':'text/javascript', '.mjs':'text/javascript', '.css':'text/css', '.json':'application/json', '.webmanifest':'application/manifest+json', '.svg':'image/svg+xml', '.png':'image/png', '.cu':'text/plain', '.py':'text/plain'}
+        types['.wasm'] = 'application/wasm'
         self.send_response(200); self.send_header('Content-Type', types.get(file.suffix,'application/octet-stream'))
         self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(body))); self.end_headers()
         try: self.wfile.write(body)
@@ -72,6 +78,9 @@ def built(temp, name):
         item = ROOT / path
         if item.is_dir(): shutil.copytree(item, source / path)
         else: shutil.copy2(item, source / path)
+    # Reuse the build cache for both releases; each build checks the pinned hashes.
+    compiler = ROOT / 'vendor/v2-compiler'
+    if compiler.is_dir(): shutil.copytree(compiler, source / 'vendor/v2-compiler')
     p = source / 'index.html'; p.write_text(p.read_text().replace('<html ', f'<html data-test-release="{name}" ',1))
     subprocess.run(['node','scripts/build.mjs'],cwd=source,check=True,stdout=subprocess.DEVNULL)
     return source / 'dist'
@@ -88,8 +97,74 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             options = {'headless':True}
             if os.environ.get('CHROMIUM_PATH'): options['executable_path'] = os.environ['CHROMIUM_PATH']
             browser = p.chromium.launch(**options)
+            # A V2 Update is also the offline download, including the real compiler.
+            CourseHandler.revision='one'
+            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
+            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
+            expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
+            expect(tab.locator('#save-offline')).to_be_visible()
+            CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
+            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_hidden()
+            tab.locator('#later-update').click();tab.reload()
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
+            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
+            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
+            editor=hello.get_by_role('textbox',name='CUDA source')
+            draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
+            reason=hello.locator('#run').evaluate("button=>{button.click();const detail={reason:''};dispatchEvent(new CustomEvent('gpu-lab:before-restart',{detail}));return detail.reason;}")
+            assert 'CUDA' in reason,reason
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
+            ctx.set_offline(True);tab.locator('#restart-update').click()
+            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
+            panel(tab);ready(tab)
+            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#offline-size')).to_be_visible()
+            tab.locator('#app-status-close').click()
+            hello=tab.frame_locator('[data-kernel-workbench="hello"]')
+            expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.')
+            expect(hello.locator('#ptx')).to_contain_text('.entry')
+            expect(hello.locator('#program-operations pre')).to_contain_text('cudaMalloc')
+            urls=hello.locator('html').evaluate('()=>lab.assets.compiler.flatMap(a=>a.parts)')
+            assert len(urls)>3 and all(url+'releases/'+releases['two']['id']+'/assets/v2-compiler/' in asset for asset in urls),urls
+            hello.locator('#run').click()
+            expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
+            tab.goto(url+'v2/more-threads-than-elements.html')
+            bounds=tab.frame_locator('[data-kernel-workbench="bounds"]');bounds.locator('#run').click()
+            expect(bounds.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(bounds.locator('#program-output')).to_contain_text('Output: [2, 4, 6, 8, 10]')
+            tab.goto(url+'v2/reduction.html')
+            reduction=tab.frame_locator('[data-kernel-workbench="reduction"]')
+            reduction.locator('#run').click()
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 10.0')
+            source=reduction.get_by_role('textbox',name='CUDA source')
+            source.fill(source.input_value().replace('threads = 4','threads = 8'));source.press('Control+Enter')
+            expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(reduction.locator('#program-output')).to_contain_text('Sum: 36.0')
+            # Older complete updates without their saved flag are recognised offline.
+            tab.evaluate('''async base => {
+              const cache = await caches.open(`gpu-lab:${base}:status-v1`);
+              const key = new URL('__app_status_state__', base);
+              const state = await (await cache.match(key)).json();
+              state.saved = false;
+              await cache.put(key, new Response(JSON.stringify(state)));
+            }''',url)
+            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
+            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
+            tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
+            ctx.close()
+            print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
-                CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False
+                CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False; CourseHandler.requests=[]
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
                 context=browser.new_context(viewport={'width':width,'height':900},color_scheme=theme,has_touch=width<500,reduced_motion='reduce')
                 errors=[]; context.on('page',lambda page:page.on('pageerror',lambda error:errors.append(str(error))))
@@ -199,15 +274,24 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 # Update progress and cancellation belong next to Update, rather
                 # than below the separate offline-access explanation.
                 CourseHandler.slow=True
+                CourseHandler.pause=(f"releases/{releases['two']['id']}/{releases['two']['files'][0]['path']}", Event())
                 page.locator('#download-update').click()
                 progress=page.locator('#download-progress')
                 expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
-                assert progress.evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'version-title'
-                button=page.locator('#download-update').bounding_box()
-                gap=progress.bounding_box()['y']-(button['y']+button['height'])
-                assert 0<=gap<=24, f'Update progress is separated from Update by {gap}px'
+                # Read both rectangles in one task; separate browser calls can
+                # straddle a progress render or a completed download.
+                geometry=page.wait_for_function('''() => {
+                    const progress=document.getElementById('download-progress');
+                    if(progress.hidden || !progress.getClientRects().length) return false;
+                    const box=progress.getBoundingClientRect();
+                    const button=document.getElementById('download-update').getBoundingClientRect();
+                    return {section:progress.closest('section').getAttribute('aria-labelledby'),gap:box.top-button.bottom};
+                }''',polling=50).json_value()
+                assert geometry['section']=='version-title',geometry
+                assert 0<=geometry['gap']<=24,geometry
                 page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-updating.png'))
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter')
+                CourseHandler.pause[1].set();CourseHandler.pause=None
                 expect(progress).to_be_hidden()
                 # Cancellation refreshes the verified cache status before render.
                 expect(page.locator('#version-status')).to_have_text('Update available',timeout=30000)
@@ -364,44 +448,6 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 assert not errors,errors
                 context.close();CourseHandler.requests=[]
                 print(f'PASS {prefix} {width}px {theme}: opt-in, real bytes, cancel/resume, all offline assets/pages, failed replacement, deployed update, Later, composition guard, three-tab restart and restored experiments, eviction/repair, scoped removal')
-            # Update is also the offline download, with no second save action.
-            CourseHandler.revision='one'
-            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
-            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v1.html');panel(tab)
-            expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
-            expect(tab.locator('#save-offline')).to_be_visible()
-            CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
-            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
-            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
-            expect(tab.locator('#save-offline')).to_be_hidden()
-            expect(tab.locator('#offline-size')).to_be_hidden()
-            tab.locator('#later-update').click();tab.reload()
-            expect(tab.locator('html')).to_have_attribute('data-test-release','one')
-            tab.close();tab=ctx.new_page();tab.goto(url+'v1.html')
-            expect(tab.locator('html')).to_have_attribute('data-test-release','one')
-            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
-            tab.locator('#restart-update').click()
-            # Verification includes the complete recording set. Match the cold
-            # restart budget below: the app RPC permits 15 s, then navigation.
-            expect(tab.locator('html')).to_have_attribute('data-test-release','two',timeout=20000)
-            panel(tab);ready(tab)
-            expect(tab.locator('#save-offline')).to_be_hidden()
-            expect(tab.locator('#offline-size')).to_be_visible()
-            # Reproduce a complete copy from the previous Update behaviour. The
-            # unchanged worker understands save=true; recognising it must work
-            # entirely offline, without another book download or user action.
-            tab.evaluate('''async base => {
-              const cache = await caches.open(`gpu-lab:${base}:status-v1`);
-              const key = new URL('__app_status_state__', base);
-              const state = await (await cache.match(key)).json();
-              state.saved = false;
-              await cache.put(key, new Response(JSON.stringify(state)));
-            }''',url)
-            ctx.set_offline(True);tab.close();tab=ctx.new_page();tab.goto(url+'v1.html')
-            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
-            tab.goto(url+'lessons/hello.html');expect(tab.locator('#hello-bridge-complete-2')).to_be_visible()
-            ctx.close()
-            print('PASS update includes offline access: deferred refresh/reopen, restart, no second save, and older complete copies recognised offline with the existing worker')
             # A persistent installed profile: closing every window does NOT apply
             # a prepared release. Reopen completely offline, then explicitly restart.
             CourseHandler.revision='one';CourseHandler.requests=[]
