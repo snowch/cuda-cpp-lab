@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import shutil
 import subprocess
-from threading import Thread
+from threading import Event, Thread
 from tempfile import TemporaryDirectory
 import time
 from urllib.parse import unquote, urlsplit
@@ -26,6 +26,7 @@ class CourseHandler(BaseHTTPRequestHandler):
     slow = False
     legacy = False
     corrupt = None
+    pause = None
     def log_message(self, *_): pass
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
@@ -44,6 +45,10 @@ class CourseHandler(BaseHTTPRequestHandler):
         if self.fail and path.endswith(self.fail): self.send_error(503); return
         if not file.is_relative_to(root) or not file.is_file(): self.send_error(404); return
         body = file.read_bytes()
+        # Hold one real response while checking progress/cancel, within the
+        # worker's 15-second per-file deadline. Release it immediately on cancel.
+        pause = self.pause
+        if pause and path == pause[0]: pause[1].wait(12)
         if self.corrupt and path.endswith(self.corrupt): body += b'corrupt'
         if self.legacy and path == 'sw.js':
             legacy=(ROOT/'tests/fixtures/legacy-worker.js').read_text()
@@ -269,15 +274,24 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 # Update progress and cancellation belong next to Update, rather
                 # than below the separate offline-access explanation.
                 CourseHandler.slow=True
+                CourseHandler.pause=(f"releases/{releases['two']['id']}/{releases['two']['files'][0]['path']}", Event())
                 page.locator('#download-update').click()
                 progress=page.locator('#download-progress')
                 expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
-                assert progress.evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'version-title'
-                button=page.locator('#download-update').bounding_box()
-                gap=progress.bounding_box()['y']-(button['y']+button['height'])
-                assert 0<=gap<=24, f'Update progress is separated from Update by {gap}px'
+                # Read both rectangles in one task; separate browser calls can
+                # straddle a progress render or a completed download.
+                geometry=page.wait_for_function('''() => {
+                    const progress=document.getElementById('download-progress');
+                    if(progress.hidden || !progress.getClientRects().length) return false;
+                    const box=progress.getBoundingClientRect();
+                    const button=document.getElementById('download-update').getBoundingClientRect();
+                    return {section:progress.closest('section').getAttribute('aria-labelledby'),gap:box.top-button.bottom};
+                }''',polling=50).json_value()
+                assert geometry['section']=='version-title',geometry
+                assert 0<=geometry['gap']<=24,geometry
                 page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-updating.png'))
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter')
+                CourseHandler.pause[1].set();CourseHandler.pause=None
                 expect(progress).to_be_hidden()
                 # Cancellation refreshes the verified cache status before render.
                 expect(page.locator('#version-status')).to_have_text('Update available',timeout=30000)
