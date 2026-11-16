@@ -33,6 +33,7 @@ import { renderConcepts, warpConcepts } from '../src/concepts.mjs';
 import { buildOffline } from './offline.mjs';
 import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Page } from '../content/v2-view.mjs';
+import { practicalSource } from '../content/v2-practical-source.mjs';
 import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
 import { cacheCompilerAssets, publishCompilerAssets } from './v2-compiler-assets.mjs';
 import { insertProgramStarters } from '../content/v2-programs.mjs';
@@ -48,6 +49,7 @@ await mkdir('dist', { recursive: true });
 for (const path of ['src', 'examples', 'assets', 'manifest.webmanifest']) {
   await cp(path, `dist/${path}`, { recursive: true });
 }
+await writeFile('dist/examples/v2-practical/softmax-capstone.cu', practicalSource('softmax-capstone'));
 await writeFile('dist/v1.html', (await readFile('index.html', 'utf8'))
   .replace('<!-- BOOK_ROADMAP -->', renderRoadmap()));
 await mkdir('dist/lessons', { recursive: true });

@@ -4,7 +4,7 @@ from playwright.sync_api import expect
 
 
 def check_v2_navigation(browser, url, root):
-    cases = [('first-kernel','part-cuda-foundations'),('scheduling','part-gpu-execution'),('token-routing','part-parallel-patterns'),('matmul-investigation','part-gpu-execution')]
+    cases = [('first-kernel','part-cuda-foundations'),('scheduling','part-gpu-execution'),('token-routing','part-parallel-patterns'),('matmul-investigation','part-gpu-execution'),('softmax-capstone','part-practical-work')]
     for width in [390,820,1440]:
         for theme in ['light','dark']:
             context=browser.new_context(viewport={'width':width,'height':900},color_scheme=theme)
@@ -19,7 +19,7 @@ def check_v2_navigation(browser, url, root):
                 panel=page.get_by_role('navigation',name='Course contents',exact=True)
                 expect(panel.locator('.v2-course-part[open]')).to_have_count(1)
                 expect(panel.locator('.v2-course-part[open]')).to_have_attribute('data-course-part',part)
-                expect(panel.locator('.v2-course-lessons a')).to_have_count(21)
+                expect(panel.locator('.v2-course-lessons a')).to_have_count(27)
                 expect(panel.locator('a[aria-current="page"]')).to_have_attribute('href','./'+slug+'.html')
                 expect(panel.locator('a[aria-current="page"]')).to_contain_text('Current lesson')
                 expect(panel.locator('a[aria-current="page"]')).to_be_in_viewport()

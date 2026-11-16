@@ -8,7 +8,7 @@ def check_v2_context(browser, url, root):
     context = browser.new_context(viewport={'width':1440,'height':1000})
     page = context.new_page()
     page.goto(url)
-    routes = page.locator('.v2-list li a').evaluate_all('links=>links.map(a=>a.href)')
+    routes = page.locator('.v2-list li[data-course-kind="core"] a').evaluate_all('links=>links.map(a=>a.href)')
     for route in routes:
         page.goto(route)
         slug = route.rsplit('/',1)[1][:-5]

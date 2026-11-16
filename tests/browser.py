@@ -1,5 +1,6 @@
 from parallel_recordings import check_parallel_recordings
 from parallel import check_parallel
+from v2_practical import check_v2_practical
 from v2_navigation import check_v2_navigation
 from v2_editor_focus import check_v2_editor_focus
 from v2_footer import check_v2_footer
@@ -65,6 +66,7 @@ try:
             options["executable_path"] = os.environ["CHROMIUM_PATH"]
         browser = playwright.chromium.launch(**options)
         errors = []
+        check_v2_practical(browser, URL, ROOT)
         check_v2(browser, URL)
         check_v2_context(browser, URL, ROOT)
         check_v2_footer(browser, URL, ROOT)

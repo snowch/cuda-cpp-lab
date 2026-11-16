@@ -3,14 +3,14 @@ import { v2Course } from './v2-course.mjs';
 import { lessonContexts } from './v2-lesson-context.mjs';
 import { escape } from '../src/continuation-ui.mjs';
 
-export function renderV2Hardware(slug) {
+export function renderV2Hardware(slug, context = {}) {
   const number = v2Course.findIndex(lesson => lesson.slug === slug) + 1;
   if (!number) throw new Error('Unknown hardware context: ' + slug);
-  const focus = lessonContexts[slug]?.focus ?? 'sm';
+  const focus = context.focus ?? lessonContexts[slug]?.focus ?? 'sm';
   const detail = number >= 5;
   const node = (key, title, text) => `<div class="v2-hw-node${focus === key ? ' is-focus' : ''}" data-hardware="${key}">
     <strong>${escape(title)}${focus === key ? '<span class="v2-hw-focus">This lesson</span>' : ''}</strong><span>${escape(text)}</span></div>`;
-  const hardware = lessonContexts[slug]?.hardware ?? 'The CPU launches the kernel. An SM executes its thread instructions, and the result is stored in device memory before the CPU copies it to system RAM.';
+  const hardware = context.hardware ?? lessonContexts[slug]?.hardware ?? 'The CPU launches the kernel. An SM executes its thread instructions, and the result is stored in device memory before the CPU copies it to system RAM.';
   return `<section class="book-section" aria-labelledby="v2-hardware-title">
     <h2 id="v2-hardware-title">Hardware context</h2>
     <p>${escape(hardware)}</p>

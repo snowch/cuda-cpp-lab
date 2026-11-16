@@ -40,8 +40,8 @@ def check_v2_footer(browser, url, root):
                     expect(cards.first).to_contain_text('Course overview')
                     expect(cards.last).to_have_attribute('href', './one-thread-one-element.html')
                 elif slug == 'token-routing':
-                    expect(cards.last).to_contain_text('Course overview')
-                    expect(cards.last).to_have_attribute('href', '../')
+                    expect(cards.last).to_contain_text('Next lesson')
+                    expect(cards.last).to_have_attribute('href', './verify-every-output.html')
                 # Include the preceding application/transition and the following pager/footer.
                 page.locator('.topbar').evaluate('el=>el.style.position="static"')
                 page.evaluate('(top)=>scrollTo({top:Math.max(0,top-150),behavior:"instant"})', resources.evaluate('e=>e.getBoundingClientRect().top+scrollY'))
@@ -82,4 +82,4 @@ def check_v2_footer(browser, url, root):
     page.locator('.v2-page-next').click()
     expect(page).to_have_url(url + 'v2/divergence.html')
     context.close()
-    print('PASS: all 21 deduplicated reference panels; V2 footer rows, rotating chevrons, keyboard/no-script disclosures, first/last navigation and six responsive layouts', flush=True)
+    print('PASS: all 27 deduplicated reference panels; V2 footer rows, rotating chevrons, keyboard/no-script disclosures, first/last navigation and six responsive layouts', flush=True)

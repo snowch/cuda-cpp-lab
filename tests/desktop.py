@@ -9,7 +9,8 @@ def check_desktop(browser,url,root):
             context=browser.new_context(viewport={'width':width,'height':1000},color_scheme=theme,service_workers='block')
             page=context.new_page()
             page.goto(url+'lessons/desktop.html')
-            expect(page.locator('.desktop-index tbody tr')).to_have_count(15 + page.locator('.sidebar #nav-parallel ~ a').count())
+            expect(page.locator('.desktop-index tbody tr')).to_have_count(21 + page.locator('.sidebar #nav-parallel ~ a').count())
+            expect(page.locator('a[href="../examples/v2-practical/benchmark-fusion.cu"]')).to_have_count(1)
             for link in page.locator('main a[download]').all():
                 response=context.request.get(link.evaluate('el=>el.href'))
                 assert response.ok,link.get_attribute('href')

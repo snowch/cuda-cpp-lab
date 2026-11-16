@@ -3,32 +3,32 @@ WEBVTT
 00:00:00.500 --> 00:00:08.525
 Inside multiply, tile sets both shared array dimensions and the block’s two-dimensional thread shape. main derives the grid from width and tile.
 
-00:00:08.525 --> 00:00:16.940
-Compare equal products before interpreting calculated load counts and shared bytes; those counts alone do not identify a faster kernel.
+00:00:08.525 --> 00:00:23.855
+Zero padding handles partial tiles while every thread reaches the barriers. main verifies every output against a CPU reference on nonuniform inputs before reporting calculated loads and shared bytes; those counts alone do not identify a faster kernel.
 
-00:00:18.440 --> 00:00:19.820
+00:00:25.355 --> 00:00:26.735
 Choose tile width.
 
-00:00:19.820 --> 00:00:22.230
+00:00:26.735 --> 00:00:29.145
 Set the block shape and shared arrays.
 
-00:00:22.230 --> 00:00:23.630
+00:00:29.145 --> 00:00:30.545
 Verify the product.
 
-00:00:23.630 --> 00:00:26.755
+00:00:30.545 --> 00:00:33.670
 Check correctness before comparing resources.
 
-00:00:26.755 --> 00:00:28.300
+00:00:33.670 --> 00:00:35.215
 Form a hypothesis.
 
-00:00:28.300 --> 00:00:31.055
+00:00:35.215 --> 00:00:37.970
 Measure the real GPU to test performance.
 
-00:00:32.555 --> 00:00:37.090
+00:00:39.470 --> 00:00:44.005
 Each resident block consumes shared storage and registers on its SM.
 
-00:00:37.090 --> 00:00:41.310
+00:00:44.005 --> 00:00:48.225
 Larger tiles can improve reuse while reducing how many blocks fit.
 
-00:00:41.310 --> 00:00:45.870
+00:00:48.225 --> 00:00:52.785
 The teaching resource budget is separate from the device-specific occupancy limits.

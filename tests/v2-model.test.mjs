@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { v2Course } from '../content/v2-course.mjs';
+import { v2CoreCourse as v2Course, v2Course as allLessons } from '../content/v2-course.mjs';
 import { v2Diagram } from '../content/v2-diagrams.mjs';
 import { renderV2Lesson } from '../content/v2-view.mjs';
 import { guidedLessons } from '../src/v2-guided.mjs';
@@ -196,11 +196,11 @@ test('all 21 lessons pair each reference with its question without repeated sour
 
 import { courseBreadcrumb } from '../content/v2-course-navigation.mjs';
 test('every breadcrumb contains all course destinations and one marked current lesson', () => {
-  for (const lesson of v2Course) {
+  for (const lesson of allLessons) {
     const html = courseBreadcrumb(lesson, (slug,part) => slug === 'contents' ? '../' + (part ? '#'+part : '') : './'+slug+'.html');
-    assert.equal((html.match(/class="v2-course-part"/g) ?? []).length,3);
+    assert.equal((html.match(/class="v2-course-part"/g) ?? []).length,4);
     assert.equal((html.match(/class="v2-course-part"[^>]* open/g) ?? []).length,1);
-    for(const item of v2Course) assert.ok(html.includes('href="./'+item.slug+'.html"'),lesson.slug);
+    for(const item of allLessons) assert.ok(html.includes('href="./'+item.slug+'.html"'),lesson.slug);
     assert.match(html,/aria-label="Course contents"/);
     assert.match(html,new RegExp('href="\\./'+lesson.slug+'\\.html" aria-current="page"'));
   }

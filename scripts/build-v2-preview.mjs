@@ -38,7 +38,7 @@ const licenses = await Promise.all(licenseNames.map(name =>
 const templates = [
   ['contents', renderV2Contents(href)],
   ...v2Course.map(lesson => [lesson.slug, renderV2Lesson(lesson, href, legacy, workbench ? 'bundled' : undefined, firstProgram)]),
-].map(([slug, markup]) => `<template id="page-${slug}">${markup}</template>`).join('\n');
+].map(([slug, markup]) => `<template id="page-${slug}">${markup.replaceAll('href="../examples/', 'href="' + current + 'examples/').replaceAll('href="../lessons/profiling.html"', 'href="'+legacy('profiling')+'"').replaceAll('href="./measure-a-kernel.html"', 'href="#measure-a-kernel"')}</template>`).join('\n');
 
 await writeFile(output, `<!doctype html>
 <!-- Copyright © 2026 Christopher Snow. -->

@@ -1,6 +1,8 @@
 // Copyright © 2026 Christopher Snow.
 import { readFile } from 'node:fs/promises';
 import { v2Course } from './v2-course.mjs';
+import { practicalLessons } from './v2-practical-catalog.mjs';
+import { practicalSource } from './v2-practical-source.mjs';
 
 export const programTasks = {
   coalescing: 'Predict the sector count at stride 1. Run the program, change stride inside runKernel to 2, then try 32.',
@@ -23,6 +25,8 @@ export const programTasks = {
 };
 
 export const programNotes = {
+  matmul: 'The editable program checks nonuniform inputs and partial tiles. The separate execution model uses its displayed fixed inputs. Try width = 5 after comparing tile widths.',
+  'matmul-investigation': 'The editable program checks every output against a CPU reference. Try width = 7 to exercise partial tiles; the separate resource model retains its stated assumptions.',
   coalescing: 'Each input stores its own index. The kernel returns the indices it read. The host groups those indices into 32-byte sectors, assuming an aligned input.',
   pipelines: 'The browser follows the stream and event dependencies. Use the execution model to explore when copies and kernels could overlap.',
 };
@@ -30,9 +34,10 @@ export const programNotes = {
 export async function insertProgramStarters(html) {
   const marker = '/* architecture-programs */ {}';
   if (!html.includes(marker)) throw new Error('Build the workbench with CUDA module support.');
-  const starters = await Promise.all(v2Course.filter(lesson => !lesson.mode && lesson.slug !== 'coalescing')
+  const starters = await Promise.all(v2Course.filter(lesson => !lesson.practical && !lesson.mode && lesson.slug !== 'coalescing')
     .map(async ({ slug }) => [
       slug, await readFile(new URL('../examples/v2-programs/' + slug + '.cu', import.meta.url), 'utf8'),
     ]));
+  starters.push(...practicalLessons.filter(lesson=>lesson.program).map(lesson=>[lesson.slug,practicalSource(lesson.slug)]));
   return html.replace(marker, () => JSON.stringify(Object.fromEntries(starters)).replaceAll('<', '\\u003c'));
 }
