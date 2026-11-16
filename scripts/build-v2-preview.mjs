@@ -12,7 +12,7 @@ const firstProgram = await readFile(new URL('../examples/first-kernel.cu', impor
 const workbench = process.argv[3] ? workbenchFrame(await insertProgramStarters(await readFile(process.argv[3], 'utf8'))) : '';
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8');
 const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
-const href = slug => '#' + slug;
+const href = (slug, part) => '#' + (part ?? slug);
 const current = 'https://snowch.github.io/gpu-lab/';
 const legacy = slug => current + 'lessons/' + slug + '.html';
 const imports = {};
@@ -80,12 +80,16 @@ function route() {
   }
   const title = main.querySelector('h1').textContent;
   document.title = title + ' · GPU Lab V2';
+  const part = document.getElementById(slug);
+  if (part?.matches('.v2-list h2')) {
+    part.focus({ preventScroll: true });
+    part.scrollIntoView({ behavior: 'instant' });
+    return;
+  }
   window.scrollTo({ top: 0, behavior: 'instant' });
+  if (slug) main.focus({ preventScroll: true });
 }
-addEventListener('hashchange', () => {
-  route();
-  if (location.hash !== '#main') main.focus({ preventScroll: true });
-});
+addEventListener('hashchange', route);
 route();
 </script>
 </body>
