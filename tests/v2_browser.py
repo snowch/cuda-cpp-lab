@@ -27,8 +27,14 @@ def check_v2(browser, url):
         assert routes[0] == url + 'v2/first-kernel.html'
         assert routes[1] == url + 'v2/one-thread-one-element.html'
         modes = ['hello', 'scale', 'bounds', 'copies'] + [route.rsplit('/', 1)[1][:-5] for route in routes[4:]]
-        for route, mode in zip(routes, modes):
+        parts = (['part-cuda-foundations'] * 4 + ['part-gpu-execution'] * 11
+                 + ['part-parallel-patterns'] * 6)
+        for route, mode, part in zip(routes, modes, parts):
             page.goto(route)
+            breadcrumb = page.get_by_role('navigation', name='Breadcrumb')
+            expect(breadcrumb.get_by_role('link', name='Contents', exact=True)).to_have_attribute('href', '../')
+            expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
+            expect(breadcrumb.locator('[aria-current="page"]')).to_have_text(page.locator('h1').inner_text())
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
             if mode == 'hello':
@@ -40,6 +46,13 @@ def check_v2(browser, url):
             expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'int main\(\)'))
             expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
             expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
+        for index in [0, 4, 15]:
+            page.goto(routes[index])
+            part = parts[index]
+            page.get_by_role('navigation', name='Breadcrumb').locator('a').last.press('Enter')
+            expect(page).to_have_url(url + '#' + part)
+            expect(page.locator('#' + part)).to_be_in_viewport()
+
         for route in routes[1:]:
             page.goto(route)
             model = page.locator('.v2-starter-model > summary')

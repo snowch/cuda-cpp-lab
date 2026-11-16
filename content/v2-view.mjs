@@ -38,9 +38,9 @@ const teaching = {
 };
 
 const groups = [
-  ['CUDA foundations', 0, 4],
-  ['GPU execution and AI workloads', 4, 15],
-  ['Parallel patterns', 15, 21],
+  ['part-cuda-foundations', 'CUDA foundations', 0, 4],
+  ['part-gpu-execution', 'GPU execution and AI workloads', 4, 15],
+  ['part-parallel-patterns', 'Parallel patterns', 15, 21],
 ];
 
 export function renderV2Contents(href) {
@@ -49,8 +49,8 @@ export function renderV2Contents(href) {
     <p class="lead">Start with one small CUDA program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
   </header>
-  ${groups.map(([title, start, end]) => `<section class="v2-list">
-    <h2>${title}</h2>
+  ${groups.map(([id, title, start, end]) => `<section class="v2-list" aria-labelledby="${id}">
+    <h2 id="${id}" tabindex="-1">${title}</h2>
     <ol start="${start + 1}">${v2Course.slice(start, end).map(lesson => `<li>
       <a href="${href(lesson.slug)}">${lesson.title}</a>
       <p>${lesson.goal}</p>
@@ -217,7 +217,15 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
+  const [partId, partTitle] = groups.find(([, , start, end]) => start < number && number <= end);
   return `<header class="intro">
+    <nav class="v2-breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="${href('contents')}">Contents</a></li>
+        <li><span aria-hidden="true">›</span><a href="${href('contents', partId)}">${partTitle}</a></li>
+        <li><span aria-hidden="true">›</span><span aria-current="page">${lesson.title}</span></li>
+      </ol>
+    </nav>
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
@@ -233,7 +241,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
 export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '' } = {}) {
   const base = home ? './' : '../';
-  const href = slug => slug === 'contents' ? base : `${home ? './v2/' : './'}${slug}.html`;
+  const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
   const legacy = slug => `${base}lessons/${slug}.html`;
   const title = lesson ? lesson.title + ' · GPU Lab V2' : 'GPU Lab V2';
   const styles = v2Styles.map(name => `<link rel="stylesheet" href="${base}src/${name}">`).join('');
