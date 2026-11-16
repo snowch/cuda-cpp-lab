@@ -27,6 +27,11 @@ def check_v2_navigation(browser, url, root):
                     if group.get_attribute('open') is None: group.locator(':scope > summary').click()
                 rect=panel.bounding_box()
                 assert rect['x']>=0 and rect['x']+rect['width']<=width+1,(slug,width,rect)
+                crumb=page.locator('.v2-breadcrumb').bounding_box()
+                if switcher.get_attribute('data-placement') == 'above':
+                    assert rect['y']+rect['height']<=crumb['y'],(slug,width,rect)
+                else:
+                    assert rect['y']>=crumb['y']+crumb['height'],(slug,width,rect)
                 assert rect['y']>=0 and rect['y']+rect['height']<=900,(slug,width,rect)
                 assert panel.evaluate('e=>e.scrollHeight>=e.clientHeight')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -48,6 +53,26 @@ def check_v2_navigation(browser, url, root):
             page.locator('.v2-course-lessons a[href="./scan.html"]').click()
             expect(page).to_have_url(url+'v2/scan.html')
             context.close()
+    # Opening navigation must not add positional entries to saved lesson panels.
+    context=browser.new_context(viewport={'width':390,'height':900})
+    page=context.new_page();page.goto(url+'v2/scheduling.html')
+    page.locator('.v2-starter-model > summary').click()
+    page.locator('#v2-choice').select_option('1')
+    page.get_by_role('button',name='Run model',exact=True).click()
+    page.locator('[data-v2-course-switcher] > summary').click()
+    page.evaluate('''async ()=>{
+        const script=[...document.scripts].find(s=>s.src.includes('/src/offline.mjs'));
+        const state=await import(new URL('experiment-state.mjs',script.src));
+        state.saveReadingState();
+        const saved=JSON.parse(sessionStorage.getItem('gpu-lab:restart:'+location.pathname+location.search));
+        const panels=[...document.querySelectorAll('main details')].filter(e=>!e.closest('[data-transient-navigation]'));
+        if(saved.details.length!==panels.length)throw new Error('Course navigation polluted lesson snapshot');
+    }''')
+    page.reload()
+    expect(page.locator('[data-v2-course-switcher]')).not_to_have_attribute('open','')
+    expect(page.locator('#v2-choice')).to_have_value('1')
+    expect(page.locator('#v2-result')).to_be_visible()
+    context.close()
     context=browser.new_context(java_script_enabled=False,viewport={'width':390,'height':900})
     page=context.new_page();page.goto(url+'v2/first-kernel.html')
     page.locator('[data-v2-course-switcher] > summary').click()

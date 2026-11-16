@@ -4,8 +4,8 @@
 const openSwitchers = () => document.querySelectorAll('[data-v2-course-switcher][open]');
 function fit(switcher) {
   const panel = switcher.querySelector('.v2-course-panel');
-  const trigger = switcher.querySelector(':scope > summary').getBoundingClientRect();
-  const below = innerHeight - trigger.bottom - 24, above = trigger.top - 24;
+  const anchor = switcher.closest('.v2-breadcrumb').getBoundingClientRect();
+  const below = innerHeight - anchor.bottom - 24, above = anchor.top - Math.max(24, (document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0) + 12);
   const upward = below < 180 && above > below;
   switcher.dataset.placement = upward ? 'above' : 'below';
   panel.style.setProperty('--v2-course-height', `${Math.max(0, upward ? above : below)}px`);

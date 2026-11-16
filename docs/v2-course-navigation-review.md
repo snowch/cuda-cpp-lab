@@ -28,3 +28,11 @@ geometry, overview and cross-part navigation, native no-script fallback and six
 viewport/theme combinations. V2's existing model, editor and media checks also run
 alongside the footer/reference audits. Reference sources remain paired with their
 questions once each, following the duplicate-source audit.
+
+
+The enhanced panel is anchored below the entire breadcrumb, so a wrapped current
+lesson remains visible above it on phones. Navigation disclosures are excluded
+from positional reading-state snapshots: adding a course menu must not shift saved
+lesson/model/reference disclosures from older releases. A restart check saves an
+open menu alongside a model result and verifies that the menu reopens closed while
+the model input and result are restored.

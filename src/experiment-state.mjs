@@ -24,6 +24,8 @@ function releaseLock() {
   clearTimeout(unlockTimer); lock = null;
   for (const el of document.querySelectorAll('[data-update-locked]')) { el.inert = false; delete el.dataset.updateLocked; }
 }
+// Navigation disclosures are ephemeral and must not shift saved lesson panels.
+const readingDetails = () => [...document.querySelectorAll('main details')].filter(el => !el.closest('[data-transient-navigation]'));
 function snapshot() {
   const key = snapshotKey();
   const required = document.querySelector('[data-book-experiment]') ? [...document.querySelectorAll('[data-book-experiment]')].map(el=>el.dataset.bookExperiment) : document.querySelector('.hello-section') ? ['hello-0','hello-1','hello-2','hello-3','hello-4','hello-launch','hello-bounds','hello-transfer'] : document.getElementById('sm-recording') ? ['sm-recording'] : document.getElementById('sm-explorer') ? ['sm-hardware'] : document.getElementById('kernel-editor') ? ['kernel'] : document.getElementById('tensor-diagram') ? ['memory','tensor-layout'] : document.body.dataset.lesson ? ['lesson'] : document.getElementById('gpu-map') ? ['gpu-map'] : document.getElementById('work-map') ? ['overview'] : [];
@@ -33,7 +35,7 @@ function snapshot() {
   const guard = { reason: '' }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
   const data = { schema: 1, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
-    details: [...document.querySelectorAll('main details')].map(el => el.open),
+    details: readingDetails().map(el => el.open),
     messages: Object.fromEntries([...document.querySelectorAll('main [id]')].filter(el => /(?:feedback|kernel-status|prediction-feedback|challenge-feedback)$/.test(el.id)).map(el => [el.id, el.textContent])),
     focus: document.activeElement?.closest('main') ? document.activeElement.id : null, scroll: [scrollX, scrollY] };
   const encoded = JSON.stringify(data);
@@ -89,7 +91,7 @@ function restore() {
     restoreForm(data.controls);
     // The GPU map owns its disclosures by stable ID, including migration from its
     // previous concept view. Positional snapshots must not overwrite that state.
-    document.querySelectorAll('main details').forEach((el, i) => {
+    readingDetails().forEach((el, i) => {
       if (!el.matches('#gpu-map .map-node')) el.open = data.details[i];
     });
     for (const [id, text] of Object.entries(data.messages)) {

@@ -10,7 +10,7 @@ export function courseBreadcrumb(lesson, href) {
   const number = v2Course.indexOf(lesson);
   const [partId, partTitle] = v2Groups.find(([, , start, end]) => start <= number && number < end);
   return `<nav class="v2-breadcrumb" aria-label="Breadcrumb"><ol>
-    <li><details class="v2-course-switcher" data-v2-course-switcher>
+    <li><details class="v2-course-switcher" data-v2-course-switcher data-transient-navigation>
       <summary aria-controls="v2-course-panel">Course <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></svg></summary>
       <nav class="v2-course-panel" id="v2-course-panel" aria-label="Course contents">
         <a class="v2-course-overview" href="${href('contents')}">Course overview</a>
