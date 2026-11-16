@@ -2,7 +2,8 @@
 
 The optional resources and lesson navigation now follow the supplied visual direction:
 quiet full-width rows, shared outline icons, brief descriptions and larger navigation
-cards. Recording, References and Use the documentation are native disclosures. Their
+cards. Recording and References are native disclosures. Each reference includes its
+annotation, question and answer comparison together, with one source link. The resource-row
 chevrons turn when opened; the arrows in navigation labels retain their direction.
 
 Recordings now join the references and documentation practice after the application
@@ -30,3 +31,14 @@ for this V2-only interface change. Omitting `--v2` retains the complete legacy/V
 Review screenshots are saved under the ignored `test-results/v2-footer-*.png` paths.
 The card-geometry check measures both cards in one browser frame to avoid comparing
 coordinates across native scrolling adjustments after a disclosure closes.
+
+
+Reference audit: the separate reference list and documentation exercises previously
+repeated each topic's URL and title on every V2 page. Consolidated them in the shared
+renderer for all 21 lessons. The References panel now pairs each link with its own
+annotation, question and local answer comparison. There is no separate repeated
+Use the documentation row. The footer browser checks open both questions in all
+21 lessons and verify one link per topic; unit coverage protects the same invariant.
+
+The consolidated reference content uses 16px body text, rather than inheriting the
+13px disclosure text size. Answer disclosures retain at least 44px touch targets.

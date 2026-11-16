@@ -29,8 +29,9 @@ lesson 9, tensor cores at lesson 12 and copy engines at lesson 20. Hardware role
 and scope remain distinct from the teaching model's counters and timings.
 
 Each lesson ends its teaching with a local application exercise. Optional resource
-rows then group the matching narrated recap (with captions and transcript), annotated
-official references and two documentation questions. Previous/next lesson cards
+rows then group the matching narrated recap (with captions and transcript) and
+References. Each official reference appears once beside its annotation, documentation
+question and answer comparison. Previous/next lesson cards
 follow the resource rows and stack on phones. Lessons 2–21 use original V2 recordings rather than V1
 recordings with different examples. See `assets/media/v2/README.md` for rebuilds.
 Header navigation uses the brand, V1 link and theme control; the lesson breadcrumb

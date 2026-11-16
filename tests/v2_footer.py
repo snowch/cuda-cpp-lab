@@ -12,7 +12,7 @@ def check_v2_footer(browser, url, root):
                 page.goto(url + 'v2/' + slug + '.html')
                 resources = page.locator('.v2-resources')
                 rows = resources.locator('.v2-resource')
-                expect(rows).to_have_count(3)
+                expect(rows).to_have_count(2)
                 for row in rows.all():
                     expect(row).not_to_have_attribute('open', '')
                     summary = row.locator(':scope > summary')
@@ -51,6 +51,28 @@ def check_v2_footer(browser, url, root):
             next_card.focus(); page.keyboard.press('Enter')
             expect(page).to_have_url(url + 'v2/divergence.html')
             context.close()
+    # Audit the shared reference markup in every lesson, including the source
+    # shown in the report (histograms) and the first lesson's special renderer.
+    context = browser.new_context(viewport={'width':390,'height':1000})
+    page = context.new_page(); page.goto(url)
+    routes = page.locator('.v2-list li a').evaluate_all('links=>links.map(a=>a.href)')
+    for route in routes:
+        page.goto(route)
+        references = page.locator('[data-v2-resource="references"]')
+        references.locator(':scope > summary').click()
+        links = references.locator('.chapter-reference-list > li > a')
+        expect(links).to_have_count(2)
+        urls = links.evaluate_all('links=>links.map(a=>a.href)')
+        assert len(urls) == len(set(urls)), route
+        for item in references.locator('.chapter-reference-list > li').all():
+            expect(item.locator('.v2-reference-question')).to_be_visible()
+            assert item.locator('.v2-reference-question').evaluate('e=>parseFloat(getComputedStyle(e).fontSize)>=16')
+            expect(item.locator('a')).to_have_count(1)
+            assert item.locator('summary').bounding_box()['height'] >= 44, route
+            item.locator('summary').click()
+            expect(item.locator('details p')).to_be_visible()
+        expect(page.locator('[data-v2-resource="documentation"]')).to_have_count(0)
+    context.close()
     context = browser.new_context(java_script_enabled=False, viewport={'width':390,'height':1000})
     page = context.new_page()
     page.goto(url + 'v2/scheduling.html')
@@ -60,4 +82,4 @@ def check_v2_footer(browser, url, root):
     page.locator('.v2-page-next').click()
     expect(page).to_have_url(url + 'v2/divergence.html')
     context.close()
-    print('PASS: V2 footer rows, rotating chevrons, keyboard/no-script disclosures, first/last navigation and six responsive layouts', flush=True)
+    print('PASS: all 21 deduplicated reference panels; V2 footer rows, rotating chevrons, keyboard/no-script disclosures, first/last navigation and six responsive layouts', flush=True)

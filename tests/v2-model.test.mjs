@@ -74,7 +74,7 @@ test('the 20 model lessons have exercises, transfer prompts and local CUDA refer
     assert.match(page, /id="v2-run"/);
     assert.match(page, /id="v2-result" hidden/);
     assert.match(page, /Compare your explanation/);
-    assert.match(page, /Use the documentation/);
+    assert.match(page, /Compare your answer/);
     assert.match(page, /docs.nvidia.com/);
     assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
   }
@@ -178,5 +178,18 @@ test('editor introductions do not present synthetic model assumptions as CUDA ru
     const model = page.indexOf('Explore the execution model');
     const assumption = page.indexOf(guidedLessons[lesson.slug].before.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'));
     assert.ok(editor < model && model < assumption, lesson.slug);
+  }
+});
+
+import { renderV2References } from '../content/v2-references.mjs';
+test('all 21 lessons pair each reference with its question without repeated source links', () => {
+  for (const lesson of v2Course) {
+    const html = renderV2References(lesson.slug);
+    const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+    assert.equal(urls.length, 2, lesson.slug);
+    assert.equal(new Set(urls).size, 2, lesson.slug);
+    assert.equal((html.match(/class="v2-reference-question"/g) ?? []).length, 2, lesson.slug);
+    assert.equal((html.match(/Compare your answer/g) ?? []).length, 2, lesson.slug);
+    assert.doesNotMatch(html, /data-v2-resource="documentation"/);
   }
 });

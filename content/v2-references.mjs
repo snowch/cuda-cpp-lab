@@ -29,12 +29,15 @@ export function renderV2References(slug) {
   const link = ([url, title]) => `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(title)} <span class="reference-new-tab">(new tab)</span></a>`;
   return `<section aria-labelledby="v2-references">
     <details class="more-settings v2-resource" data-v2-resource="references">
-    ${resourceSummary('references', 'References', 'Official CUDA guides for this lesson', 'v2-references')}
-    <div class="v2-resource-body"><ul class="chapter-reference-list">${keys.map(key => { const topic = referenceTopics[key]; return `<li>${link(topic)}<p>${escape(topic[2])}</p></li>`; }).join('')}</ul></div></details>
-    <details class="more-settings v2-resource" data-v2-resource="documentation">
-      ${resourceSummary('documentation', 'Use the documentation', 'Apply the guide to two new cases')}
-      <div class="v2-resource-body">
+    ${resourceSummary('references', 'References', 'Official CUDA guides, questions and answer comparisons', 'v2-references')}
+    <div class="v2-resource-body">
       <p>The browser exercises need no installed CUDA documentation version. For local execution, use the documentation matching your toolkit. External references need internet access.</p>
-      ${keys.map(key => {const topic = referenceTopics[key]; return `<section><h3>${escape(topic[1])}</h3><p>${escape(topic[3])}</p><p>${link(topic)}</p><details><summary>Compare your answer</summary><p>${escape(topic[4])}</p></details></section>`;}).join('')}
+      <ul class="chapter-reference-list">${keys.map(key => {
+        const topic = referenceTopics[key];
+        return `<li>${link(topic)}<p>${escape(topic[2])}</p>
+          <p class="v2-reference-question">${escape(topic[3])}</p>
+          <details><summary>Compare your answer</summary><p>${escape(topic[4])}</p></details>
+        </li>`;
+      }).join('')}</ul>
     </div></details></section>`;
 }
