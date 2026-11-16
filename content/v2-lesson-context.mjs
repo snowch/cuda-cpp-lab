@@ -111,3 +111,17 @@ export const lessonContexts = Object.fromEntries(Object.entries(rows).map(([slug
   const launches = [...source.matchAll(/^\s*\w+<<<[^]*?;/gm)].map(match => match[0].trim()).join('\n');
   return [slug, {code, label, launches, explanation, focus, hardware, stages, references}];
 }));
+
+// Some teaching models use different shapes or deliberately synthetic machinery.
+// Keep those assumptions with the model, rather than describing the editor's run.
+const introductions = {
+  scheduling: 'Each thread doubles two input values. A multiply needs its loaded input before it can proceed. The optional execution model shows how a ready warp can issue while another waits for data on the same SM.',
+  'shared-memory-banks': 'Shared memory is divided into banks that serve groups of word addresses. This starter reads four-byte integer words so the returned values identify their addresses. The optional model uses four-byte FP32 words to explore the same bank mapping and broadcasts.',
+  precision: 'The first eight inputs are 1.0003f and the next eight are −1.0f. The starter optionally rounds each input through FP16 before adding it to an FP32 total. Its input arrays remain FP32; the optional model separately compares input storage formats.',
+  attention: 'Attention forms scores from a query and keys. Softmax converts those scores to weights for a weighted sum of values. This starter follows one scalar query over eight scalar keys and values; the optional model expands the calculation to vectors.',
+  inference: 'A decoding step reads old keys and values and appends a new token’s key and value. This starter represents one layer with four FP32 values per key and per value. cached selects the old token count; the optional model accounts for a larger multi-layer cache.',
+  'matmul-investigation': 'Compare tile reuse with the storage each block needs. This starter multiplies 8 × 8 matrices and prints calculated input loads and shared bytes per block. The optional resource model uses an explicitly imaginary SM budget to explore how many blocks could fit.',
+  progress: 'Four threads initialise shared storage, and every thread reaches the block barrier before any dependent read. readers changes which threads consume neighbouring values. The optional model separately diagnoses what happens when a barrier’s participant set is incomplete.',
+  pipelines: 'Four chunks pass through two reusable GPU storage slots. CUDA streams queue the copies and kernels, and events order their dependencies. The starter checks the resulting values; the optional model explores overlap using explicitly synthetic durations.',
+};
+for (const [slug, introduction] of Object.entries(introductions)) lessonContexts[slug].introduction = introduction;

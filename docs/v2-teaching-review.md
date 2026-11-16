@@ -35,7 +35,10 @@ remains visible in both themes. Scoped code panels retain scrolling; prose stays
 at the shared reading measure. The header Contents link is removed in both hosted
 and standalone views; the brand and lesson breadcrumb retain navigation.
 
-Learning findings: fixed source excerpts must be distinguished from editor drafts
+Learning findings: model-only shapes and synthetic machine assumptions are placed
+inside the execution-model disclosure, so the opening describes the actual CUDA
+starter. This is particularly important for attention, inference, pipelines and
+the safe barrier-participation example. Fixed source excerpts must be distinguished from editor drafts
 and model cases. Attention's one-thread recurrence is not a production parallel
 attention implementation. Precision's FP16 round-trip leaves the arrays FP32.
 WMMA fragment layout is not a portable lane-to-coordinate map. Pipeline streams

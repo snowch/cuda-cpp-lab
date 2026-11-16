@@ -6,7 +6,7 @@ import { escape } from '../src/continuation-ui.mjs';
 import { v2Course } from './v2-course.mjs';
 import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
-import { lessonContexts } from './v2-lesson-context.mjs';
+import { lessonContexts, starterFor } from './v2-lesson-context.mjs';
 import { renderV2Hardware } from './v2-hardware.mjs';
 import { renderV2References } from './v2-references.mjs';
 import { renderV2Video } from './v2-lesson-video.mjs';
@@ -98,13 +98,14 @@ function renderFirstKernel(workbenchHref, program) {
   ${renderV2References('first-kernel').replace('id="v2-references"', 'id="v2-first-references"').replace('aria-labelledby="v2-references"', 'aria-labelledby="v2-first-references"')}`;
 }
 
-function renderStarter(slug) {
+function renderStarter(slug, workbenchHref) {
   const context = lessonContexts[slug];
   return `<h3>Read the starter</h3>
     ${codePanel({id: 'v2-starter-source', label: context.label, source: context.code, explainedLocally: true})}
     <p>${escape(context.explanation)}</p>
     ${codePanel({id: 'v2-starter-launch', label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
-    <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. See <code>main()</code> in the editor for the storage and dimension definitions. These excerpts describe the starter; edits in the editor do not change them.</p>`;
+    <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. See <code>main()</code> in the ${workbenchHref ? 'editor' : 'complete program'} for the storage and dimension definitions. These excerpts describe the fixed starter.</p>
+    ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : '<p>Editing the program does not change these fixed excerpts.</p>'}`;
 }
 
 function renderContext(slug, workbenchHref) {
@@ -139,14 +140,14 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     <h2 id="v2-setup">Before you run</h2>
     <p>${lesson.before}</p>
     ${definitions(lesson.terms)}
-    ${renderStarter(slug)}
+    ${renderStarter(slug, workbenchHref)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
     ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug, workbenchHref) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
     ${!workbenchHref ? renderContext(slug, workbenchHref) : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. Compile and run the complete program in the editor above. For optional local execution, use the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
+    <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. ${workbenchHref ? 'Compile and run the complete program in the editor above.' : 'This preview runs the teaching model.'} For optional local execution, use the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -182,9 +183,9 @@ function renderGuided(slug, workbenchHref) {
   const codeLabel = slug === 'attention' ? 'CUDA algorithm outline' : 'CUDA C++ excerpt';
   return `<section aria-labelledby="v2-setup">
     <h2 id="v2-setup">Before you run</h2>
-    <p>${lesson.before}</p>
+    <p>${escape(lessonContexts[slug].introduction ?? lesson.before)}</p>
     ${definitions(lesson.terms)}
-    ${renderStarter(slug)}
+    ${renderStarter(slug, workbenchHref)}
   </section>
   ${workbenchHref ? `<section class="book-section" aria-labelledby="v2-cuda-editor">
     <h2 id="v2-cuda-editor">Edit and run CUDA</h2>
@@ -197,6 +198,7 @@ function renderGuided(slug, workbenchHref) {
   <details class="more-settings v2-starter-model"><summary>Explore the execution model</summary>` : renderContext(slug, workbenchHref)}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
+    ${lessonContexts[slug].introduction ? `<p>${escape(lesson.before)}</p>` : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. The controls change the source shown below. Run model traces the selected starter case using the assumptions above. These controls do not execute changes from the CUDA editor.</p>
     <noscript><p class="notice">Enable JavaScript to change settings and run the model. You can still read the starter and compare the final explanation below.</p></noscript>

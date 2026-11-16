@@ -37,7 +37,7 @@ export function renderV2Hardware(slug) {
           <div class="v2-hw-chip"><h4>GPU compute chip</h4>
             <div class="v2-hw-sms">
               <div class="v2-hw-sm${focus === 'sm' ? ' is-focus' : ''}" data-hardware="sm">
-                <h5>SM · streaming multiprocessor</h5>
+                <h5>SM · streaming multiprocessor${focus === 'sm' ? '<span class="v2-hw-focus">This lesson</span>' : ''}</h5>
                 ${detail ? `<div class="v2-hw-assigned">Assigned blocks → resident warps → threads<br><small>Logical groups using this SM’s resources</small></div>
                   ${node('scheduler', 'Warp schedulers', 'Ready warp instructions.')}
                   <p class="v2-hw-link">Issue to the appropriate units</p>
@@ -45,7 +45,7 @@ export function renderV2Hardware(slug) {
                   <p class="v2-hw-link">Registers ↔ execution units · operands and results</p>
                   ${number >= 12 ? node('tensor', 'Tensor cores', 'Supported matrix multiply-accumulate instructions.') : ''}
                   ${node('global', 'Load/store units', 'Memory instructions and addresses.')}
-                  <div class="v2-hw-peers">${node('l1', 'L1 cache', 'Recently used data.')}${number >= 8 ? node(focus === 'banks' ? 'banks' : 'shared', number >= 9 ? 'Shared memory · banks' : 'Shared memory', 'Per-block data exchange.') : ''}</div>` : node('sm', 'Assigned blocks', 'Executes the kernel’s thread instructions.')}
+                  <div class="v2-hw-peers">${node('l1', 'L1 cache', 'Recently used data.')}${number >= 8 ? node(focus === 'banks' ? 'banks' : 'shared', number >= 9 ? 'Shared memory · banks' : 'Shared memory', 'Per-block data exchange.') : ''}</div>` : '<div class="v2-hw-assigned">Assigned blocks → threads<br><small>Logical groups using this SM’s resources</small></div>'}
               </div>
               <div class="v2-hw-other"><strong>Other SMs</strong><p>Have their own execution resources.</p><p>Blocks may be assigned to different SMs.</p></div>
             </div>
