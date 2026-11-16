@@ -74,7 +74,7 @@ test('the 20 model lessons have exercises, transfer prompts and local CUDA refer
     assert.match(page, /id="v2-run"/);
     assert.match(page, /id="v2-result" hidden/);
     assert.match(page, /Compare your explanation/);
-    assert.match(page, /Use the documentation/);
+    assert.match(page, /Compare your answer/);
     assert.match(page, /docs.nvidia.com/);
     assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
   }
@@ -140,7 +140,7 @@ test('each lesson connects its actual CUDA starter to execution, hardware and re
       assert.ok(source.includes(launch.trim()), lesson.slug);
     }
     const page = renderV2Lesson(lesson, s => s + '.html', s => '../lessons/' + s + '.html', './cuda-source-workbench.html');
-    const positions = ['id="v2-starter-source"', 'data-kernel-workbench=', 'id="v2-execution-title"', 'id="v2-hardware-title"', 'id="v2-video"', 'id="v2-apply"', 'id="v2-references"'].map(token => page.indexOf(token));
+    const positions = ['id="v2-starter-source"', 'data-kernel-workbench=', 'id="v2-execution-title"', 'id="v2-hardware-title"', 'id="v2-apply"', 'id="v2-video"', 'id="v2-references"'].map(token => page.indexOf(token));
     assert.ok(positions.every((n,i)=>n>=0 && (!i || n>positions[i-1])), lesson.slug);
     assert.match(page, /kind="captions"/);
     assert.ok(media[lesson.slug].durationSeconds > 0);
@@ -178,5 +178,30 @@ test('editor introductions do not present synthetic model assumptions as CUDA ru
     const model = page.indexOf('Explore the execution model');
     const assumption = page.indexOf(guidedLessons[lesson.slug].before.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'));
     assert.ok(editor < model && model < assumption, lesson.slug);
+  }
+});
+
+import { renderV2References } from '../content/v2-references.mjs';
+test('all 21 lessons pair each reference with its question without repeated source links', () => {
+  for (const lesson of v2Course) {
+    const html = renderV2References(lesson.slug);
+    const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+    assert.equal(urls.length, 2, lesson.slug);
+    assert.equal(new Set(urls).size, 2, lesson.slug);
+    assert.equal((html.match(/class="v2-reference-question"/g) ?? []).length, 2, lesson.slug);
+    assert.equal((html.match(/Compare your answer/g) ?? []).length, 2, lesson.slug);
+    assert.doesNotMatch(html, /data-v2-resource="documentation"/);
+  }
+});
+
+import { courseBreadcrumb } from '../content/v2-course-navigation.mjs';
+test('every breadcrumb contains all course destinations and one marked current lesson', () => {
+  for (const lesson of v2Course) {
+    const html = courseBreadcrumb(lesson, (slug,part) => slug === 'contents' ? '../' + (part ? '#'+part : '') : './'+slug+'.html');
+    assert.equal((html.match(/class="v2-course-part"/g) ?? []).length,3);
+    assert.equal((html.match(/class="v2-course-part"[^>]* open/g) ?? []).length,1);
+    for(const item of v2Course) assert.ok(html.includes('href="./'+item.slug+'.html"'),lesson.slug);
+    assert.match(html,/aria-label="Course contents"/);
+    assert.match(html,new RegExp('href="\\./'+lesson.slug+'\\.html" aria-current="page"'));
   }
 });

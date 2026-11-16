@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { mountCourseNavigation } from './v2-course-navigation.mjs';
 import { mountGuided } from './v2-guided.mjs';
 import { downloadCuda } from './cuda-program.mjs';
 import { fp32, v2Experiments, v2Run } from './v2-model.mjs';
@@ -48,6 +49,7 @@ window.addEventListener('message', event => {
 });
 
 export function mountV2(root = document) {
+  mountCourseNavigation(root);
   mountGuided(root);
   const activity = root.querySelector('[data-v2-mode]');
   if (!activity) return;

@@ -32,9 +32,9 @@ def check_v2(browser, url):
         for route, mode, part in zip(routes, modes, parts):
             page.goto(route)
             breadcrumb = page.get_by_role('navigation', name='Breadcrumb')
-            expect(breadcrumb.get_by_role('link', name='Contents', exact=True)).to_have_attribute('href', '../')
+            expect(breadcrumb.locator('.v2-course-overview')).to_have_attribute('href', '../')
             expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
-            expect(breadcrumb.locator('[aria-current="page"]')).to_have_text(page.locator('h1').inner_text())
+            expect(breadcrumb.locator(':scope > ol > li > [aria-current="page"]')).to_have_text(page.locator('h1').inner_text())
             expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
             expect(page.locator('.v2-hardware')).to_be_visible()
             expect(page.locator('.v2-diagram')).to_have_count(1)

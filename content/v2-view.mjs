@@ -3,6 +3,7 @@ import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
 import { fp32, v2Experiments, v2Run } from '../src/v2-model.mjs';
 import { guidedLessons } from '../src/v2-guided.mjs';
 import { escape } from '../src/continuation-ui.mjs';
+import { courseBreadcrumb, v2Groups as groups } from './v2-course-navigation.mjs';
 import { v2Course } from './v2-course.mjs';
 import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
@@ -41,12 +42,6 @@ const teaching = {
   },
 };
 
-const groups = [
-  ['part-cuda-foundations', 'CUDA foundations', 0, 4],
-  ['part-gpu-execution', 'GPU execution and AI workloads', 4, 15],
-  ['part-parallel-patterns', 'Parallel patterns', 15, 21],
-];
-
 export function renderV2Contents(href) {
   return `<header class="intro">
     <h1>Learn the GPU through CUDA</h1>
@@ -68,7 +63,6 @@ function workbenchEditor(mode, href, title) {
 }
 
 function renderFirstKernel(workbenchHref, program) {
-  const inlineRecording = workbenchHref && workbenchHref !== 'bundled';
   const kernel = program.match(/^__global__[^]*?^}/m)?.[0];
   const launch = program.match(/^\s*(hello<<<[^\n]+;)$/m)?.[1];
   if (!kernel || !launch) throw new Error('Lesson 1 needs a kernel and launch in the starter.');
@@ -93,9 +87,7 @@ function renderFirstKernel(workbenchHref, program) {
     ${v2Diagram('first-kernel')}
   </section>
   ${renderV2Hardware('first-kernel')}
-  ${renderFirstKernelVideo(inlineRecording)}
-  <p>In the next lesson, threads run one kernel to process five values. How will each thread choose its own array element?</p>
-  ${renderV2References('first-kernel').replace('id="v2-references"', 'id="v2-first-references"').replace('aria-labelledby="v2-references"', 'aria-labelledby="v2-first-references"')}`;
+  <p>In the next lesson, threads run one kernel to process five values. How will each thread choose its own array element?</p>`;
 }
 
 function renderStarter(slug, workbenchHref) {
@@ -108,13 +100,12 @@ function renderStarter(slug, workbenchHref) {
     ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : '<p>Editing the program does not change these fixed excerpts.</p>'}`;
 }
 
-function renderContext(slug, workbenchHref) {
+function renderContext(slug) {
   return `<section class="book-section" aria-labelledby="v2-execution-title">
     <h2 id="v2-execution-title">Execution trace</h2>
     ${v2Diagram(slug)}
   </section>
-  ${renderV2Hardware(slug)}
-  ${renderV2Video(slug, workbenchHref && workbenchHref !== 'bundled')}`;
+  ${renderV2Hardware(slug)}`;
 }
 
 function renderWorkbench(mode, href) {
@@ -144,8 +135,8 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
-    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug, workbenchHref) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
-    ${!workbenchHref ? renderContext(slug, workbenchHref) : ''}
+    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
+    ${!workbenchHref ? renderContext(slug) : ''}
     ${readerTask(lesson.task, 'Try it')}
     <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. ${workbenchHref ? 'Compile and run the complete program in the editor above.' : 'This preview runs the teaching model.'} For optional local execution, use the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
@@ -194,8 +185,8 @@ function renderGuided(slug, workbenchHref) {
     ${readerTask(programTasks[slug], 'Try it')}
     ${workbenchEditor(slug, workbenchHref, 'Editable CUDA program and output')}
   </section>
-  ${renderContext(slug, workbenchHref)}
-  <details class="more-settings v2-starter-model"><summary>Explore the execution model</summary>` : renderContext(slug, workbenchHref)}
+  ${renderContext(slug)}
+  <details class="more-settings v2-starter-model"><summary>Explore the execution model</summary>` : renderContext(slug)}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
     ${lessonContexts[slug].introduction ? `<p>${escape(lesson.before)}</p>` : ''}
@@ -239,24 +230,26 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
-  const [partId, partTitle] = groups.find(([, , start, end]) => start < number && number <= end);
   return `<header class="intro">
-    <nav class="v2-breadcrumb" aria-label="Breadcrumb">
-      <ol>
-        <li><a href="${href('contents')}">Contents</a></li>
-        <li><span aria-hidden="true">›</span><a href="${href('contents', partId)}">${partTitle}</a></li>
-        <li><span aria-hidden="true">›</span><span aria-current="page">${lesson.title}</span></li>
-      </ol>
-    </nav>
+    ${courseBreadcrumb(lesson, href)}
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
   ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
     lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug, workbenchHref)}
-  ${lesson.mode === 'hello' ? '' : renderV2References(lesson.slug)}
+  <section class="v2-resources" aria-label="Optional lesson resources">
+    ${lesson.mode === 'hello' ? renderFirstKernelVideo(workbenchHref && workbenchHref !== 'bundled') : renderV2Video(lesson.slug, workbenchHref && workbenchHref !== 'bundled')}
+    ${lesson.mode === 'hello' ? renderV2References(lesson.slug).replaceAll('v2-references', 'v2-first-references') : renderV2References(lesson.slug)}
+  </section>
   <nav class="v2-pager" aria-label="Lesson sequence">
-    <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
-    <a href="${href(next?.slug ?? 'contents')}">${next?.title ?? 'Contents'} →</a>
+    <a class="v2-page-card" href="${href(previous?.slug ?? 'contents')}">
+      <span class="v2-page-direction">${previous ? '← Previous lesson' : 'Course overview'}</span>
+      <strong>${escape(previous?.title ?? 'Choose a lesson')}</strong>
+    </a>
+    <a class="v2-page-card v2-page-next" href="${href(next?.slug ?? 'contents')}">
+      <span class="v2-page-direction">${next ? 'Next lesson →' : 'Course overview'}</span>
+      <strong>${escape(next?.title ?? 'Choose a lesson')}</strong>
+    </a>
   </nav>`;
 }
 
