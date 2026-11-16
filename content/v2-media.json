@@ -209,7 +209,7 @@
   },
   "matmul": {
     "durationSeconds": 53,
-    "bytes": 972192,
+    "bytes": 982069,
     "scenes": [
       {
         "start": 0,
@@ -339,7 +339,7 @@
   },
   "matmul-investigation": {
     "durationSeconds": 54,
-    "bytes": 1010123,
+    "bytes": 1020938,
     "scenes": [
       {
         "start": 0,
@@ -494,22 +494,22 @@
     "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
   },
   "token-routing": {
-    "durationSeconds": 51,
-    "bytes": 1023050,
+    "durationSeconds": 54,
+    "bytes": 932824,
     "scenes": [
       {
         "start": 0,
-        "end": 20.955000000000002,
+        "end": 24.1,
         "title": "Read the CUDA example"
       },
       {
-        "start": 20.955000000000002,
-        "end": 35.190000000000005,
+        "start": 24.1,
+        "end": 38.335,
         "title": "Follow execution"
       },
       {
-        "start": 35.190000000000005,
-        "end": 50.58500000000001,
+        "start": 38.335,
+        "end": 53.730000000000004,
         "title": "Locate the hardware"
       }
     ],

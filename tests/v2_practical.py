@@ -48,6 +48,15 @@ def check_v2_practical(browser, url, root):
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (slug,width,theme)
                 page.reload()
                 expect(page.locator('[data-practical-result]')).to_be_visible()
+                if width == 390 and theme == 'light':
+                    page.evaluate('''async slug=>{
+                        const offline=[...document.scripts].find(s=>s.src.includes('/src/offline.mjs'));
+                        const state=await import(new URL('experiment-state.mjs',offline.src));
+                        state.saveReadingState();
+                        localStorage.removeItem('gpu-lab:practical:1:'+slug);
+                    }''', slug)
+                    page.reload()
+                    expect(page.locator('[data-practical-result]')).to_be_visible()
                 activity = page.locator('[data-practical]')
                 control = activity.locator('select').first if activity.locator('select').count() else activity.locator('textarea').first if activity.locator('textarea').count() else activity.locator('input').first
                 control.dispatch_event('input')
