@@ -101,7 +101,7 @@ function renderFirstKernel(workbenchHref, program) {
 function renderStarter(slug) {
   const context = lessonContexts[slug];
   return `<h3>Read the starter</h3>
-    ${codePanel({id: 'v2-starter-source', label: 'CUDA C++ · fixed starter excerpt', source: context.code, explainedLocally: true})}
+    ${codePanel({id: 'v2-starter-source', label: context.label, source: context.code, explainedLocally: true})}
     <p>${escape(context.explanation)}</p>
     ${codePanel({id: 'v2-starter-launch', label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
     <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. See <code>main()</code> in the editor for the storage and dimension definitions. These excerpts describe the starter; edits in the editor do not change them.</p>`;

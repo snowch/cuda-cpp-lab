@@ -105,6 +105,9 @@ export const lessonContexts = Object.fromEntries(Object.entries(rows).map(([slug
   const to = source.indexOf(end, from);
   if (from < 0 || to < 0) throw new Error('Missing starter excerpt: ' + slug);
   const code = source.slice(from, to + (end === '\n}\n' ? 2 : 0)).replace(start.startsWith('__global__') ? /$^/g : /^ {4}/gm, '');
+  const kernelName = [...source.matchAll(/__global__\s+void\s+(\w+)\s*\(/g)].filter(match => match.index <= from).at(-1)?.[1];
+  const inMain = from >= source.indexOf('int main()');
+  const label = `CUDA C++ · ${inMain ? 'main() · host excerpt' : kernelName + (start.startsWith('__global__') ? ' · starter kernel' : ' · kernel body excerpt')}`;
   const launches = [...source.matchAll(/^\s*\w+<<<[^]*?;/gm)].map(match => match[0].trim()).join('\n');
-  return [slug, {code, launches, explanation, focus, hardware, stages, references}];
+  return [slug, {code, label, launches, explanation, focus, hardware, stages, references}];
 }));

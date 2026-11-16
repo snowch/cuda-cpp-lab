@@ -148,6 +148,12 @@ test('each lesson connects its actual CUDA starter to execution, hardware and re
     for (const file of ['recap.mp4','poster.jpg','captions.vtt']) {
       assert.ok(readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/' + file, import.meta.url)).length > 0);
     }
+    assert.equal(readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/recap.mp4', import.meta.url)).length, media[lesson.slug].bytes);
+    const captions = readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/captions.vtt', import.meta.url), 'utf8')
+      .split('\n').filter(line => line && line !== 'WEBVTT' && !line.includes(' --> ')).join(' ');
+    const transcript = [context.explanation, context.stages.map(([a,b]) => a + '. ' + b).join(' '), context.hardware].join(' ');
+    assert.equal(captions, transcript, lesson.slug + ' captions must match the visible transcript');
+
   }
 });
 
