@@ -12,7 +12,7 @@ from threading import Event, Thread
 from tempfile import TemporaryDirectory
 import time
 from urllib.parse import unquote, urlsplit
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import TimeoutError, sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / 'test-results'
@@ -355,18 +355,23 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 expect(concept_map.locator('#map-chapter, .map-match, .map-highlight')).to_have_count(0)
                 expect(concept_map.locator('#hardware-panel')).to_be_visible()
                 expect(concept_map.locator('#a-warp-1')).to_have_attribute('open','')
-                expect(page.locator('#gpu-map-panel')).to_be_visible()
-                # The reading document can finish before its restored iframe.
-                expect(page.locator('#gpu-map-panel .map-loading')).to_be_hidden(timeout=20000)
                 try:
-                    expect(page.frame_locator('#gpu-map-frame').locator('#a-w1-lane-7')).to_have_attribute('open','')
-                except AssertionError:
+                    # A release marker arrives with HTML. Wait for the reading
+                    # window to run its load-time restore after the multi-tab restart.
+                    page.wait_for_load_state('load', timeout=20000)
+                    expect(page.locator('#gpu-map-panel')).to_be_visible(timeout=20000)
+                    # The restored iframe still has to load and apply its state.
+                    expect(page.locator('#gpu-map-panel .map-loading')).to_be_hidden(timeout=20000)
+                    expect(page.frame_locator('#gpu-map-frame').locator('#a-w1-lane-7')).to_have_attribute('open','',timeout=20000)
+                except (AssertionError, TimeoutError):
                     print('Embedded map restore diagnostics:',page.evaluate("""() => {
-                      const frame=document.querySelector('#gpu-map-frame'),doc=frame.contentDocument;
-                      return {width:innerWidth,frameURL:frame.contentWindow.location.href,ready:doc.readyState,
-                        open:[...doc.querySelectorAll('.map-node[open]')].map(n=>n.id),
-                        notice:doc.querySelector('.restore-notice')?.textContent};
-                    }"""),flush=True)
+                      const frame=document.querySelector('#gpu-map-frame'),doc=frame?.contentDocument;
+                      return {url:location.href, width:innerWidth, ready:document.readyState,
+                        frameURL:frame?.src, frameReady:doc?.readyState,
+                        open:doc ? [...doc.querySelectorAll('.map-node[open]')].map(n=>n.id) : [],
+                        notice:document.querySelector('.restore-notice')?.textContent,
+                        frameNotice:doc?.querySelector('.restore-notice')?.textContent};
+                    }"""), 'Page errors:', errors, flush=True)
                     raise
                 page.locator('.gpu-map-link').click()
                 expect(page.locator('#gpu-map-panel')).to_be_hidden()
