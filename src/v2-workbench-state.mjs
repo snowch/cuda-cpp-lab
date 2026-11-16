@@ -31,6 +31,7 @@ registerExperiment('v2-cuda-workbench', () => ({
     throw new Error('The saved CUDA workbench state changed.');
   }
   editor.value = saved.source;
+  editor.dispatchEvent(new Event('gpu-lab:source-restored'));
   cells.forEach((cell, index) => { cell.textContent = saved.output[index]; });
   consoleOutput.textContent = saved.console;
   consoleOutput.hidden = saved.consoleHidden;

@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { mountFirstKernelFocus } from '../src/v2-editor-focus.mjs';
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html, {compilerBase, compilerParts} = {}) {
   if (!html.includes('lab.arrayProgram')) throw new Error('This workbench must support complete CUDA programs.');
@@ -45,6 +46,22 @@ html[data-inline] .editor-label { align-items:center; flex-wrap:wrap; }
 html[data-inline] .editor-label label { font-family:var(--mono); }
 html[data-inline] .controls { align-items:center; justify-content:flex-end; }
 html[data-inline] .kernel-shortcut { font-size:.82rem; color:#b8cdc4; }
+html[data-inline] .source-focus { margin:0 0 12px; font-size:1rem; line-height:1.5; }
+html[data-inline] .source-focus p { max-width:68ch; }
+html[data-inline] .source-focus strong { color:#a7e3c8; }
+html[data-inline] .source-focus code { font-family:var(--mono); }
+html[data-inline="hello"] textarea { font-size:16px; }
+html[data-inline] .source-focus button { margin-top:8px; min-height:44px; }
+html[data-inline] #source-focus-missing { margin-top:8px; color:#ffaea2; }
+html[data-inline] textarea.has-source-focus {
+  background-image:linear-gradient(to bottom,
+    transparent var(--source-focus-top),
+    #a7e3c82b var(--source-focus-top) var(--source-focus-bottom),
+    transparent var(--source-focus-bottom));
+  background-size:100% var(--source-focus-height);
+  background-attachment:local;
+  background-repeat:no-repeat;
+}
 @media(max-width:480px) { html[data-inline] .kernel-shortcut { display:none; } }
 </style>
 <script>
@@ -57,6 +74,8 @@ if (inlineMode && /^[a-z0-9-]+$/.test(inlineMode)) {
 </script></head>`)
     .replace('</body>', `<script>
 if (document.documentElement.dataset.inline) {
+  ${mountFirstKernelFocus.toString()}
+  if (inlineMode === 'hello') mountFirstKernelFocus(editor, reset);
   const filename = profile === 'hello' ? 'hello.cu' : advanced || inlineMode === 'coalescing' ? inlineMode + '.cu' : 'runKernel.cu';
   const toolbar = document.createElement('div');
   toolbar.className = 'kernel-tools';
@@ -90,9 +109,14 @@ if (document.documentElement.dataset.inline) {
       if (!run.disabled) run.click();
     }
   });
-  new ResizeObserver(() => {
+  const reportHeight = () => {
     parent.postMessage({gpuLabWorkbenchHeight: document.querySelector('main').offsetHeight + 4}, '*');
-  }).observe(document.querySelector('main'));
+  };
+  new ResizeObserver(reportHeight).observe(document.querySelector('main'));
+  // The parent's module can mount after the initial resize notification.
+  addEventListener('message', event => {
+    if (event.source === parent && event.data?.gpuLabWorkbenchMeasure) reportHeight();
+  });
 }
 </script></body>`);
 }

@@ -49,6 +49,11 @@ window.addEventListener('message', event => {
 });
 
 export function mountV2(root = document) {
+  for (const frame of root.querySelectorAll('[data-kernel-workbench]')) {
+    const measure = () => frame.contentWindow?.postMessage({gpuLabWorkbenchMeasure: true}, '*');
+    frame.addEventListener('load', measure);
+    measure();
+  }
   mountCourseNavigation(root);
   mountGuided(root);
   const activity = root.querySelector('[data-v2-mode]');

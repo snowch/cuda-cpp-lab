@@ -1,6 +1,7 @@
 from parallel_recordings import check_parallel_recordings
 from parallel import check_parallel
 from v2_navigation import check_v2_navigation
+from v2_editor_focus import check_v2_editor_focus
 from v2_footer import check_v2_footer
 from v2_context import check_v2_context
 from v2_browser import check_v2
@@ -68,6 +69,7 @@ try:
         check_v2_context(browser, URL, ROOT)
         check_v2_footer(browser, URL, ROOT)
         check_v2_navigation(browser, URL, ROOT)
+        check_v2_editor_focus(browser, URL, ROOT)
         if '--v2' in sys.argv:
             browser.close()
             print('PASS: V2 browser checks')
