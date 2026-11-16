@@ -55,22 +55,46 @@ html[data-inline] .source-focus code { font-family:var(--mono); }
 html[data-inline="hello"] textarea { font-size:16px; }
 html[data-inline] .source-focus button { margin-top:8px; min-height:44px; }
 html[data-inline] #source-focus-missing { margin-top:8px; color:#ffaea2; }
-html[data-inline] textarea.has-source-focus {
-  background-image:linear-gradient(to bottom,
-    transparent var(--source-focus-top),
-    #a7e3c82b var(--source-focus-top) var(--source-focus-bottom),
-    transparent var(--source-focus-bottom)),
-    linear-gradient(to bottom,
-      transparent var(--kernel-focus-top),
-      #8fcbff26 var(--kernel-focus-top) var(--kernel-focus-bottom),
-      transparent var(--kernel-focus-bottom)),
-    linear-gradient(to bottom,
-      transparent var(--launch-focus-top),
-      #8fcbff26 var(--launch-focus-top) var(--launch-focus-bottom),
-      transparent var(--launch-focus-bottom));
-  background-size:100% var(--source-focus-height);
-  background-attachment:local;
-  background-repeat:no-repeat;
+html[data-inline] .source-editor { background:#0f211d; border-radius:7px; }
+html[data-inline] .source-editor textarea {
+  --source-neutral-ink:#edf8f1;
+  --source-lesson-ink:#8fcbff;
+  --source-target-ink:#ffe09a;
+}
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+  html[data-inline] textarea.has-source-focus {
+    background-image:var(--source-focus-ink);
+    background-color:transparent;
+    background-clip:text;
+    -webkit-background-clip:text;
+    color:transparent;
+    caret-color:var(--source-neutral-ink);
+    background-size:100% var(--source-focus-height);
+    background-attachment:local;
+    background-position:0 0;
+    background-repeat:no-repeat;
+  }
+  /* Firefox scrolls the text mask but needs an explicit ink offset. */
+  @supports (-moz-appearance:none) {
+    html[data-inline] textarea.has-source-focus {
+      background-position:0 var(--source-focus-scroll-top, 0px);
+    }
+  }
+  html[data-inline] textarea.has-source-focus::selection {
+    color:#edf8f1;
+    background-color:#355b50;
+  }
+}
+@media(forced-colors:active) {
+  html[data-inline] textarea.has-source-focus {
+    background-image:none;
+    background-clip:border-box;
+    -webkit-background-clip:border-box;
+    background-color:Canvas;
+    color:CanvasText;
+    caret-color:CanvasText;
+  }
+  html[data-inline] .source-editor { background:Canvas; }
 }
 @media(max-width:480px) { html[data-inline] .kernel-shortcut { display:none; } }
 </style>
