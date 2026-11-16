@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { resourceSummary } from './v2-resource-view.mjs';
 import { escape } from '../src/continuation-ui.mjs';
 import { guides } from '../src/reference-tasks.mjs';
 import { lessonContexts } from './v2-lesson-context.mjs';
@@ -26,10 +27,14 @@ export const referenceTopics = {
 export function renderV2References(slug) {
   const keys = lessonContexts[slug]?.references ?? ['first-launch', 'first-storage'];
   const link = ([url, title]) => `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer">${escape(title)} <span class="reference-new-tab">(new tab)</span></a>`;
-  return `<section class="book-section" aria-labelledby="v2-references"><h2 id="v2-references">References</h2>
-    <ul class="chapter-reference-list">${keys.map(key => { const topic = referenceTopics[key]; return `<li>${link(topic)}<p>${escape(topic[2])}</p></li>`; }).join('')}</ul>
-    <details class="more-settings"><summary>Use the documentation</summary>
+  return `<section aria-labelledby="v2-references">
+    <details class="more-settings v2-resource" data-v2-resource="references">
+    ${resourceSummary('references', 'References', 'Official CUDA guides for this lesson', 'v2-references')}
+    <div class="v2-resource-body"><ul class="chapter-reference-list">${keys.map(key => { const topic = referenceTopics[key]; return `<li>${link(topic)}<p>${escape(topic[2])}</p></li>`; }).join('')}</ul></div></details>
+    <details class="more-settings v2-resource" data-v2-resource="documentation">
+      ${resourceSummary('documentation', 'Use the documentation', 'Apply the guide to two new cases')}
+      <div class="v2-resource-body">
       <p>The browser exercises need no installed CUDA documentation version. For local execution, use the documentation matching your toolkit. External references need internet access.</p>
       ${keys.map(key => {const topic = referenceTopics[key]; return `<section><h3>${escape(topic[1])}</h3><p>${escape(topic[3])}</p><p>${link(topic)}</p><details><summary>Compare your answer</summary><p>${escape(topic[4])}</p></details></section>`;}).join('')}
-    </details></section>`;
+    </div></details></section>`;
 }

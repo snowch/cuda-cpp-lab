@@ -28,9 +28,10 @@ load/store units and L1/L2 caches at lesson 5, shared memory at lesson 8, banks 
 lesson 9, tensor cores at lesson 12 and copy engines at lesson 20. Hardware roles
 and scope remain distinct from the teaching model's counters and timings.
 
-Each lesson includes a matching optional narrated recap, captions and transcript,
-then its local application exercise and annotated official references with two
-documentation questions. Lessons 2–21 use original V2 recordings rather than V1
+Each lesson ends its teaching with a local application exercise. Optional resource
+rows then group the matching narrated recap (with captions and transcript), annotated
+official references and two documentation questions. Previous/next lesson cards
+follow the resource rows and stack on phones. Lessons 2–21 use original V2 recordings rather than V1
 recordings with different examples. See `assets/media/v2/README.md` for rebuilds.
 Header navigation uses the brand, V1 link and theme control; the lesson breadcrumb
 provides Contents and the current part. Editor drafts and existing model controls,

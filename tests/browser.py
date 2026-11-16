@@ -1,5 +1,6 @@
 from parallel_recordings import check_parallel_recordings
 from parallel import check_parallel
+from v2_footer import check_v2_footer
 from v2_context import check_v2_context
 from v2_browser import check_v2
 from complete_recaps import check_complete_recaps
@@ -26,6 +27,7 @@ from launch_from_input import check_launch_from_input
 # Copyright © 2026 Christopher Snow.
 """Browser checks against the built course, including the GitHub Pages subpath."""
 import os
+import sys
 from pathlib import Path
 import subprocess
 import time
@@ -63,6 +65,11 @@ try:
         errors = []
         check_v2(browser, URL)
         check_v2_context(browser, URL, ROOT)
+        check_v2_footer(browser, URL, ROOT)
+        if '--v2' in sys.argv:
+            browser.close()
+            print('PASS: V2 browser checks')
+            raise SystemExit(0)
         for width in [1440, 390]:
             for theme in ["light", "dark"]:
                 context = browser.new_context(viewport={"width": width, "height": 1000}, color_scheme=theme)

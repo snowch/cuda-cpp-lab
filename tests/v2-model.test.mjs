@@ -140,7 +140,7 @@ test('each lesson connects its actual CUDA starter to execution, hardware and re
       assert.ok(source.includes(launch.trim()), lesson.slug);
     }
     const page = renderV2Lesson(lesson, s => s + '.html', s => '../lessons/' + s + '.html', './cuda-source-workbench.html');
-    const positions = ['id="v2-starter-source"', 'data-kernel-workbench=', 'id="v2-execution-title"', 'id="v2-hardware-title"', 'id="v2-video"', 'id="v2-apply"', 'id="v2-references"'].map(token => page.indexOf(token));
+    const positions = ['id="v2-starter-source"', 'data-kernel-workbench=', 'id="v2-execution-title"', 'id="v2-hardware-title"', 'id="v2-apply"', 'id="v2-video"', 'id="v2-references"'].map(token => page.indexOf(token));
     assert.ok(positions.every((n,i)=>n>=0 && (!i || n>positions[i-1])), lesson.slug);
     assert.match(page, /kind="captions"/);
     assert.ok(media[lesson.slug].durationSeconds > 0);
