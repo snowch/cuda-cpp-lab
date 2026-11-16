@@ -1,6 +1,32 @@
 # Copyright © 2026 Christopher Snow.
 """First-kernel edit guidance follows the source without changing the program."""
+import base64
 from playwright.sync_api import expect
+
+
+def assert_source_ink(editor, fragment, colour):
+    # Inspect rendered glyph pixels, not just CSS: engines differ in how a
+    # textarea's text clip follows its native scroll position.
+    png=base64.b64encode(editor.screenshot()).decode()
+    pixels=editor.evaluate('''async (e,{png,fragment,colour})=>{
+        const image=new Image();image.src='data:image/png;base64,'+png;await image.decode();
+        const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+        const context=canvas.getContext('2d');context.drawImage(image,0,0);
+        const style=getComputedStyle(e),h=parseFloat(style.lineHeight);
+        const line=e.value.slice(0,e.value.indexOf(fragment)).split('\\n').length-1;
+        const top=parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop)+line*h-e.scrollTop;
+        let count=0;
+        const pixels=context.getImageData(0,0,image.width,image.height).data;
+        for(let y=Math.max(0,Math.floor(top));y<Math.min(image.height,Math.ceil(top+h));y++){
+            for(let x=2;x<image.width-2;x++){
+                const at=(y*image.width+x)*4,r=pixels[at],g=pixels[at+1],b=pixels[at+2];
+                if(colour==='gold' ? r>220&&g>180&&b<190 : b>220&&g>160&&r<180)count++;
+            }
+        }
+        return count;
+    }''', {'png':png,'fragment':fragment,'colour':colour})
+    assert pixels>15, (fragment,colour,'The intended source line must have visible coloured glyphs.',pixels)
+
 
 
 def check_v2_editor_focus(browser, url, root):
@@ -56,6 +82,8 @@ def check_v2_editor_focus(browser, url, root):
                 # Review preceding task, guidance/editor and following output in context.
                 page.locator('[aria-labelledby="v2-first-kernel"]').screenshot(
                     path=str(root / f'test-results/v2-editor-focus-{width}-{theme}.png'))
+                assert_source_ink(editor,'__global__','blue')
+                assert_source_ink(editor,'output[0]','gold')
                 editor.screenshot(path=str(root / f'test-results/v2-editor-font-kernel-{width}-{theme}.png'))
                 show_launch.focus()
                 show_launch.press('Enter')
@@ -65,7 +93,7 @@ def check_v2_editor_focus(browser, url, root):
                     const bottom = parseFloat(e.style.getPropertyValue('--launch-focus-bottom'));
                     return top >= e.scrollTop && bottom <= e.scrollTop + e.clientHeight;
                 }'''), 'The launch should be reachable from the keyboard.'
-                assert editor.evaluate('e=>Math.abs(parseFloat(getComputedStyle(e).backgroundPositionY)+e.scrollTop)<1'), 'Font colours follow the scrolled source.'
+                assert_source_ink(editor,'hello<<<','blue')
                 editor.screenshot(path=str(root / f'test-results/v2-editor-launch-{width}-{theme}.png'))
                 show.click()
 
@@ -171,6 +199,7 @@ def check_v2_editor_focus(browser, url, root):
         page.get_by_role('button',name='Show target line').press('Enter')
         editor.evaluate('e=>e.scrollLeft=e.scrollWidth-e.clientWidth')
         assert editor.evaluate('e=>e.scrollLeft>1000')
+        assert_source_ink(editor,'output[0]','gold')
         editor.screenshot(path=str(root/'test-results/v2-editor-font-horizontal.png'))
         page.get_by_role('button',name='Show target line').press('Enter')
         assert editor.evaluate('e=>e.scrollLeft===0')

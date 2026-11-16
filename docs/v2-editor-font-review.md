@@ -9,8 +9,8 @@ still names output[0] and the two reveal buttons work independently of colour.
 
 The original textarea remains the editable and accessible source. A gradient is
 clipped to its glyphs rather than painting line backgrounds. Source ranges follow
-edits, nested braces and multiline launches; scroll offsets are applied explicitly
-so Firefox and Chromium keep colours on the same code. Source export, selection,
+edits, nested braces and multiline launches; Firefox receives an explicit ink offset while Chromium scrolls its local text
+paint natively, keeping colours on the same code in both engines. Source export, selection,
 caret placement and saved drafts retain native behaviour. High-contrast mode uses
 Canvas/CanvasText without custom colour emphasis. Browsers without text clipping
 retain the normal readable source style.

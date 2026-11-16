@@ -88,15 +88,14 @@ export function mountFirstKernelFocus(editor, reset) {
     const offset = section === 'launch' ? launch?.index : target;
     if (offset == null) return;
     const top = parseFloat(editor.style.getPropertyValue('--' + section + '-focus-top'));
+    // Keep the native caret at the revealed line even when restoring source
+    // without focusing it. Otherwise Firefox can scroll back to the old end
+    // position after the textarea's value changes.
+    if (focus) editor.focus({preventScroll: true});
+    editor.setSelectionRange(offset, offset);
     // Include the kernel declaration above the assignment, without selecting text.
     editor.scrollTop = Math.max(0, top - position.height * 2);
     editor.scrollLeft = 0;
-    if (focus) {
-      editor.focus({preventScroll: true});
-      editor.setSelectionRange(offset, offset);
-      // Setting the caret can scroll a textarea; keep its context visible.
-      editor.scrollTop = Math.max(0, top - position.height * 2);
-    }
     syncScroll();
   }
 

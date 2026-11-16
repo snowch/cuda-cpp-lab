@@ -70,9 +70,15 @@ html[data-inline] .source-editor textarea {
     color:transparent;
     caret-color:var(--source-neutral-ink);
     background-size:100% var(--source-focus-height);
-    background-attachment:scroll;
-    background-position:0 var(--source-focus-scroll-top, 0px);
+    background-attachment:local;
+    background-position:0 0;
     background-repeat:no-repeat;
+  }
+  /* Firefox scrolls the text mask but needs an explicit ink offset. */
+  @supports (-moz-appearance:none) {
+    html[data-inline] textarea.has-source-focus {
+      background-position:0 var(--source-focus-scroll-top, 0px);
+    }
   }
   html[data-inline] textarea.has-source-focus::selection {
     color:#edf8f1;
