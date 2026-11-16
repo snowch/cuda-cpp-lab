@@ -13,6 +13,7 @@ import { renderV2Hardware } from './v2-hardware.mjs';
 import { renderV2References } from './v2-references.mjs';
 import { renderV2Video } from './v2-lesson-video.mjs';
 import { renderFirstKernelVideo } from './v2-first-kernel-video.mjs';
+import { renderV2Brand } from './v2-brand.mjs';
 
 const teaching = {
   scale: {
@@ -45,8 +46,9 @@ const teaching = {
 
 export function renderV2Contents(href) {
   return `<header class="intro">
-    <h1>Learn the GPU through CUDA</h1>
-    <p class="lead">Start with one small CUDA program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
+    <h1>Learn the GPU through CUDA C++</h1>
+    <p class="lead">Start with one small CUDA C++ program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
+    <p>No installation or GPU required. Compile and run CUDA C++ examples in this browser using GPU simulation.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
   </header>
   ${groups.map(([id, title, start, end]) => `<section class="v2-list" aria-labelledby="${id}">
@@ -272,12 +274,14 @@ export function renderV2Page(lesson, versionMarkup = '', { home = false, firstPr
 <!-- Copyright © 2026 Christopher Snow. -->
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>${title}</title>${styles}
+<meta name="description" content="Learn GPU architecture through hands-on CUDA C++ lessons. Edit, compile and run examples in your browser using GPU simulation.">
+<link rel="icon" type="image/svg+xml" href="${base}assets/icon.svg">
 <script type="module" src="${base}src/theme.mjs"></script>
 ${lesson ? `<script type="module" src="${base}src/v2.mjs"></script><script type="module" src="${base}src/recording.mjs"></script>` : ''}
 ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}</head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
-<header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
+<header class="topbar v2-topbar">${renderV2Brand(base, base + 'assets/icon.svg')}
 <div class="top-actions"><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
