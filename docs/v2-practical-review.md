@@ -50,6 +50,10 @@ settings remain unknown. Those profiled durations do not benchmark our kernels.
 The timing importer has no prefilled performance numbers and cannot authenticate
 an imported report's provenance.
 
+The softmax harness limits rows to 128 and total elements to 8192, keeping its
+32-thread blocks within the browser simulator’s 4096-thread launch budget. This
+is an exercise limit rather than a CUDA hardware limit.
+
 The resource calculator is explicitly synthetic: 65,536 registers, 64 KiB shared,
 64 warps, 2048 threads and 16 blocks per SM; it omits allocation granularity and
 reserved storage. It predicts residency bounds only, not spills or elapsed time.

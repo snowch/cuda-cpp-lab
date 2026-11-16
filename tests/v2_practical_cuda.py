@@ -17,6 +17,7 @@ CASES = [
  ('softmax-capstone', 'reference', 'mismatches: 0'),
  ('softmax-capstone', [('rows = 3','rows = 1'),('columns = 33','columns = 1')], 'mismatches: 0'),
  ('softmax-capstone', [('columns = 33','columns = 65'),('shift = 1000.0f','shift = 0.0f')], 'mismatches: 0'),
+ ('softmax-capstone', [('rows = 3','rows = 128'),('columns = 33','columns = 1')], 'mismatches: 0'),
 ]
 def check(browser,url,compiler):
     context=lesson_context(browser,compiler)

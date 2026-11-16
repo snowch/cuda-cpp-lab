@@ -22,7 +22,8 @@ bool closeEnough(float actual, float expected) {
 constexpr int rows = 3;
 constexpr int columns = 33;
 constexpr float shift = 1000.0f;
-static_assert(rows > 0 && columns > 0 && rows * columns <= 8192);
+static_assert(rows > 0 && rows <= 128 && columns > 0 && rows * columns <= 8192,
+    "Browser exercise: 1-128 rows, positive columns, at most 8192 elements.");
 
 // BEGIN SOFTMAX KERNEL
 __global__ void rowSoftmax(const float* input, float* output, int cols) {
