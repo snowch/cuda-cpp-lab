@@ -17,6 +17,10 @@ from playwright.sync_api import TimeoutError, sync_playwright, expect
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / 'test-results'
 RESULTS.mkdir(exist_ok=True)
+# This is a whole-course transfer plus hash verification, not an inactivity
+# deadline. The 287 MB release can take over 30 s on persistent-profile CI disks.
+# The application's separate progress/inactivity watchdog remains in force.
+DOWNLOAD_TIMEOUT = 120_000
 
 class CourseHandler(BaseHTTPRequestHandler):
     revision = 'one'
@@ -70,7 +74,23 @@ def check(page):
     panel(page); page.locator('#check-update').click()
 
 def ready(page):
-    expect(page.locator('#offline-status')).to_have_text('Available offline', timeout=30000)
+    expect(page.locator('#offline-status')).to_have_text('Available offline', timeout=DOWNLOAD_TIMEOUT)
+
+def update_ready(page):
+    started = time.monotonic()
+    try:
+        expect(page.locator('#version-status')).to_have_text('Update ready', timeout=DOWNLOAD_TIMEOUT)
+        expect(page.locator('#app-status-error')).to_be_empty()
+    except AssertionError:
+        print('Update diagnostics:', {
+            'elapsed': time.monotonic() - started,
+            'error': page.locator('#app-status-error').inner_text(),
+            'progress': page.locator('#progress-text').inner_text(),
+            'storage': page.evaluate('navigator.storage.estimate()'),
+            'recentRequests': CourseHandler.requests[-8:],
+        }, flush=True)
+        raise
+    print(f'Update verified in {time.monotonic() - started:.2f}s', flush=True)
 
 def built(temp, name):
     source = temp / name; source.mkdir()
@@ -104,7 +124,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
             expect(tab.locator('#save-offline')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
-            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+            tab.locator('#download-update').click();update_ready(tab)
             expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
             expect(tab.locator('#save-offline')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
@@ -331,16 +351,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
                 ready(page);expect(page.locator('#restart-update')).to_be_hidden()
                 CourseHandler.fail=None;page.locator('#download-update').click()
-                try:
-                    expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
-                except AssertionError:
-                    print('Update diagnostics:', {
-                        'error':page.locator('#app-status-error').inner_text(),
-                        'progress':page.locator('#progress-text').inner_text(),
-                        'storage':page.evaluate('navigator.storage.estimate()'),
-                        'recentRequests':CourseHandler.requests[-8:],
-                    },flush=True)
-                    raise
+                update_ready(page)
                 page.locator('#later-update').click();expect(page.locator('#app-status-summary')).to_contain_text('Update ready')
                 assert second.locator('meta[name="gpu-release"]').get_attribute('content')==releases['one']['id']
                 # Input composition in ANY window blocks everyone without resetting state.
@@ -484,7 +495,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             manifest=ctx.new_cdp_session(tab).send('Page.getAppManifest')
             assert not manifest['errors'],manifest
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
-            tab.locator('#download-update').click();expect(tab.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+            tab.locator('#download-update').click();update_ready(tab)
             tab.locator('#later-update').click();ctx.close()
             ctx=p.chromium.launch_persistent_context(str(profile),**options);ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'v1.html')

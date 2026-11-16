@@ -65,12 +65,15 @@ test('background cache pruning finishes before an update can create its staging 
   const old={schema:1,id:'1'.repeat(64),commit:null,date:null,files:[file('old page')],bytes:8};
   const next={schema:1,id:'2'.repeat(64),commit:null,date:null,files:[file('new page')],bytes:8};
   const paused=deferred(),resume=deferred(),fetched=deferred();
-  let keysCalls=0,prunePaused=false,overlap=false;
+  let keysCalls=0,prunePaused=false,overlap=false,nextReads=0;
   const caches={
     async open(name){
       if(!stores.has(name)) stores.set(name,new Map());
       const entries=stores.get(name);
-      return {async keys(){return [...entries.keys()].map(url=>new Request(url));},async match(url){return entries.get(String(url))?.clone();},async put(url,response){entries.set(String(url),response.clone());}};
+      return {async keys(){return [...entries.keys()].map(url=>new Request(url));},async match(url){
+        if(name===prefix+'release-'+next.id && String(url)===base+'index.html')nextReads++;
+        return entries.get(String(url))?.clone();
+      },async put(url,response){entries.set(String(url),response.clone());}};
     },
     async keys(){
       if(++keysCalls===2){prunePaused=true;paused.resolve();await resume.promise;prunePaused=false;}
@@ -103,7 +106,11 @@ test('background cache pruning finishes before an update can create its staging 
   assert.equal(overlap,false,'Update fetched assets while cleanup could still delete its cache');
   assert.ok(!update.messages.some(m=>m.error),JSON.stringify(update.messages));
   assert.equal(update.messages.at(-1).result.pendingReady,true);
+  assert.equal(nextReads,2,'A cache miss and final verification suffice; acknowledgement must not reread the downloaded book');
   assert.ok(stores.has(prefix+'release-'+next.id));
+  stores.get(prefix+'release-'+next.id).delete(base+'index.html');
+  const evicted=rpc('STATUS');await evicted.work;
+  assert.equal(evicted.messages.at(-1).result.pendingReady,false,'The download acknowledgement cannot hide later eviction');
 });
 
 test('readiness verification bounds parallel I/O and still rejects missing bytes and same-size corruption',async()=>{

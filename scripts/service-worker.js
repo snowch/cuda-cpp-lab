@@ -77,7 +77,7 @@ function prune() {
   })().finally(() => { pruning = null; });
   return pruning;
 }
-async function status(running) {
+async function status(running, justVerified) {
   const state = await readState();
   const release = await manifest(state.active || running);
   const pending = await manifest(state.pending);
@@ -86,8 +86,8 @@ async function status(running) {
   // explicitly removes it; treat it as consent to preserve offline access on update.
   const legacy = keys.some(k => k.startsWith(PREFIX) && !k.startsWith(PREFIX + 'release-') && k !== META);
   return { ...state, runningRelease: await manifest(running), saved: Boolean(state.saved || legacy), legacy,
-    offlineReady: Boolean(state.saved && await complete(release)),
-    pendingReady: Boolean(pending && await complete(pending)),
+    offlineReady: Boolean(state.saved && ((justVerified && release?.id === justVerified.id) || await complete(release))),
+    pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending))),
     busy: Boolean(operation || restarting) };
 }
 async function rememberPage(release, paths) {
@@ -142,7 +142,6 @@ async function prepare(release, save, port, signal) {
   }
   state.partial = null;
   await writeState(state);
-  await broadcast({ type: 'STATUS_CHANGED' });
 }
 async function courseWindows(release) {
   const paths = new Set(release.files.filter(f => f.path.endsWith('.html')).map(f => new URL(f.path, BASE).pathname));
@@ -211,7 +210,10 @@ self.addEventListener('message', event => {
           validateRelease(data.release);
           const state = await readState(); state.partial = data.release.id; await writeState(state);
           await prepare(data.release, Boolean(data.save), port, operation.signal);
-          result = await status(data.running);
+          // prepare() has just verified every byte. Reuse that result for this
+          // response instead of scanning the new release again. Later STATUS
+          // requests still verify storage afresh to detect eviction.
+          result = await status(data.running, data.release);
         } finally { operation = null; await broadcast({ type: 'STATUS_CHANGED' }); }
       } else if (data.type === 'RESTART') {
         if (operation || restarting) throw new Error('Wait for the current operation to finish.');
