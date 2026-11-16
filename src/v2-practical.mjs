@@ -17,7 +17,8 @@ function calculate(slug,values) {
  }
  if(slug==='multi-block-scan') {
   const m=blockScan(n),start=m.blocks.at(-1)?.start??0;
-  return {message:`${m.kernels} kernel phases; ${m.total} selected flags. ${m.blocks.length?'Last block start: '+start+'.':'Empty input: no launch.'} Your prediction ${prediction===start?'matches.':'differs.'}`,html:table('Cross-block prefix construction',['Block','Valid / padded lanes','Total','Start'],m.blocks.map(b=>[b.block,b.valid+' / '+b.padding,b.total,b.start]))+table('Global offsets · first 80 elements',['Index','Flag','Exclusive offset'],m.output.slice(0,80).map((v,i)=>[i,m.input[i],v]))+(n>80?'<p>Showing 80 of '+n+' offsets; all were calculated.</p>':'')};
+  const indices=[...new Set([0,1,30,31,32,33,62,63,64,65,n-2,n-1])].filter(i=>i>=0&&i<n).sort((a,b)=>a-b);
+  return {message:`${m.kernels} kernel phases; ${m.total} selected flags. ${m.blocks.length?'Last block start: '+start+'.':'Empty input: no launch.'} Your prediction ${prediction===start?'matches.':'differs.'}`,html:table('Cross-block prefix construction',['Block','Valid / padded lanes','Total','Start'],m.blocks.map(b=>[b.block,b.valid+' / '+b.padding,b.total,b.start]))+table('Global offsets · selected block boundaries and tail',['Index','Flag','Exclusive offset'],indices.map(i=>[i,m.input[i],m.output[i]]))+'<p>Showing '+indices.length+' selected offsets of '+n+'; every offset was calculated.</p>'};
  }
  if(slug==='resource-tradeoffs') {
   const m=residency(Number(values.threads),Number(values.registers),Number(values.shared));

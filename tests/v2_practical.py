@@ -43,7 +43,7 @@ def check_v2_practical(browser, url, root):
                     expect(result).to_be_visible()
                 # Actual preceding explanation -> controls/results -> application.
                 for label, target in [('opening',page.locator('.intro')), ('activity',activity), ('references',page.locator('.v2-resources'))]:
-                    target.scroll_into_view_if_needed()
+                    target.evaluate('el=>scrollTo({top:Math.max(0,el.getBoundingClientRect().top+scrollY-140),behavior:"instant"})')
                     page.screenshot(path=str(root / f'test-results/practical-{slug}-{width}-{theme}-{label}.png'))
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (slug,width,theme)
                 page.reload()
