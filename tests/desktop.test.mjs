@@ -73,4 +73,6 @@ test('appendix covers setup, expected output, provenance and explicit unsupporte
   const html=renderDesktop(desktopExamples(),{revision:'test-revision',image:'test-image'});
   for(const text of ['test-revision','test-image','PTX_SIM_MODE_FUNC=1','SM7_QV100','compute_70','PASS: verified 5','--network none','--device cpu','Tensor-core/WMMA','not a runnable language model'])assert.ok(html.includes(text),text);
   assert.equal([...html.matchAll(/<th scope="row">/g)].length,21+parallelChapters.length);
+  assert.match(html,/v2-practical\/benchmark-fusion\.cu/);
+  assert.match(html,/Native CUDA event benchmark; GPU\/toolkit execution and timings unvalidated/);
 });
