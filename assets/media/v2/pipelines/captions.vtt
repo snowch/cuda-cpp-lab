@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:10.395
+In main, ready[s] is recorded after the input copy in copy’s stream. cudaStreamWaitEvent orders compute after that event, and process doubles the slot values.
+
+00:00:10.395 --> 00:00:16.350
+Later, used[s] is recorded after the output copy; the next reuse waits for it.
+
+00:00:16.350 --> 00:00:20.435
+Streams are ordered queues, and events connect their dependencies.
+
+00:00:21.935 --> 00:00:23.615
+Copy and record ready.
+
+00:00:23.615 --> 00:00:25.665
+Finish supplying the slot’s input.
+
+00:00:25.665 --> 00:00:26.830
+Wait and compute.
+
+00:00:26.830 --> 00:00:29.535
+Order the kernel after its input event.
+
+00:00:29.535 --> 00:00:30.940
+Record consumed.
+
+00:00:30.940 --> 00:00:34.230
+Protect the slot until output copying finishes.
+
+00:00:35.730 --> 00:00:43.170
+Copy engines can transfer data while SMs execute independent kernels, if the device and workload support overlap.
+
+00:00:43.170 --> 00:00:46.765
+Streams express ordering, not dedicated hardware.
+
+00:00:46.765 --> 00:00:52.425
+A reusable buffer must wait for its previous consumer, even when its next copy is ready.

@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:05.260
+doubleValues gives each thread two elements, separated by blockDim.x.
+
+00:00:05.260 --> 00:00:13.095
+Each assignment needs a loaded input before its multiply. main sets threads from warpsPerBlock and allocates twice as many elements.
+
+00:00:13.095 --> 00:00:18.095
+The teaching trace models this dependency, not compiler instruction order.
+
+00:00:19.595 --> 00:00:20.430
+Load.
+
+00:00:20.430 --> 00:00:22.860
+A warp requests its input values.
+
+00:00:22.860 --> 00:00:24.690
+Wait or issue another warp.
+
+00:00:24.690 --> 00:00:27.885
+Only instructions with ready operands can issue.
+
+00:00:27.885 --> 00:00:29.410
+Multiply and store.
+
+00:00:29.410 --> 00:00:31.940
+Use the returned values and write results.
+
+00:00:33.440 --> 00:00:37.690
+An SM keeps resident warps and their register values available.
+
+00:00:37.690 --> 00:00:42.905
+A warp scheduler selects a ready instruction for an appropriate execution unit.
+
+00:00:42.905 --> 00:00:46.550
+Another warp can issue while a load dependency blocks the first.

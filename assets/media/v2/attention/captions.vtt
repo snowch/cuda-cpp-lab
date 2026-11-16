@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:11.425
+Inside onlineAttention, next is the new maximum score found for the tile. expf supplies the rescaling factor and weights. denominator and weighted carry the running totals.
+
+00:00:11.425 --> 00:00:18.665
+This correctness example uses one GPU thread over eight keys; it is not a parallel FlashAttention implementation.
+
+00:00:20.165 --> 00:00:21.840
+Find tile maximum.
+
+00:00:21.840 --> 00:00:24.375
+Compare scores with the running maximum.
+
+00:00:24.375 --> 00:00:25.830
+Rescale and add.
+
+00:00:25.830 --> 00:00:28.625
+Carry a denominator and weighted sum forward.
+
+00:00:28.625 --> 00:00:29.675
+Normalise.
+
+00:00:29.675 --> 00:00:32.560
+Divide after processing all key tiles.
+
+00:00:34.060 --> 00:00:38.890
+Running totals can remain as thread working state while successive key and value tiles are read.
+
+00:00:38.890 --> 00:00:42.560
+Avoiding a full score array changes intermediate storage.
+
+00:00:42.560 --> 00:00:48.835
+Real parallel attention kernels also use shared memory and matrix units according to their implementation.

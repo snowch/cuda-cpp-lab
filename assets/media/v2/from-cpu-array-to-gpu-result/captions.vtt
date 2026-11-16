@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:10.340
+cudaMalloc reserves GPU storage for d_x and d_y. cudaMemcpy copies sizeof(x) bytes from CPU array x to d_x.
+
+00:00:10.340 --> 00:00:17.105
+The later kernel launch passes n elements, and a device-to-host copy fills CPU array y before it is printed.
+
+00:00:18.605 --> 00:00:19.530
+Allocate.
+
+00:00:19.530 --> 00:00:22.620
+Reserve separate GPU input and output storage.
+
+00:00:22.620 --> 00:00:23.825
+Copy input.
+
+00:00:23.825 --> 00:00:27.090
+Move x from CPU memory to d_x.
+
+00:00:27.090 --> 00:00:28.535
+Run and read back.
+
+00:00:28.535 --> 00:00:32.095
+Write d_y, then copy its values to y.
+
+00:00:33.595 --> 00:00:36.055
+CPU arrays live in system RAM.
+
+00:00:36.055 --> 00:00:39.145
+Device arrays live in GPU device memory.
+
+00:00:39.145 --> 00:00:45.185
+Allocation reserves storage; copying moves values, and the SM executes the calculation.

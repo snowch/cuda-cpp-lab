@@ -1,0 +1,522 @@
+{
+  "one-thread-one-element": {
+    "durationSeconds": 37,
+    "bytes": 586760,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 14.17,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 14.17,
+        "end": 26.825,
+        "title": "Follow execution"
+      },
+      {
+        "start": 26.825,
+        "end": 36.875,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "more-threads-than-elements": {
+    "durationSeconds": 41,
+    "bytes": 634987,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 16.994999999999997,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 16.994999999999997,
+        "end": 29.759999999999998,
+        "title": "Follow execution"
+      },
+      {
+        "start": 29.759999999999998,
+        "end": 40.915,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "from-cpu-array-to-gpu-result": {
+    "durationSeconds": 47,
+    "bytes": 686613,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 18.105,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 18.105,
+        "end": 33.095,
+        "title": "Follow execution"
+      },
+      {
+        "start": 33.095,
+        "end": 46.185,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "coalescing": {
+    "durationSeconds": 47,
+    "bytes": 728984,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.975,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 17.975,
+        "end": 32.555,
+        "title": "Follow execution"
+      },
+      {
+        "start": 32.555,
+        "end": 46.865,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "scheduling": {
+    "durationSeconds": 48,
+    "bytes": 724488,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 19.095,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 19.095,
+        "end": 32.94,
+        "title": "Follow execution"
+      },
+      {
+        "start": 32.94,
+        "end": 47.55,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "divergence": {
+    "durationSeconds": 46,
+    "bytes": 692791,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.535,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 17.535,
+        "end": 31.305,
+        "title": "Follow execution"
+      },
+      {
+        "start": 31.305,
+        "end": 45.525,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "reduction": {
+    "durationSeconds": 43,
+    "bytes": 705883,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 16.84,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 16.84,
+        "end": 30.625,
+        "title": "Follow execution"
+      },
+      {
+        "start": 30.625,
+        "end": 42.735,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "shared-memory-banks": {
+    "durationSeconds": 50,
+    "bytes": 755039,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 18.88,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 18.88,
+        "end": 33.095,
+        "title": "Follow execution"
+      },
+      {
+        "start": 33.095,
+        "end": 49.54,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "matmul": {
+    "durationSeconds": 47,
+    "bytes": 725923,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 20.125,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 20.125,
+        "end": 34.215,
+        "title": "Follow execution"
+      },
+      {
+        "start": 34.215,
+        "end": 46.67,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "precision": {
+    "durationSeconds": 53,
+    "bytes": 900617,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 21.875,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 21.875,
+        "end": 36.675,
+        "title": "Follow execution"
+      },
+      {
+        "start": 36.675,
+        "end": 52.42,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "tensor-cores": {
+    "durationSeconds": 54,
+    "bytes": 905868,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 21.4,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 21.4,
+        "end": 35.9,
+        "title": "Follow execution"
+      },
+      {
+        "start": 35.9,
+        "end": 53.525,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "attention": {
+    "durationSeconds": 50,
+    "bytes": 774903,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 19.665,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 19.665,
+        "end": 33.56,
+        "title": "Follow execution"
+      },
+      {
+        "start": 33.56,
+        "end": 49.835,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "inference": {
+    "durationSeconds": 44,
+    "bytes": 706875,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.36,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 17.36,
+        "end": 29.935,
+        "title": "Follow execution"
+      },
+      {
+        "start": 29.935,
+        "end": 43.28,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "matmul-investigation": {
+    "durationSeconds": 47,
+    "bytes": 747861,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.939999999999998,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 17.939999999999998,
+        "end": 32.05499999999999,
+        "title": "Follow execution"
+      },
+      {
+        "start": 32.05499999999999,
+        "end": 46.86999999999999,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "histograms": {
+    "durationSeconds": 49,
+    "bytes": 750451,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 19.66,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 19.66,
+        "end": 34.035,
+        "title": "Follow execution"
+      },
+      {
+        "start": 34.035,
+        "end": 48.61,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "scan": {
+    "durationSeconds": 46,
+    "bytes": 737598,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 17.805,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 17.805,
+        "end": 31.725,
+        "title": "Follow execution"
+      },
+      {
+        "start": 31.725,
+        "end": 45.705,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "compaction": {
+    "durationSeconds": 49,
+    "bytes": 739425,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 20.119999999999997,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 20.119999999999997,
+        "end": 33.175,
+        "title": "Follow execution"
+      },
+      {
+        "start": 33.175,
+        "end": 48.78,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "progress": {
+    "durationSeconds": 42,
+    "bytes": 659925,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 14.745000000000001,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 14.745000000000001,
+        "end": 28.17,
+        "title": "Follow execution"
+      },
+      {
+        "start": 28.17,
+        "end": 41.355000000000004,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "pipelines": {
+    "durationSeconds": 54,
+    "bytes": 894645,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 21.435,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 21.435,
+        "end": 35.23,
+        "title": "Follow execution"
+      },
+      {
+        "start": 35.23,
+        "end": 53.425,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  },
+  "token-routing": {
+    "durationSeconds": 49,
+    "bytes": 795766,
+    "scenes": [
+      {
+        "start": 0,
+        "end": 19.225,
+        "title": "Read the CUDA example"
+      },
+      {
+        "start": 19.225,
+        "end": 33.46,
+        "title": "Follow execution"
+      },
+      {
+        "start": 33.46,
+        "end": 48.855000000000004,
+        "title": "Locate the hardware"
+      }
+    ],
+    "speech": {
+      "engine": "Flite",
+      "voice": "slt"
+    },
+    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+  }
+}

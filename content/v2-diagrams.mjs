@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { lessonContexts } from './v2-lesson-context.mjs';
 import { launchPlan } from '../src/hello-model.mjs';
 import { simulateLoad } from '../src/model.mjs';
 import { escape } from '../src/continuation-ui.mjs';
@@ -93,5 +94,5 @@ const diagrams = {
 };
 
 export function v2Diagram(slug) {
-  return diagrams[slug]?.() ?? '';
+  return diagrams[slug]?.() ?? (lessonContexts[slug] ? flow('Follow the starter’s execution', lessonContexts[slug].stages, 'Conceptual dependencies in this example; placement and timing are not specified.') : '');
 }

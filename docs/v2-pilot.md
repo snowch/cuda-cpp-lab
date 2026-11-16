@@ -4,7 +4,7 @@ The CUDA-first course opens at `/gpu-lab/`. Lesson URLs stay under `/gpu-lab/v2/
 V2's 21 lessons progress from
 per-thread arithmetic and CPU–GPU copies to warp execution, matrix operations,
 attention, inference and stable token routing. The V1 course overview is at
-`/gpu-lab/v1.html`. Each V2 lesson links to the related V1 lesson.
+`/gpu-lab/v1.html`. V1 remains accessible through the course header. V2 lessons contain their own explanations, hardware context and CUDA references.
 
 ## Run the course
 
@@ -15,16 +15,27 @@ npm run dev
 Open `http://localhost:5173/gpu-lab/` and start with **Write your first GPU value**.
 Lesson 1 runs one thread that writes one value. Lessons 2–4 share a complete
 CUDA program that processes an array. Every subsequent lesson opens with an
-editable CUDA program that exercises its concept. The architecture models
+editable CUDA program that exercises its concept. The execution models
 below the editors let readers predict, step through and inspect selected
 cases. They use original diagrams and data. Their address groupings,
 dependencies and timing explanations are teaching models.
 
-In Lesson 1, the kernel definition and launch appear beside their explanations.
-The full program follows in the editor. The optional recording after the editor
-uses that lesson’s source and follows the launch, store and readback. Build later
-recordings around the relevant lesson’s example and concept. Place references at
-the end so learners can look up the constructs they just used.
+Every lesson places short fixed starter excerpts and explanations before the full
+program editor. After the editor, an execution diagram explains the dependencies,
+and a recurring hardware map locates the work. The map starts with host memory,
+device memory and SMs, then reveals warp schedulers, registers, execution units,
+load/store units and L1/L2 caches at lesson 5, shared memory at lesson 8, banks at
+lesson 9, tensor cores at lesson 12 and copy engines at lesson 20. Hardware roles
+and scope remain distinct from the teaching model's counters and timings.
+
+Each lesson includes a matching optional narrated recap, captions and transcript,
+then its local application exercise and annotated official references with two
+documentation questions. Lessons 2–21 use original V2 recordings rather than V1
+recordings with different examples. See `assets/media/v2/README.md` for rebuilds.
+Header navigation uses the brand, V1 link and theme control; the lesson breadcrumb
+provides Contents and the current part. Editor drafts and existing model controls,
+results and restoration identifiers are preserved. Native recordings participate
+in the shared paused-state restart restoration.
 
 For the hosted course, open **App status** and choose **Download for offline use**
 or **Update**. Both save the complete course, including the CUDA compiler. After

@@ -340,3 +340,22 @@ from the existing stable-grouping model. It retains the stable argsort and CUDA
 phase-ordering contracts, without claiming that PyTorch executes the teaching
 construction. The pinned narration commands and automated-review boundary are
 recorded in assets/media/pattern-investigation/README.md.
+
+## V2 hardware context and lesson references (16 November 2026)
+
+Each V2 lesson now supplies annotated CUDA references and two local documentation
+applications. Checked the target sections for launch notation, thread/grid index
+intrinsics, explicit memory management, SIMT, hardware multithreading, occupancy,
+shared memory, synchronisation functions, bank conflicts, atomic functions, WMMA,
+FP16 conversions, expf, streams and runtime events. The topic catalogue is
+`content/v2-references.mjs`. Replaced outdated thread-hierarchy/SIMT targets with
+current guide sections during this review.
+
+The recurring original hardware diagram is a simplified NVIDIA-style conceptual
+map, not copied from the user's reference figures or presented as a specific chip
+floor plan. It separates logical thread/block/warp grouping from physical SM
+resources, hardware L1/L2 caches from the application KV cache, and addressed
+sectors from physical device-memory traffic. Its sources are the same CUDA SIMT,
+multithreading, memory and WMMA rules above. New V2 recordings use original source
+excerpts and diagrams with synthetic Flite narration. Rebuilds and review limits
+are recorded in `assets/media/v2/README.md`.

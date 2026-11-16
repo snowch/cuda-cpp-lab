@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:09.730
+flag first marks selected categories. scatter counts earlier keep flags to obtain an exclusive offset, then writes the original token ID t.
+
+00:00:09.730 --> 00:00:12.770
+Both kernels are launched in order in the same stream.
+
+00:00:12.770 --> 00:00:19.120
+This small reference counts earlier flags directly; the model explains the scan-based construction.
+
+00:00:20.620 --> 00:00:21.840
+Flag tokens.
+
+00:00:21.840 --> 00:00:24.305
+Record whether each token survives.
+
+00:00:24.305 --> 00:00:26.270
+Count earlier survivors.
+
+00:00:26.270 --> 00:00:28.935
+Form an exclusive destination offset.
+
+00:00:28.935 --> 00:00:30.140
+Scatter IDs.
+
+00:00:30.140 --> 00:00:32.175
+Write each selected token once.
+
+00:00:33.675 --> 00:00:38.610
+Flags produced in device memory must be ready before scatter consumes them.
+
+00:00:38.610 --> 00:00:42.345
+Unique offsets give selected threads distinct destinations.
+
+00:00:42.345 --> 00:00:47.780
+Stable output order follows the offsets, not the order in which warps happen to run.

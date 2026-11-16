@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:02.700
+exchange launches four threads.
+
+00:00:02.700 --> 00:00:13.745
+Every thread writes its shared slot and reaches __syncthreads before the readers condition. readers changes who consumes the values, not who must participate in the barrier.
+
+00:00:15.245 --> 00:00:17.005
+Publish shared values.
+
+00:00:17.005 --> 00:00:19.470
+All four threads supply a value.
+
+00:00:19.470 --> 00:00:20.525
+All arrive.
+
+00:00:20.525 --> 00:00:23.150
+Keep the barrier outside t < readers.
+
+00:00:23.150 --> 00:00:24.780
+Selected threads read.
+
+00:00:24.780 --> 00:00:27.170
+Only the consumer set changes.
+
+00:00:28.670 --> 00:00:32.330
+Resident threads can wait for other threads at a block barrier.
+
+00:00:32.330 --> 00:00:36.430
+Enough hardware resources alone do not repair a missing participant.
+
+00:00:36.430 --> 00:00:40.355
+This safe kernel keeps the barrier outside the conditional reads.
