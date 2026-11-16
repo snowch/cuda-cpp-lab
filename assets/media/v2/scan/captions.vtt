@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:03.335
+scan stores eight flags in shared values.
+
+00:00:03.335 --> 00:00:11.420
+For each step, all threads finish the old stage, read a partner into previous, and reach another barrier before updating shared storage.
+
+00:00:11.420 --> 00:00:16.805
+Subtracting flags[t] converts the inclusive prefix to an exclusive offset.
+
+00:00:18.305 --> 00:00:19.790
+Read old stage.
+
+00:00:19.790 --> 00:00:22.010
+Keep the partner value in previous.
+
+00:00:22.010 --> 00:00:23.315
+Synchronise.
+
+00:00:23.315 --> 00:00:26.130
+Finish old reads before any thread updates.
+
+00:00:26.130 --> 00:00:27.565
+Write new stage.
+
+00:00:27.565 --> 00:00:30.725
+Add the partner; repeat at the next distance.
+
+00:00:32.225 --> 00:00:36.125
+A shared-memory stage lets a block exchange prefix values.
+
+00:00:36.125 --> 00:00:41.485
+Registers keep the partner value separate while a barrier protects the old shared snapshot.
+
+00:00:41.485 --> 00:00:44.705
+A block barrier does not order a multi-block scan.

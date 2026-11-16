@@ -7,7 +7,7 @@ export function renderFirstKernelVideo(inline) {
   const media = '../assets/media/first-kernel/';
   return `<details class="more-settings sm-recording" id="v2-first-video">
     <summary>Watch the kernel launch <span class="reference-new-tab">(${metadata.durationSeconds} sec)</span></summary>
-    ${inline ? `<video controls playsinline preload="none" width="1920" height="1080"
+    ${inline ? `<video data-recording="v2-first-kernel" controls playsinline preload="none" width="1920" height="1080"
       poster="${media}poster.jpg" aria-label="What is a CUDA kernel?">
       <source src="${media}first-kernel.mp4" type="video/mp4">
       <track kind="captions" src="${media}captions.vtt" srclang="en" label="English" default>

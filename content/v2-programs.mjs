@@ -4,7 +4,7 @@ import { v2Course } from './v2-course.mjs';
 
 export const programTasks = {
   coalescing: 'Predict the sector count at stride 1. Run the program, change stride inside runKernel to 2, then try 32.',
-  scheduling: 'Change warpsPerBlock from 1 to 2. Predict the number of lanes and total elements. Check the launch and result before tracing a load dependency in the architecture model.',
+  scheduling: 'Change warpsPerBlock from 1 to 2. Predict the number of lanes and total elements. Check the launch and result before tracing a load dependency in the execution model.',
   divergence: 'Set alternateSigns to false. Predict how many lanes take each branch and check the result for lane 1.',
   reduction: 'Change threads from 4 to 8. Which values contribute to the new sum? Find the barrier between successive partner reads.',
   'shared-memory-banks': 'Change stride from 32 to 33. Read the returned addresses and compare the calculated bank service rounds.',
@@ -24,7 +24,7 @@ export const programTasks = {
 
 export const programNotes = {
   coalescing: 'Each input stores its own index. The kernel returns the indices it read. The host groups those indices into 32-byte sectors, assuming an aligned input.',
-  pipelines: 'The browser follows the stream and event dependencies. Use the architecture model to explore when copies and kernels could overlap.',
+  pipelines: 'The browser follows the stream and event dependencies. Use the execution model to explore when copies and kernels could overlap.',
 };
 
 export async function insertProgramStarters(html) {

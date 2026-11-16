@@ -1,0 +1,40 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:05.960
+readWords cooperatively initialises shared words, then all threads reach a barrier.
+
+00:00:05.960 --> 00:00:08.860
+Each lane reads words[lane * stride].
+
+00:00:08.860 --> 00:00:11.875
+The returned integers identify word addresses.
+
+00:00:11.875 --> 00:00:17.880
+The host calculates service rounds for the stated bank model; the console is not a hardware timer.
+
+00:00:19.380 --> 00:00:21.305
+Initialise shared words.
+
+00:00:21.305 --> 00:00:23.865
+Complete the block barrier before reads.
+
+00:00:23.865 --> 00:00:25.115
+Select words.
+
+00:00:25.115 --> 00:00:27.480
+Each lane forms lane × stride.
+
+00:00:27.480 --> 00:00:28.815
+Group by bank.
+
+00:00:28.815 --> 00:00:32.095
+Distinguish broadcasts from different-word conflicts.
+
+00:00:33.595 --> 00:00:38.460
+Shared memory is organised into banks that can serve requests in parallel.
+
+00:00:38.460 --> 00:00:42.740
+In this model, word index modulo 32 selects a bank.
+
+00:00:42.740 --> 00:00:48.540
+Repeated requests for one word can broadcast; different words in one bank need separate rounds.

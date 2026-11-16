@@ -65,7 +65,7 @@ const expected = {
   'token-routing': [5, 4],
 };
 
-test('the 20 model lessons have exercises, transfer prompts and links to the related course', () => {
+test('the 20 model lessons have exercises, transfer prompts and local CUDA references', () => {
   assert.equal(new Set(v2Course.map(lesson => lesson.slug)).size, 21);
   assert.equal(Object.keys(guidedLessons).length, 17);
   for (const lesson of v2Course.slice(1)) {
@@ -74,7 +74,9 @@ test('the 20 model lessons have exercises, transfer prompts and links to the rel
     assert.match(page, /id="v2-run"/);
     assert.match(page, /id="v2-result" hidden/);
     assert.match(page, /Compare your explanation/);
-    assert.ok(page.includes('../lessons/' + lesson.current + '.html'));
+    assert.match(page, /Use the documentation/);
+    assert.match(page, /docs.nvidia.com/);
+    assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
   }
 });
 
@@ -122,4 +124,59 @@ test('original concept diagrams use the local launch and address-model cases', (
   assert.match(indices, /7<span>Skip<\/span>/);
   assert.match(sectors, /Bytes 32–63/);
   assert.match(sectors, /Sector 1<\/strong><span>Lanes 4, 5, 6, 7/);
+});
+
+import { lessonContexts, starterFor } from '../content/v2-lesson-context.mjs';
+import { renderV2Hardware } from '../content/v2-hardware.mjs';
+import { referenceTopics } from '../content/v2-references.mjs';
+import media from '../content/v2-media.json' with {type:'json'};
+
+test('each lesson connects its actual CUDA starter to execution, hardware and references', () => {
+  for (const lesson of v2Course.slice(1)) {
+    const context = lessonContexts[lesson.slug];
+    const source = starterFor(lesson.slug).replace(/^ +/gm, '');
+    assert.ok(source.includes(context.code.replace(/^ +/gm, '')), lesson.slug);
+    for (const launch of context.launches.split('\n').filter(line => line.includes('<<<'))) {
+      assert.ok(source.includes(launch.trim()), lesson.slug);
+    }
+    const page = renderV2Lesson(lesson, s => s + '.html', s => '../lessons/' + s + '.html', './cuda-source-workbench.html');
+    const positions = ['id="v2-starter-source"', 'data-kernel-workbench=', 'id="v2-execution-title"', 'id="v2-hardware-title"', 'id="v2-video"', 'id="v2-apply"', 'id="v2-references"'].map(token => page.indexOf(token));
+    assert.ok(positions.every((n,i)=>n>=0 && (!i || n>positions[i-1])), lesson.slug);
+    assert.match(page, /kind="captions"/);
+    assert.ok(media[lesson.slug].durationSeconds > 0);
+    for (const key of context.references) assert.match(referenceTopics[key][0], /^https:\/\//);
+    for (const file of ['recap.mp4','poster.jpg','captions.vtt']) {
+      assert.ok(readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/' + file, import.meta.url)).length > 0);
+    }
+    assert.equal(readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/recap.mp4', import.meta.url)).length, media[lesson.slug].bytes);
+    const captions = readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/captions.vtt', import.meta.url), 'utf8')
+      .split('\n').filter(line => line && line !== 'WEBVTT' && !line.includes(' --> ')).join(' ');
+    const transcript = [context.explanation, context.stages.map(([a,b]) => a + '. ' + b).join(' '), context.hardware].join(' ');
+    assert.equal(captions, transcript, lesson.slug + ' captions must match the visible transcript');
+
+  }
+});
+
+test('hardware context introduces resources progressively without physical thread-unit mapping', () => {
+  const first = renderV2Hardware('first-kernel');
+  const scheduling = renderV2Hardware('scheduling');
+  const reduction = renderV2Hardware('reduction');
+  const matrix = renderV2Hardware('tensor-cores');
+  assert.doesNotMatch(first, /data-hardware="scheduler"|data-hardware="shared"|data-hardware="tensor"/);
+  assert.match(scheduling, /data-hardware="scheduler"/);
+  assert.match(scheduling, /data-hardware="registers"/);
+  assert.doesNotMatch(scheduling, /data-hardware="shared"|data-hardware="tensor"/);
+  assert.match(reduction, /data-hardware="shared"/);
+  assert.match(matrix, /data-hardware="tensor"/);
+  assert.match(matrix, /Simplified NVIDIA-style architecture/);
+});
+
+test('editor introductions do not present synthetic model assumptions as CUDA run inputs', () => {
+  for (const lesson of v2Course.filter(lesson => lessonContexts[lesson.slug]?.introduction)) {
+    const page = renderV2Lesson(lesson, s => s + '.html', s => '../lessons/' + s + '.html', './cuda-source-workbench.html');
+    const editor = page.indexOf('data-kernel-workbench=');
+    const model = page.indexOf('Explore the execution model');
+    const assumption = page.indexOf(guidedLessons[lesson.slug].before.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'));
+    assert.ok(editor < model && model < assumption, lesson.slug);
+  }
 });

@@ -150,6 +150,27 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             source.fill(source.input_value().replace('threads = 4','threads = 8'));source.press('Control+Enter')
             expect(reduction.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
             expect(reduction.locator('#program-output')).to_contain_text('Sum: 36.0')
+            # Every new V2 recap asset is included in the verified offline release.
+            media = json.loads((ROOT/'content/v2-media.json').read_text())
+            for slug in media:
+                for name in ['recap.mp4','poster.jpg','captions.vtt']:
+                    path = f'assets/media/v2/{slug}/{name}'
+                    expected = next(item for item in releases['two']['files'] if item['path'] == path)
+                    actual = tab.evaluate("""async path=>{
+                        const response=await fetch(path);
+                        if(!response.ok)throw new Error('Missing offline recap');
+                        const body=await response.arrayBuffer();
+                        const hash=await crypto.subtle.digest('SHA-256',body);
+                        return {bytes:body.byteLength,sha256:[...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join('')};
+                    }""", url+'releases/'+releases['two']['id']+'/'+path)
+                    assert actual['bytes'] == expected['bytes'] and actual['sha256'] == expected['sha256'],path
+            tab.locator('.sm-recording > summary').click()
+            video=tab.locator('video')
+            video.evaluate('(v)=>{v.muted=true; v.load();}')
+            expect(video).to_have_js_property('readyState',4,timeout=20000)
+            video.evaluate('(v)=>{v.currentTime=5; return v.play();}')
+            expect(video).to_have_js_property('paused',False)
+            video.evaluate('(v)=>v.pause()')
             # Older complete updates without their saved flag are recognised offline.
             tab.evaluate('''async base => {
               const cache = await caches.open(`gpu-lab:${base}:status-v1`);

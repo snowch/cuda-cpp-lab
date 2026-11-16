@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:03.710
+transform tests the sign of each lane’s value.
+
+00:00:03.710 --> 00:00:08.010
+Negative values are negated; the other path doubles its values.
+
+00:00:08.010 --> 00:00:16.535
+All 32 threads belong to one warp. alternateSigns in main changes the input signs, rather than the kernel’s branch condition.
+
+00:00:18.035 --> 00:00:19.240
+Test signs.
+
+00:00:19.240 --> 00:00:22.125
+Each lane evaluates value < 0.0f.
+
+00:00:22.125 --> 00:00:23.720
+Execute paths.
+
+00:00:23.720 --> 00:00:26.815
+Only participating lanes update their outputs.
+
+00:00:26.815 --> 00:00:27.955
+Continue.
+
+00:00:27.955 --> 00:00:30.305
+The warp proceeds after the branch.
+
+00:00:31.805 --> 00:00:35.100
+A warp instruction has participating lanes.
+
+00:00:35.100 --> 00:00:38.745
+Different branch paths can require different active lane sets.
+
+00:00:38.745 --> 00:00:44.525
+These lanes are logical positions in a warp, not a drawing of separate dedicated processors.

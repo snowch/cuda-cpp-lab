@@ -15,7 +15,7 @@ def check_v2(browser, url):
         page.goto(url)
         expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA')
         expect(page.locator('html')).to_have_attribute('data-theme', theme)
-        expect(page.get_by_role('link', name='Contents', exact=True)).to_be_visible()
+        expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
         page.get_by_role('link', name='GPU Lab V1', exact=True).click()
         expect(page).to_have_url(url + 'v1.html')
         expect(page.locator('.roadmap h3')).to_have_count(14)
@@ -35,6 +35,12 @@ def check_v2(browser, url):
             expect(breadcrumb.get_by_role('link', name='Contents', exact=True)).to_have_attribute('href', '../')
             expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
             expect(breadcrumb.locator('[aria-current="page"]')).to_have_text(page.locator('h1').inner_text())
+            expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
+            expect(page.locator('.v2-hardware')).to_be_visible()
+            expect(page.locator('.v2-diagram')).to_have_count(1)
+            expect(page.locator('.v2-hw-device > [data-hardware="memory"]')).to_have_count(1)
+            expect(page.locator('.v2-hw-chip [data-hardware="memory"]')).to_have_count(0)
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), route
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
             expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
             if mode == 'hello':
@@ -44,6 +50,13 @@ def check_v2(browser, url):
             else:
                 expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'__global__'))
             expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'int main\(\)'))
+            if mode != 'hello':
+                starter_source = workbench.get_by_role('textbox', name='CUDA source').input_value()
+                normalise = lambda text: re.sub(r'\s+', '', text)
+                assert normalise(page.locator('#v2-starter-source code').inner_text()) in normalise(starter_source), route
+                for launch in re.findall(r'\w+<<<[\s\S]*?;', page.locator('#v2-starter-launch code').inner_text()):
+                    assert normalise(launch) in normalise(starter_source), route
+
             expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
             expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
         for index in [0, 4, 15]:
@@ -80,7 +93,7 @@ def check_v2(browser, url):
             expect(page.get_by_text('Compare your explanation')).to_be_visible()
 
         page.goto(url + 'v2/reduction.html')
-        page.get_by_text('Explore the architecture model').click()
+        page.get_by_text('Explore the execution model').click()
         expect(page.locator('.v2-diagram')).to_contain_text('All threads arrive before any partner read.')
         choice = page.locator('#v2-choice')
         choice.select_option('0')
@@ -107,7 +120,7 @@ def check_v2(browser, url):
     page.get_by_role('link', name='GPU Lab V1', exact=True).click()
     expect(page).to_have_url(url + 'v1.html')
     page.goto(url + 'v2/reduction.html')
-    page.get_by_text('Explore the architecture model').click()
+    page.get_by_text('Explore the execution model').click()
     expect(page.locator('#v2-source')).to_be_visible()
     expect(page.get_by_role('button', name='Run model')).to_be_disabled()
     expect(page.locator('#v2-result')).to_be_hidden()

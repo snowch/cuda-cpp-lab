@@ -567,3 +567,22 @@ Empty-bin starts can equal the output end without causing a write. The final
 recap connects these contracts, tests a concentrated input before its comparison
 and distinguishes unique atomic slots from stable input order. Placement proves
 no allocation cost, physical traffic, GPU timing or fastest algorithm.
+
+## V2 recurring hardware context and recaps
+
+The V2 revision adds conceptual hardware containment and data/issue relationships,
+not a numerical hardware simulation. Host CPU and RAM are peers; device memory is
+inside the GPU device but outside the compute chip. Each SM has its own execution
+resources, registers and block-scoped shared storage. The shared L2 and interconnect
+sit on the chip. Blocks and warps are explicitly logical groups assigned resources;
+the map gives no physical unit count, block placement schedule or cycle timing.
+Shared memory and L1 can share physical backing depending on the architecture.
+Tensor cores enter only with the WMMA lesson, without a portable fragment/lane map.
+
+The existing execution-model results, control IDs and saved-state keys are unchanged.
+New starter excerpts are extracted from the editor source; they remain fixed while
+the editor and model vary independently. The small reference attention kernel uses
+one thread to illustrate the recurrence. The precision reference rounds FP32 inputs
+through FP16 and back without changing its FP32 arrays. Neither example is presented
+as a production parallel attention or tensor-core implementation. The recaps explain
+these same scopes and are not performance measurements.

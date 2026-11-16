@@ -6,6 +6,10 @@ import { escape } from '../src/continuation-ui.mjs';
 import { v2Course } from './v2-course.mjs';
 import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
+import { lessonContexts, starterFor } from './v2-lesson-context.mjs';
+import { renderV2Hardware } from './v2-hardware.mjs';
+import { renderV2References } from './v2-references.mjs';
+import { renderV2Video } from './v2-lesson-video.mjs';
 import { renderFirstKernelVideo } from './v2-first-kernel-video.mjs';
 
 const teaching = {
@@ -87,16 +91,30 @@ function renderFirstKernel(workbenchHref, program) {
     <h2 id="v2-first-path">Where does the kernel run?</h2>
     <p>A <strong>streaming multiprocessor (SM)</strong> is a part of the GPU that executes thread instructions.</p>
     ${v2Diagram('first-kernel')}
-    ${renderFirstKernelVideo(inlineRecording)}
-    <p>In the next lesson, threads run one kernel to process five values. How will each thread choose its own array element?</p>
   </section>
-  <section class="book-section" aria-labelledby="v2-first-references">
-    <h2 id="v2-first-references">References</h2>
-    <ul class="chapter-reference-list">
-      <li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/intro-to-cuda-cpp.html#launching-kernels" target="_blank" rel="noopener noreferrer">NVIDIA CUDA Programming Guide · Launching kernels <span class="reference-new-tab">(new tab)</span></a><p>Check how the two numbers inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> set the launch size.</p></li>
-      <li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html" target="_blank" rel="noopener noreferrer">NVIDIA CUDA Programming Guide · Programming model <span class="reference-new-tab">(new tab)</span></a><p>See how threads are grouped into blocks and grids.</p></li>
-    </ul>
-  </section>`;
+  ${renderV2Hardware('first-kernel')}
+  ${renderFirstKernelVideo(inlineRecording)}
+  <p>In the next lesson, threads run one kernel to process five values. How will each thread choose its own array element?</p>
+  ${renderV2References('first-kernel').replace('id="v2-references"', 'id="v2-first-references"').replace('aria-labelledby="v2-references"', 'aria-labelledby="v2-first-references"')}`;
+}
+
+function renderStarter(slug, workbenchHref) {
+  const context = lessonContexts[slug];
+  return `<h3>Read the starter</h3>
+    ${codePanel({id: 'v2-starter-source', label: context.label, source: context.code, explainedLocally: true})}
+    <p>${escape(context.explanation)}</p>
+    ${codePanel({id: 'v2-starter-launch', label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
+    <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. See <code>main()</code> in the ${workbenchHref ? 'editor' : 'complete program'} for the storage and dimension definitions. These excerpts describe the fixed starter.</p>
+    ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : '<p>Editing the program does not change these fixed excerpts.</p>'}`;
+}
+
+function renderContext(slug, workbenchHref) {
+  return `<section class="book-section" aria-labelledby="v2-execution-title">
+    <h2 id="v2-execution-title">Execution trace</h2>
+    ${v2Diagram(slug)}
+  </section>
+  ${renderV2Hardware(slug)}
+  ${renderV2Video(slug, workbenchHref && workbenchHref !== 'bundled')}`;
 }
 
 function renderWorkbench(mode, href) {
@@ -106,7 +124,7 @@ function renderWorkbench(mode, href) {
     copies: 'Add 6.0f, 7.0f, 8.0f and 9.0f to x in main(). Run and open Trace CUDA calls. Compare the copy sizes and launch with the five-input run.',
   };
   return `<h3>Run the CUDA program</h3>
-    <p>Edit the kernel or main(). Clang compiles the program. The browser runs main() and launches the kernel in GPGPU-Sim.</p>
+    <p>No installation or GPU is required. Edit and run the complete CUDA program in this browser. The run checks the program in simulation; it does not measure a physical GPU.</p>
     ${readerTask(tasks[mode], 'Try it')}
     ${workbenchEditor(mode, href, 'Editable CUDA program and output')}`;
 }
@@ -122,13 +140,14 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     <h2 id="v2-setup">Before you run</h2>
     <p>${lesson.before}</p>
     ${definitions(lesson.terms)}
-    ${v2Diagram(slug)}
+    ${renderStarter(slug, workbenchHref)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
-    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
+    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug, workbenchHref) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
+    ${!workbenchHref ? renderContext(slug, workbenchHref) : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. To compile the complete program, use the downloaded file with the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
+    <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. ${workbenchHref ? 'Compile and run the complete program in the editor above.' : 'This preview runs the teaching model.'} For optional local execution, use the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -164,21 +183,24 @@ function renderGuided(slug, workbenchHref) {
   const codeLabel = slug === 'attention' ? 'CUDA algorithm outline' : 'CUDA C++ excerpt';
   return `<section aria-labelledby="v2-setup">
     <h2 id="v2-setup">Before you run</h2>
-    <p>${lesson.before}</p>
+    <p>${escape(lessonContexts[slug].introduction ?? lesson.before)}</p>
     ${definitions(lesson.terms)}
-    ${v2Diagram(slug)}
+    ${renderStarter(slug, workbenchHref)}
   </section>
   ${workbenchHref ? `<section class="book-section" aria-labelledby="v2-cuda-editor">
     <h2 id="v2-cuda-editor">Edit and run CUDA</h2>
+    <p>No installation or GPU is required. Edit and run the complete CUDA program in this browser. The run checks the program in simulation; it does not measure a physical GPU.</p>
     ${programNotes[slug] ? `<p>${programNotes[slug]}</p>` : ''}
     ${readerTask(programTasks[slug], 'Try it')}
     ${workbenchEditor(slug, workbenchHref, 'Editable CUDA program and output')}
   </section>
-  <details class="more-settings v2-starter-model"><summary>Explore the architecture model</summary>` : ''}
+  ${renderContext(slug, workbenchHref)}
+  <details class="more-settings v2-starter-model"><summary>Explore the execution model</summary>` : renderContext(slug, workbenchHref)}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
+    ${lessonContexts[slug].introduction ? `<p>${escape(lesson.before)}</p>` : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">No installation or GPU is required. The controls change the source shown below. Run model traces the selected case using the assumptions above.</p>
+    <p class="chapter-browser-note">No installation or GPU is required. The controls change the source shown below. Run model traces the selected starter case using the assumptions above. These controls do not execute changes from the CUDA editor.</p>
     <noscript><p class="notice">Enable JavaScript to change settings and run the model. You can still read the starter and compare the final explanation below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -231,7 +253,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </header>
   ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
     lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug, workbenchHref)}
-  ${lesson.mode === 'hello' ? '' : `<p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>`}
+  ${lesson.mode === 'hello' ? '' : renderV2References(lesson.slug)}
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
     <a href="${href(next?.slug ?? 'contents')}">${next?.title ?? 'Contents'} →</a>
@@ -250,12 +272,12 @@ export function renderV2Page(lesson, versionMarkup = '', { home = false, firstPr
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>${title}</title>${styles}
 <script type="module" src="${base}src/theme.mjs"></script>
-${lesson ? `<script type="module" src="${base}src/v2.mjs"></script>` : ''}
+${lesson ? `<script type="module" src="${base}src/v2.mjs"></script><script type="module" src="${base}src/recording.mjs"></script>` : ''}
 ${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}</head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar v2-topbar"><a class="brand" href="${base}">GPU Lab V2</a>
-<div class="top-actions"><a href="${base}">Contents</a><a href="${base}v1.html">GPU Lab V1</a>
+<div class="top-actions"><a href="${base}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
 </body></html>`;

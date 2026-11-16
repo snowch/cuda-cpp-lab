@@ -1,5 +1,6 @@
 from parallel_recordings import check_parallel_recordings
 from parallel import check_parallel
+from v2_context import check_v2_context
 from v2_browser import check_v2
 from complete_recaps import check_complete_recaps
 from section_cues import check_section_cues
@@ -61,6 +62,7 @@ try:
         browser = playwright.chromium.launch(**options)
         errors = []
         check_v2(browser, URL)
+        check_v2_context(browser, URL, ROOT)
         for width in [1440, 390]:
             for theme in ["light", "dark"]:
                 context = browser.new_context(viewport={"width": width, "height": 1000}, color_scheme=theme)

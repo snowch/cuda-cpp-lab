@@ -1,0 +1,40 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:03.750
+count first builds a four-bin histogram with atomics.
+
+00:00:03.750 --> 00:00:10.260
+In route, start counts tokens in earlier categories and rank counts earlier tokens in the same category.
+
+00:00:10.260 --> 00:00:13.155
+Their sum is a unique stable destination.
+
+00:00:13.155 --> 00:00:18.225
+The count and route launches share a stream, so the histogram is ready before route reads it.
+
+00:00:19.725 --> 00:00:21.410
+Count categories.
+
+00:00:21.410 --> 00:00:23.880
+Build counts before routing starts.
+
+00:00:23.880 --> 00:00:25.385
+Find start and rank.
+
+00:00:25.385 --> 00:00:28.650
+Combine the category region and local order.
+
+00:00:28.650 --> 00:00:29.925
+Write token ID.
+
+00:00:29.925 --> 00:00:32.460
+Give each token a unique stable slot.
+
+00:00:33.960 --> 00:00:38.070
+Device-memory phase results connect counting to placement.
+
+00:00:38.070 --> 00:00:44.415
+Atomics can count safely, but the order of atomic arrivals alone does not preserve token order.
+
+00:00:44.415 --> 00:00:47.855
+The explicit earlier-token rank supplies stability.

@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:13.375
+dot optionally rounds each FP32 input to FP16 with __float2half_rn and converts it back with __half2float. total remains FP32.
+
+00:00:13.375 --> 00:00:20.875
+This starter isolates rounding while its arrays remain FP32; the model separately compares storage formats.
+
+00:00:22.375 --> 00:00:24.180
+Read FP32.
+
+00:00:24.180 --> 00:00:26.370
+Fetch a value from the input array.
+
+00:00:26.370 --> 00:00:28.000
+Optionally round.
+
+00:00:28.000 --> 00:00:31.325
+Convert to FP16 and back before adding.
+
+00:00:31.325 --> 00:00:33.495
+Accumulate FP32.
+
+00:00:33.495 --> 00:00:35.675
+Keep total in the wider format.
+
+00:00:37.175 --> 00:00:41.090
+Registers hold a thread’s working operands and accumulator.
+
+00:00:41.090 --> 00:00:46.545
+Rounding an operand can change a sum even when the accumulation stays FP32.
+
+00:00:46.545 --> 00:00:51.420
+This example uses conversions and scalar additions, not tensor cores.
