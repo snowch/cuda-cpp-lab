@@ -30,14 +30,14 @@ def check_v2_practical(browser, url, root):
                 if slug == 'measure-a-kernel':
                     expect(feedback).to_contain_text('Invalid JSON')
                     activity.locator('textarea').fill('{"schema":1,"scope":"kernel-only","gpu":"test fixture, not measured","elements":3,"checked_elements":3,"warmup":10,"repetitions":200,"samples_ms":{"separate":[3,2,1],"fused":[1,0.5,1.5]}}')
-                    submit.click()
+                    submit.focus(); page.keyboard.press('Enter')
                     expect(result).to_be_visible()
                     expect(feedback).to_contain_text('ratio: 2.000')
                 elif slug == 'softmax-capstone':
                     expect(feedback).to_contain_text('Row failed')
                     activity.locator('textarea').fill('0.0351190 0.2594965 0.7053845')
                     expect(result).to_be_hidden()
-                    submit.click()
+                    submit.focus(); page.keyboard.press('Enter')
                     expect(feedback).to_contain_text('This row passes')
                 else:
                     expect(result).to_be_visible()
