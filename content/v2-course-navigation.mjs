@@ -5,6 +5,7 @@ export const v2Groups = [
   ['part-cuda-foundations', 'CUDA foundations', 0, 4],
   ['part-gpu-execution', 'GPU execution and AI workloads', 4, 15],
   ['part-parallel-patterns', 'Parallel patterns', 15, 21],
+  ['part-practical-work', 'Practical GPU investigations', 21, 27],
 ];
 export function courseBreadcrumb(lesson, href) {
   const number = v2Course.indexOf(lesson);

@@ -383,3 +383,13 @@ captioned narrated recaps, with transcripts and downloadable slides. Contributio
 prefix snapshots, stable placement, resource waits, barrier participation, pipeline
 handoffs and grouped-token destinations retain their stated model scopes. These
 follow-on resources add no content to the fourteen core lessons.
+
+## V2 practical investigations
+
+After stable routing, six working lessons extend the CUDA-first V2 path with
+full-output CPU verification and native debugging, grid-stride loops, a two-level
+multi-block scan, explicit SM residency constraints, measured kernel workflow and
+an independent stable-softmax capstone. See [scope and evidence](v2-practical-review.md).
+The original models remain available; new activities distinguish mathematical
+checks, compiled browser simulation, published profiler evidence and native GPU
+measurements. Native execution remains unvalidated until a named GPU/toolkit run.

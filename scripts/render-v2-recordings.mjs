@@ -1,7 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 // Prepare lesson-specific recording frames from the visible starter bridges.
 import { mkdir, writeFile } from 'node:fs/promises';
-import { v2Course } from '../content/v2-course.mjs';
+import { v2CoreCourse as v2Course } from '../content/v2-course.mjs';
 import { lessonContexts } from '../content/v2-lesson-context.mjs';
 import { escape } from '../src/continuation-ui.mjs';
 const inputs = [];

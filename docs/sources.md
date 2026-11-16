@@ -359,3 +359,20 @@ sectors from physical device-memory traffic. Its sources are the same CUDA SIMT,
 multithreading, memory and WMMA rules above. New V2 recordings use original source
 excerpts and diagrams with synthetic Flite narration. Rebuilds and review limits
 are recorded in `assets/media/v2/README.md`.
+
+## V2 practical workflow
+
+The practical extension uses the existing CUDA thread/grid, collective barrier,
+stream ordering, occupancy and Runtime event references. NVIDIA's Compute
+Sanitizer guide supports the distinct memcheck, racecheck and synccheck roles;
+the PyTorch softmax contract supplies the row dimension reference. Nsight Compute
+LaunchStats, Occupancy, MemoryWorkloadAnalysis and SchedulerStats are suggested
+for device-specific investigation; no counter values are fabricated.
+
+The recorded-trace excerpt comes from PyTorch Kineto v0.4.0 at commit
+486c083b84a53c60aec0d2c522c1fc5b99ce5284, its ResNet50 zero-worker sample.
+Eight unchanged Kernel events and device properties are retained. Provenance,
+compressed-source SHA-256 and BSD licence are in examples/v2-practical/.
+These published V100 events are separate from GPU Lab's unmeasured native fusion
+exercise. CPU/reference, browser-simulator and source/schema checks do not validate
+native benchmarking, sanitizers or target GPU performance.

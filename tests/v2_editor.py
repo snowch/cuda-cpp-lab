@@ -109,7 +109,7 @@ def check(browser, url, compiler_url, selected):
     with browser.new_context() as context:
         page = context.new_page()
         page.goto(url)
-        routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
+        routes = page.locator('.v2-list li[data-course-kind="core"] a').evaluate_all('links => links.map(link => link.href)')
     slugs = [route.rsplit('/', 1)[-1][:-5] for route in routes]
     assert set(slugs) == set(CHECKS), 'Every listed lesson needs a browser execution check.'
     for route, slug in zip(routes, slugs):
@@ -136,6 +136,14 @@ def check(browser, url, compiler_url, selected):
                 slug, status, frame.locator('#diagnostics').text_content())
             assert expected in result.text_content(), (slug, expected, result.text_content())
             assert '.entry' in frame.locator('#ptx').text_content(), slug
+        if slug in ['matmul', 'matmul-investigation']:
+            width = 4 if slug == 'matmul' else 8
+            tail = 5 if slug == 'matmul' else 7
+            editor.fill(code.replace(f'width = {width}', f'width = {tail}').replace('tile = 2', 'tile = 4'))
+            run.click()
+            frame.locator('#run:enabled').wait_for(timeout=95_000)
+            assert frame.locator('#status').inner_text() == 'Ran main() and the kernel in GPGPU-Sim.', frame.locator('#diagnostics').text_content()
+            assert f'Checked {tail * tail} matrix values; mismatches: 0' in console.inner_text()
         context.close()
         print(f'PASS {slug} starter and edit', flush=True)
 

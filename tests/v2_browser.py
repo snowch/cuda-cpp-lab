@@ -21,7 +21,7 @@ def check_v2(browser, url):
         expect(page.locator('.roadmap h3')).to_have_count(14)
         page.get_by_role('link', name='Go to GPU Lab V2').click()
         expect(page).to_have_url(url)
-        routes = page.locator('.v2-list li a').evaluate_all('links => links.map(link => link.href)')
+        routes = page.locator('.v2-list li[data-course-kind="core"] a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 21
         expect(page.get_by_role('link', name='Start with your first kernel')).to_have_attribute('href', './v2/first-kernel.html')
         assert routes[0] == url + 'v2/first-kernel.html'

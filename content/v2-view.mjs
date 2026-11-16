@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { renderPractical, practicalReferences } from './v2-practical-view.mjs';
 import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
 import { fp32, v2Experiments, v2Run } from '../src/v2-model.mjs';
 import { guidedLessons } from '../src/v2-guided.mjs';
@@ -50,7 +51,7 @@ export function renderV2Contents(href) {
   </header>
   ${groups.map(([id, title, start, end]) => `<section class="v2-list" aria-labelledby="${id}">
     <h2 id="${id}" tabindex="-1">${title}</h2>
-    <ol start="${start + 1}">${v2Course.slice(start, end).map(lesson => `<li>
+    <ol start="${start + 1}">${v2Course.slice(start, end).map(lesson => `<li data-course-kind="${lesson.practical ? 'practical' : 'core'}">
       <a href="${href(lesson.slug)}">${lesson.title}</a>
       <p>${lesson.goal}</p>
     </li>`).join('')}</ol>
@@ -226,8 +227,14 @@ function renderGuided(slug, workbenchHref) {
   </section>`;
 }
 
+const practicalConnections = {
+  'from-cpu-array-to-gpu-result': ['verify-every-output', 'Learn to check every GPU result'],
+  scan: ['multi-block-scan', 'Extend a prefix across blocks'],
+  'matmul-investigation': ['resource-tradeoffs', 'Investigate SM resource limits'],
+};
 export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram = '') {
   const number = v2Course.indexOf(lesson) + 1;
+  const connection = practicalConnections[lesson.slug];
   const previous = v2Course[number - 2];
   const next = v2Course[number];
   return `<header class="intro">
@@ -235,11 +242,12 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>
-  ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
+  ${lesson.practical ? renderPractical(lesson, workbenchHref, legacy) : lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
     lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug, workbenchHref)}
+  ${connection ? `<p>Further practice: <a href="${href(connection[0])}">${connection[1]}</a>.</p>` : ''}
   <section class="v2-resources" aria-label="Optional lesson resources">
-    ${lesson.mode === 'hello' ? renderFirstKernelVideo(workbenchHref && workbenchHref !== 'bundled') : renderV2Video(lesson.slug, workbenchHref && workbenchHref !== 'bundled')}
-    ${lesson.mode === 'hello' ? renderV2References(lesson.slug).replaceAll('v2-references', 'v2-first-references') : renderV2References(lesson.slug)}
+    ${lesson.practical ? '' : lesson.mode === 'hello' ? renderFirstKernelVideo(workbenchHref && workbenchHref !== 'bundled') : renderV2Video(lesson.slug, workbenchHref && workbenchHref !== 'bundled')}
+    ${lesson.practical ? practicalReferences(lesson.slug) : lesson.mode === 'hello' ? renderV2References(lesson.slug).replaceAll('v2-references', 'v2-first-references') : renderV2References(lesson.slug)}
   </section>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a class="v2-page-card" href="${href(previous?.slug ?? 'contents')}">

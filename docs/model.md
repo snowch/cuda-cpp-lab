@@ -586,3 +586,14 @@ one thread to illustrate the recurrence. The precision reference rounds FP32 inp
 through FP16 and back without changing its FP32 arrays. Neither example is presented
 as a production parallel attention or tensor-core implementation. The recaps explain
 these same scopes and are not performance measurements.
+
+## V2 practical models
+
+`src/v2-practical-model.mjs` defines exact integer prefix/ownership models and the
+stated illustrative SM allocation bound. Grid coverage is unique modulo launched
+thread count; scan totals carry a serial reference across 32-element chunks.
+The resource model ignores allocation granularity and does not predict timing or
+spills. Numerical comparison rejects non-finite/missing values before applying
+atol 1e-5 + rtol 1e-4 × |reference|. Softmax uses a stable serial JS reference;
+compiled CUDA has a separate serial CPU FP32 expf reference. Capstone row sums
+are an additional check, never a substitute for elementwise comparison.

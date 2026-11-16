@@ -18,9 +18,21 @@ __global__ void count(const int* categories, int* histogram) {
 
 __global__ void route(const int* categories, const int* histogram, int* positions) {
     int t = threadIdx.x;
-    int category = categories[t], start = 0, rank = 0;
+    __shared__ int prefix[4][8];
+    int category = categories[t], start = 0;
+    for (int c = 0; c < 4; ++c) prefix[c][t] = category == c;
+    __syncthreads();
+    for (int step = 1; step < 8; step *= 2) {
+        int previous[4];
+        for (int c = 0; c < 4; ++c)
+            previous[c] = t >= step ? prefix[c][t - step] : 0;
+        __syncthreads();
+        for (int c = 0; c < 4; ++c) prefix[c][t] += previous[c];
+        __syncthreads();
+    }
+    int rank = prefix[category][t] - 1;
     for (int i = 0; i < category; ++i) start += histogram[i];
-    for (int i = 0; i < t; ++i) rank += categories[i] == category;
+
     positions[start + rank] = t;
 }
 
@@ -38,7 +50,11 @@ int main() {
     check(cudaGetLastError());
     route<<<1, 8>>>(input, histogram, positions);
     check(cudaGetLastError());
+    int expected[8], next = 0;
+    for (int c = 0; c < 4; ++c) for (int t = 0; t < 8; ++t)
+        if (values[t] == c) expected[next++] = t;
     check(cudaMemcpy(values, positions, sizeof(values), cudaMemcpyDeviceToHost));
+    for (int i = 0; i < 8; ++i) if (values[i] != expected[i]) return EXIT_FAILURE;
     for (int i = 0; i < 8; ++i) std::printf("Slot %d: token %d\n", i, values[i]);
     check(cudaFree(input));
     check(cudaFree(histogram));

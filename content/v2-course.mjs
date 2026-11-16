@@ -1,5 +1,6 @@
 // Copyright © 2026 Christopher Snow.
-export const v2Course = [
+import { practicalLessons } from './v2-practical-catalog.mjs';
+export const v2CoreCourse = [
   { slug: 'first-kernel', title: 'Write your first GPU value', mode: 'hello',
     goal: 'Launch one thread, write one value, and read it back in main().', current: 'hello' },
   { slug: 'one-thread-one-element', title: 'One thread, one element', mode: 'scale',
@@ -43,3 +44,5 @@ export const v2Course = [
   { slug: 'token-routing', title: 'Investigate stable token routing', current: 'pattern-investigation',
     goal: 'Combine counts, starts and ranks to place every token once, then design a performance measurement.' },
 ];
+
+export const v2Course = [...v2CoreCourse, ...practicalLessons];

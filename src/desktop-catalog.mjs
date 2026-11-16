@@ -1,3 +1,4 @@
+import { practicalPython } from './v2-practical-python.mjs';
 import {parallelChapters} from './parallel-chapters.mjs';
 // Copyright © 2026 Christopher Snow.
 import {tiledMatmul} from './ai-models.mjs';
@@ -6,7 +7,15 @@ import {deviceOpening,readingOpening,memorySetup,memoryExample} from './book-cod
 import {tensorSetup,journeyCode,readingCode,deviceJourney,readTensor} from './foundations-model.mjs';
 import {continuationChapters,computeExperiment} from './continuation-view.mjs';
 export function desktopExamples(){
-  const examples=[...parallelChapters.map(c=>({slug:c.slug,id:"opening",source:c.source,expected:c.expected})),
+  const practicalExpected = {
+    'verify-every-output':{y:[[4,8],[11,20]]},
+    'grid-stride-loops':{y:Array.from({length:70},(_,i)=>((i%13)-6)*0.25*2.5)},
+    'multi-block-scan':{offsets:Array.from({length:70},(_,i)=>Math.ceil(i/3))},
+    'resource-tradeoffs':{y:Array.from({length:8},(_,i)=>i*2+1)},
+    'measure-a-kernel':{y:Array.from({length:4096},(_,i)=>i*2+1)},
+    'softmax-capstone':{y:[[-2,0,1],[1000,1002,1003]].map(row=>{const m=Math.max(...row),w=row.map(v=>Math.exp(v-m)),sum=w.reduce((a,b)=>a+b);return w.map(v=>v/sum);})}
+  };
+  const examples=[...Object.entries(practicalPython).map(([slug,source])=>({slug,id:'opening',source,expected:practicalExpected[slug]})),...parallelChapters.map(c=>({slug:c.slug,id:"opening",source:c.source,expected:c.expected})),
     {slug:'hello',id:'opening',source:pythonSource(),expected:{y:[2,4,6,8,10]}},
     {slug:'devices',id:'opening',source:deviceOpening,expected:{y_cpu:[2,4,6,8,10]}},
     {slug:'launch-from-input',id:'opening',source:deviceOpening,expected:{y_cpu:[2,4,6,8,10]}},

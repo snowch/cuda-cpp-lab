@@ -1,4 +1,5 @@
 // Copyright © 2026 Christopher Snow.
+import { mountPractical } from './v2-practical.mjs';
 import { mountCourseNavigation } from './v2-course-navigation.mjs';
 import { mountGuided } from './v2-guided.mjs';
 import { downloadCuda } from './cuda-program.mjs';
@@ -56,6 +57,7 @@ export function mountV2(root = document) {
   }
   mountCourseNavigation(root);
   mountGuided(root);
+  mountPractical(root);
   const activity = root.querySelector('[data-v2-mode]');
   if (!activity) return;
   const mode = activity.dataset.v2Mode;

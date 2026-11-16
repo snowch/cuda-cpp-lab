@@ -172,6 +172,19 @@ export function codeExplanations(source) {
     add('transposed[0, :]', 'Reads the first row of the transposed view: the original tensor’s first column.');
     match(/y = (?:values|packed|transposed\[0, :\]) \* [^\n]+/, 'Multiplies each selected value by the shown amount to create the result tensor y.');
   }
+  if(python && !source.includes('device="cuda"')) {
+    add('a = torch.tensor([[1.0, 2.0], [3.0, 5.0]])', 'Creates distinct FP32 rows so an indexing mistake is observable.');
+    add('b = torch.tensor([[2.0, 0.0], [1.0, 4.0]])', 'Creates a separate right-hand matrix with distinct columns.');
+    add('y = a @ b', 'Computes the complete two-dimensional matrix product.');
+    match(/x = torch.arange\((70|8|4096), dtype=torch.float32\)/, 'Creates the displayed count of FP32 inputs. The download can run this calculation on CPU.');
+    add('x = (x.remainder(13) - 6.0) * 0.25', 'Repeats signed quarter values, including zero, to make incorrect element ownership visible.');
+    add('y = x * 2.5', 'Scales every input independently, preserving length and order.');
+    add('y = x * 2.0 + 1.0', 'Computes the two mathematical stages; PyTorch selects their implementation.');
+    add('flags = (torch.arange(70) % 3 == 0).to(torch.int64)', 'Selects indices divisible by three and stores integer flags.');
+    add('offsets = torch.cumsum(flags, dim=0) - flags', 'Subtracts each flag from its inclusive prefix to obtain the exclusive count of earlier selections.');
+    add('logits = torch.tensor([', 'Creates two FP32 score rows, including large positive values.');
+    add('y = torch.softmax(logits, dim=1)', 'Normalises across the columns within each row.');
+  }
   for(const [fragment,meaning] of courseCudaExplanations(source)){
     const existing=entries.find(entry=>entry.fragment===fragment);
     if(existing)existing.meaning=meaning;else add(fragment,meaning);

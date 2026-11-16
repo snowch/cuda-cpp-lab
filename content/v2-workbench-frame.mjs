@@ -1,8 +1,10 @@
 // Copyright © 2026 Christopher Snow.
 import { mountFirstKernelFocus } from '../src/v2-editor-focus.mjs';
+import { practicalRuntime } from './v2-practical-source.mjs';
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html, {compilerBase, compilerParts} = {}) {
   if (!html.includes('lab.arrayProgram')) throw new Error('This workbench must support complete CUDA programs.');
+  html = practicalRuntime(html);
   if (compilerBase) {
     const marker = "\nconst editor = document.querySelector('#source');";
     if (!html.includes(marker)) throw new Error('The CUDA workbench initialisation changed.');

@@ -27,7 +27,7 @@ for example in examples:
             continue
         assert actual is not None,(example['id'],name)
         reference=torch.tensor(values,dtype=actual.dtype)
-        torch.testing.assert_close(actual,reference,rtol=1e-5 if example['slug']=='attention' else 0,atol=1e-6 if example['slug']=='attention' else 0,msg=lambda msg:example['id']+' '+name+': '+msg)
+        torch.testing.assert_close(actual,reference,rtol=1e-5 if example['slug'] in ['attention','softmax-capstone'] else 0,atol=1e-6 if example['slug'] in ['attention','softmax-capstone'] else 0,msg=lambda msg:example['id']+' '+name+': '+msg)
     if example['id']=='opening':
         if example['slug']=='scheduling':assert namespace['z'].tolist()==[4,8,12,16,20]
         if example['slug']=='inference':
