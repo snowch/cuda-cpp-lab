@@ -36,7 +36,7 @@ test('eviction during a shared readiness scan is detected before reporting a com
 
 test('concurrent readiness checks share byte verification but later checks detect eviction and recover from errors',async()=>{
   const base='https://example.test/gpu-lab/',body='recording bytes';
-  const release={id:'1'.repeat(64),files:[{path:'video.mp4',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]};
+  const release={id:'1'.repeat(64),bytes:Buffer.byteLength(body),files:[{path:'video.mp4',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]};
   const started=deferred(),resume=deferred();
   let reads=0,present=true,denied=false;
   const cache={async keys(){return present?[new Request(new URL('video.mp4',base))]:[];},async match(){
@@ -45,15 +45,19 @@ test('concurrent readiness checks share byte verification but later checks detec
     if(denied){denied=false;throw new Error('Storage temporarily unavailable');}
     return present?new Response(body):undefined;
   }};
-  const context=vm.createContext({release,URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,
+  const updates=[];
+  const context=vm.createContext({release,report(value){updates.push(value);},URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,
     caches:{async open(){return cache;}},self:{registration:{scope:base},addEventListener(){}}});
   const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
   vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);
-  const check=()=>vm.runInContext('complete(release)',context);
+  const check=()=>vm.runInContext('complete(release, value => report(value))',context);
   const first=check();await started.promise;
   const others=Array.from({length:15},check);
+  assert.equal(updates.length,0,'A paused verification must not emit synthetic keepalives');
   resume.resolve();assert.ok((await Promise.all([first,...others])).every(Boolean));
   assert.equal(reads,1,'Sixteen tabs should not reread the same recording sixteen times');
+  assert.equal(updates.length,16,'Every joined requester needs progress to keep its inactivity deadline current');
+  assert.ok(updates.every(value=>value.bytes===release.bytes&&value.total===release.bytes));
   present=false;assert.equal(await check(),false,'A completed check cannot conceal later eviction');
   present=true;denied=true;await assert.rejects(check(),/Storage temporarily unavailable/);
   assert.equal(await check(),true,'A rejected scan must not poison the next retry');

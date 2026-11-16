@@ -28,39 +28,57 @@ async function verified(response, file) {
   const data = await response.arrayBuffer();
   return data.byteLength === file.bytes && await digest(data) === file.sha256;
 }
-async function complete(release) {
+async function complete(release, progress) {
   if (!release) return false;
   // Many open tabs request status together after a download. Share that scan,
   // including its byte/hash checks, rather than rereading every video per tab.
   // Retain no result after it finishes: the next check must detect eviction.
-  if (verifying.has(release.id)) return verifying.get(release.id);
-  const scan = (async () => {
-    const cache = await caches.open(cacheName(release.id));
-    // Bound memory while overlapping CacheStorage I/O for the complete book.
-    // Join the whole batch even on failure, so retries cannot leave old reads
-    // running behind a new scan. Inspect outcomes in manifest order.
-    for (let start = 0; start < release.files.length; start += 4) {
-      const checks = await Promise.allSettled(release.files.slice(start, start + 4).map(async file => verified(await cache.match(new URL(file.path, BASE)), file)));
-      for (const check of checks) {
-        if (check.status === 'rejected') throw check.reason;
-        if (!check.value) return false;
+  let scan = verifying.get(release.id);
+  if (!scan) {
+    scan = { listeners: new Set(), bytes: 0, work: null };
+    scan.work = Promise.resolve().then(async () => {
+      try {
+        const cache = await caches.open(cacheName(release.id));
+        // Bound memory while overlapping CacheStorage I/O for the complete book.
+        // Join failed batches before retries can start another scan.
+        for (let start = 0; start < release.files.length; start += 4) {
+          const batch = release.files.slice(start, start + 4);
+          const checks = await Promise.allSettled(batch.map(async file => verified(await cache.match(new URL(file.path, BASE)), file)));
+          for (const check of checks) {
+            if (check.status === 'rejected') throw check.reason;
+            if (!check.value) return false;
+          }
+          scan.bytes += batch.reduce((sum, file) => sum + file.bytes, 0);
+          // Each waiting RPC receives real verification progress, so cold disk
+          // reads reset its inactivity timer without extending stalled work.
+          for (const listener of scan.listeners) {
+            try { listener({ bytes: scan.bytes, total: release.bytes }); } catch { /* A closed tab cannot cancel another tab's scan. */ }
+          }
+        }
+        // A file checked early can be evicted while a later recording is hashed.
+        const present = new Set((await cache.keys()).map(request => request.url));
+        return release.files.every(file => present.has(new URL(file.path, BASE).href));
+      } finally {
+        if (verifying.get(release.id) === scan) verifying.delete(release.id);
       }
+    });
+    verifying.set(release.id, scan);
+  }
+  if (progress) {
+    scan.listeners.add(progress);
+    if (scan.bytes) {
+      try { progress({ bytes: scan.bytes, total: release.bytes }); } catch { /* The requester may have closed. */ }
     }
-    // A file checked early can be evicted while a later recording is hashed.
-    // Recheck presence at the end without rereading every large response.
-    const present = new Set((await cache.keys()).map(request => request.url));
-    return release.files.every(file => present.has(new URL(file.path, BASE).href));
-  })();
-  verifying.set(release.id, scan);
-  try { return await scan; }
-  finally { if (verifying.get(release.id) === scan) verifying.delete(release.id); }
+  }
+  try { return await scan.work; }
+  finally { scan.listeners.delete(progress); }
 }
 async function broadcast(message) {
   for (const client of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) {
     if (client.url.startsWith(BASE.href)) client.postMessage(message);
   }
 }
-function prune() {
+function prune(progress) {
   if (operation || restarting) return;
   if (pruning) return pruning;
   // Cleanup owns the cache list until it finishes. Mutating requests reserve
@@ -69,7 +87,7 @@ function prune() {
     const state = await readState();
     if (!state.active) return;
     const release = await manifest(state.active);
-    if (!await complete(release)) return;
+    if (!await complete(release, progress)) return;
     const windows = await courseWindows(release);
     if (windows.some(client => seen.get(client.id) !== state.active)) return;
     const keep = new Set([META, ...[state.active, state.previous, state.pending, state.partial].filter(Boolean).map(cacheName)]);
@@ -77,7 +95,7 @@ function prune() {
   })().finally(() => { pruning = null; });
   return pruning;
 }
-async function status(running, justVerified) {
+async function status(running, justVerified, progress) {
   const state = await readState();
   const release = await manifest(state.active || running);
   const pending = await manifest(state.pending);
@@ -86,8 +104,8 @@ async function status(running, justVerified) {
   // explicitly removes it; treat it as consent to preserve offline access on update.
   const legacy = keys.some(k => k.startsWith(PREFIX) && !k.startsWith(PREFIX + 'release-') && k !== META);
   return { ...state, runningRelease: await manifest(running), saved: Boolean(state.saved || legacy), legacy,
-    offlineReady: Boolean(state.saved && ((justVerified && release?.id === justVerified.id) || await complete(release))),
-    pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending))),
+    offlineReady: Boolean(state.saved && ((justVerified && release?.id === justVerified.id) || await complete(release, progress))),
+    pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending, progress))),
     busy: Boolean(operation || restarting) };
 }
 async function rememberPage(release, paths) {
@@ -131,7 +149,7 @@ async function prepare(release, save, port, signal) {
     port.postMessage({ progress: { bytes, total: release.bytes } });
   }
   signal.throwIfAborted();
-  if (!await complete(release)) throw new Error('The saved files could not be verified. Free storage and retry.');
+  if (!await complete(release, () => port.postMessage({ progress: { bytes, total: release.bytes } }))) throw new Error('The saved files could not be verified. Free storage and retry.');
   signal.throwIfAborted();
   const state = await readState();
   if (save && (!state.active || state.active === release.id)) {
@@ -161,9 +179,9 @@ function ask(client, token) {
     client.postMessage({ type: 'PREPARE_RESTART', token }, [channel.port2]);
   });
 }
-async function restart() {
+async function restart(progress) {
   const state = await readState(), release = await manifest(state.pending);
-  if (!release || !await complete(release)) throw new Error('The update is incomplete. Download it again before restarting.');
+  if (!release || !await complete(release, progress)) throw new Error('The update is incomplete. Download it again before restarting.');
   const token = crypto.randomUUID();
   const windows = await courseWindows(release);
   try {
@@ -191,10 +209,11 @@ self.addEventListener('message', event => {
     try {
       const data = event.data;
       let result;
+      const progress = value => port.postMessage({ progress: value });
       if (data.type === 'STATUS') {
         if (/^[a-f0-9]{64}$/.test(data.running)) seen.set(event.source.id, data.running);
-        result = await status(data.running);
-        await prune();
+        result = await status(data.running, null, progress);
+        await prune(progress);
       }
       else if (data.type === 'REMEMBER_PAGE') {
         if (operation || restarting) throw new Error('A download or restart is already in progress.');
@@ -213,13 +232,13 @@ self.addEventListener('message', event => {
           // prepare() has just verified every byte. Reuse that result for this
           // response instead of scanning the new release again. Later STATUS
           // requests still verify storage afresh to detect eviction.
-          result = await status(data.running, data.release);
+          result = await status(data.running, data.release, () => progress({ bytes: data.release.bytes, total: data.release.bytes }));
         } finally { operation = null; await broadcast({ type: 'STATUS_CHANGED' }); }
       } else if (data.type === 'RESTART') {
         if (operation || restarting) throw new Error('Wait for the current operation to finish.');
         restarting = true;
         navigationGate = new Promise(resolve => { releaseNavigation = resolve; });
-        try { await pruning; await restart(); result = {}; } finally { restarting = false; releaseNavigation(); }
+        try { await pruning; await restart(progress); result = {}; } finally { restarting = false; releaseNavigation(); }
       } else if (data.type === 'REMOVE') {
         if (operation || restarting) throw new Error('Cancel the download or wait for the restart before removing files.');
         operation = new AbortController();
