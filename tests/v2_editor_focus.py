@@ -1,0 +1,93 @@
+# Copyright © 2026 Christopher Snow.
+"""First-kernel edit guidance follows the source without changing the program."""
+from playwright.sync_api import expect
+
+
+def check_v2_editor_focus(browser, url, root):
+    for width in [390, 820, 1440]:
+        for theme in ['light', 'dark']:
+            with browser.new_context(viewport={'width': width, 'height': 1000}, color_scheme=theme) as context:
+                page = context.new_page()
+                errors = []
+                page.on('pageerror', lambda error: errors.append(str(error)))
+                page.goto(url + 'v2/first-kernel.html')
+                frame = page.frame_locator('[data-kernel-workbench="hello"]')
+                editor = frame.get_by_role('textbox', name='CUDA source')
+                show = frame.get_by_role('button', name='Show target line')
+                expect(editor).to_have_class('has-source-focus')
+                expect(frame.locator('#source-focus-help')).to_contain_text('leave it unchanged for now')
+                expect(editor).to_have_attribute('aria-describedby', 'source-focus-help source-focus-missing')
+                starter = editor.input_value()
+                target_visible = '''e => {
+                    const top = parseFloat(e.style.getPropertyValue('--source-focus-top'));
+                    const height = parseFloat(getComputedStyle(e).lineHeight);
+                    return top >= e.scrollTop && top + height <= e.scrollTop + e.clientHeight;
+                }'''
+                assert editor.evaluate(target_visible), (width, theme, 'initial target')
+                assert editor.evaluate('e => getComputedStyle(e).backgroundImage.includes("gradient")')
+                assert show.evaluate('e => e.getBoundingClientRect().height >= 44')
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                assert frame.locator('html').evaluate('e => e.scrollWidth <= innerWidth')
+                page.wait_for_function('''() => {
+                    const frame = document.querySelector('[data-kernel-workbench]');
+                    return frame.clientHeight >= frame.contentDocument.querySelector('main').offsetHeight;
+                }''')
+                # Review preceding task, guidance/editor and following output in context.
+                page.locator('[aria-labelledby="v2-first-kernel"]').screenshot(
+                    path=str(root / f'test-results/v2-editor-focus-{width}-{theme}.png'))
+
+                # Moving the assignment and changing its value must move the highlight.
+                edited = starter.replace('    output[0] = 42.0f;', '\n' * 18 + '    output[0] = 7.0f;')
+                initial_top = editor.evaluate('e => parseFloat(e.style.getPropertyValue("--source-focus-top"))')
+                editor.fill(edited)
+                assert editor.evaluate('e => parseFloat(e.style.getPropertyValue("--source-focus-top"))') > initial_top
+                editor.evaluate('e => e.scrollTop = e.scrollHeight')
+                show.focus()
+                show.press('Enter')
+                expect(editor).to_be_focused()
+                assert editor.evaluate(target_visible), (width, theme, 'keyboard target')
+                assert editor.evaluate('e => e.selectionStart === e.selectionEnd'), 'Finding a line must not select code for accidental replacement.'
+                assert editor.input_value() == edited
+                with page.expect_download() as info:
+                    frame.get_by_role('button', name='Export .cu').click()
+                assert info.value.suggested_filename == 'hello.cu'
+                assert info.value.path().read_text() == edited
+
+                # A missing target must not leave a highlight on unrelated setup code.
+                editor.fill(edited.replace('output[0] = 7.0f;', 'return;'))
+                expect(editor).not_to_have_class('has-source-focus')
+                expect(show).to_be_disabled()
+                expect(frame.locator('#source-focus-missing')).to_be_visible()
+                frame.get_by_role('button', name='Restore starter').click()
+                expect(editor).to_have_value(starter)
+                expect(editor).to_have_class('has-source-focus')
+                expect(frame.locator('#source-focus-missing')).to_be_hidden()
+                assert editor.evaluate(target_visible), 'Reset should reveal the assignment again.'
+
+                # Reload restores edited source and refinds its line.
+                editor.fill(edited)
+                page.reload()
+                expect(editor).to_have_value(edited)
+                expect(editor).to_have_class('has-source-focus')
+                assert editor.evaluate(target_visible)
+                # Snapshot restoration can differ from localStorage; it must update the cue.
+                editor.evaluate('''async e => {
+                    const script = [...document.scripts].find(s => s.src.includes('/src/v2-workbench-state.mjs'));
+                    const {saveReadingState} = await import(new URL('experiment-state.mjs', script.src));
+                    e.value = e.value.replace('7.0f', '9.0f').replace('    output[0]', '\\n\\n\\n\\n    output[0]');
+                    saveReadingState();
+                }''')
+                page.reload()
+                expect(editor).to_have_value(edited.replace('7.0f', '9.0f').replace('    output[0]', '\n\n\n\n    output[0]'))
+                expect(editor).to_have_class('has-source-focus')
+                assert editor.evaluate(target_visible)
+                assert editor.evaluate('''e => {
+                    const line = e.value.slice(0, e.value.indexOf('    output[0]')).split('\\n').length - 1;
+                    const style = getComputedStyle(e);
+                    return Math.abs(parseFloat(e.style.getPropertyValue('--source-focus-top')) -
+                        (parseFloat(style.paddingTop) + line * parseFloat(style.lineHeight))) < 1;
+                }''')
+                assert not errors, errors
+                page.goto(url + 'v2/one-thread-one-element.html')
+                expect(page.frame_locator('[data-kernel-workbench]').locator('.source-focus')).to_have_count(0)
+    print('PASS: first-kernel focus cue, six layouts, keyboard reveal, edits, missing target, export, reset and restart restoration')
