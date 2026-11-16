@@ -36,7 +36,7 @@ test('eviction during a shared readiness scan is detected before reporting a com
 
 test('concurrent readiness checks share byte verification but later checks detect eviction and recover from errors',async()=>{
   const base='https://example.test/gpu-lab/',body='recording bytes';
-  const release={id:'1'.repeat(64),files:[{path:'video.mp4',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]};
+  const release={id:'1'.repeat(64),bytes:Buffer.byteLength(body),files:[{path:'video.mp4',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]};
   const started=deferred(),resume=deferred();
   let reads=0,present=true,denied=false;
   const cache={async keys(){return present?[new Request(new URL('video.mp4',base))]:[];},async match(){
@@ -45,15 +45,19 @@ test('concurrent readiness checks share byte verification but later checks detec
     if(denied){denied=false;throw new Error('Storage temporarily unavailable');}
     return present?new Response(body):undefined;
   }};
-  const context=vm.createContext({release,URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,
+  const updates=[];
+  const context=vm.createContext({release,report(value){updates.push(value);},URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,
     caches:{async open(){return cache;}},self:{registration:{scope:base},addEventListener(){}}});
   const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
   vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);
-  const check=()=>vm.runInContext('complete(release)',context);
+  const check=()=>vm.runInContext('complete(release, value => report(value))',context);
   const first=check();await started.promise;
   const others=Array.from({length:15},check);
+  assert.equal(updates.length,0,'A paused verification must not emit synthetic keepalives');
   resume.resolve();assert.ok((await Promise.all([first,...others])).every(Boolean));
   assert.equal(reads,1,'Sixteen tabs should not reread the same recording sixteen times');
+  assert.equal(updates.length,16,'Every joined requester needs progress to keep its inactivity deadline current');
+  assert.ok(updates.every(value=>value.bytes===release.bytes&&value.total===release.bytes));
   present=false;assert.equal(await check(),false,'A completed check cannot conceal later eviction');
   present=true;denied=true;await assert.rejects(check(),/Storage temporarily unavailable/);
   assert.equal(await check(),true,'A rejected scan must not poison the next retry');
@@ -65,12 +69,15 @@ test('background cache pruning finishes before an update can create its staging 
   const old={schema:1,id:'1'.repeat(64),commit:null,date:null,files:[file('old page')],bytes:8};
   const next={schema:1,id:'2'.repeat(64),commit:null,date:null,files:[file('new page')],bytes:8};
   const paused=deferred(),resume=deferred(),fetched=deferred();
-  let keysCalls=0,prunePaused=false,overlap=false;
+  let keysCalls=0,prunePaused=false,overlap=false,nextReads=0;
   const caches={
     async open(name){
       if(!stores.has(name)) stores.set(name,new Map());
       const entries=stores.get(name);
-      return {async keys(){return [...entries.keys()].map(url=>new Request(url));},async match(url){return entries.get(String(url))?.clone();},async put(url,response){entries.set(String(url),response.clone());}};
+      return {async keys(){return [...entries.keys()].map(url=>new Request(url));},async match(url){
+        if(name===prefix+'release-'+next.id && String(url)===base+'index.html')nextReads++;
+        return entries.get(String(url))?.clone();
+      },async put(url,response){entries.set(String(url),response.clone());}};
     },
     async keys(){
       if(++keysCalls===2){prunePaused=true;paused.resolve();await resume.promise;prunePaused=false;}
@@ -103,7 +110,11 @@ test('background cache pruning finishes before an update can create its staging 
   assert.equal(overlap,false,'Update fetched assets while cleanup could still delete its cache');
   assert.ok(!update.messages.some(m=>m.error),JSON.stringify(update.messages));
   assert.equal(update.messages.at(-1).result.pendingReady,true);
+  assert.equal(nextReads,2,'A cache miss and final verification suffice; acknowledgement must not reread the downloaded book');
   assert.ok(stores.has(prefix+'release-'+next.id));
+  stores.get(prefix+'release-'+next.id).delete(base+'index.html');
+  const evicted=rpc('STATUS');await evicted.work;
+  assert.equal(evicted.messages.at(-1).result.pendingReady,false,'The download acknowledgement cannot hide later eviction');
 });
 
 test('readiness verification bounds parallel I/O and still rejects missing bytes and same-size corruption',async()=>{
