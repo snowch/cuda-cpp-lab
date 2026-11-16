@@ -1,0 +1,50 @@
+[
+  {
+    "id": "s01",
+    "stage": "definition",
+    "title": "What is a CUDA kernel?",
+    "lead": "GPU threads execute the instructions in hello.",
+    "note": "The assignment writes one float to GPU memory.",
+    "captions": [
+      "A CUDA kernel is a function that GPU threads execute.",
+      "In this file, global marks hello as a kernel.",
+      "The thread writes forty-two point zero at output index zero."
+    ]
+  },
+  {
+    "id": "s02",
+    "stage": "launch",
+    "title": "Launch one thread",
+    "lead": "The CPU launches hello from main.",
+    "note": "The two numbers describe how many threads to start.",
+    "captions": [
+      "On the CPU, main reserves space in GPU memory for one float.",
+      "The first one requests one block. The second one requests one thread in that block.",
+      "The argument output gives the kernel the address of the float."
+    ]
+  },
+  {
+    "id": "s03",
+    "stage": "store",
+    "title": "Where does the value go?",
+    "lead": "One GPU thread runs the kernel and stores the result.",
+    "note": "An SM is the part of the GPU that executes thread instructions.",
+    "captions": [
+      "A streaming multiprocessor, or S M, executes instructions for the GPU thread.",
+      "The kernel stores forty-two point zero in GPU memory.",
+      "The CPU copies the value back, and main prints it in the console."
+    ]
+  },
+  {
+    "id": "s04",
+    "stage": "edit",
+    "title": "Change the stored value",
+    "lead": "Which line determines what the console prints?",
+    "note": "Try a new value in the editor.",
+    "captions": [
+      "Change the value in the assignment, then compile and run again.",
+      "The launch still asks for one block and one thread.",
+      "Which value will main print this time?"
+    ]
+  }
+]

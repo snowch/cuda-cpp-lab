@@ -24,11 +24,11 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument('chapter',choices=['pattern-investigation','pipelines','progress','compaction','scan','histograms','hello','launch-from-input','putting-it-together','reduction','matmul','devices','reading','layout','requests','scheduling','divergence','tensor-cores','attention','inference'],nargs='?',default='reduction')
+parser.add_argument('chapter',choices=['pattern-investigation','pipelines','progress','compaction','scan','histograms','first-kernel','hello','launch-from-input','putting-it-together','reduction','matmul','devices','reading','layout','requests','scheduling','divergence','tensor-cores','attention','inference'],nargs='?',default='reduction')
 parser.add_argument('--slides-only',action='store_true',help='Export slide frames and PDF for review before encoding')
 args=parser.parse_args()
 chapter=args.chapter
-title={'pattern-investigation':'Combine counts, bin starts and ranks for stable token grouping','pipelines':'Order copy, compute and buffer reuse before expecting overlap','progress':'Distinguish resource waits, barriers and scheduling dependencies','compaction':'Place surviving token identities with exclusive offsets','scan':'Build output positions from prefix sums','histograms':'Count token destinations without losing updates','hello':'Trace five values through GPU threads','launch-from-input':'Derive CUDA storage and launches from inputs','putting-it-together':'Turn matrix reuse into a testable hypothesis','reduction':'Shared memory and barriers','matmul':'How matrix tiles reuse inputs','devices':'Follow tensor values between CPU and GPU','reading':'Select tensor rows and columns','layout':'Follow tensor views into memory','requests':'Group five reads into memory sectors','scheduling':'Choose a ready warp while another waits','divergence':'Follow active masks through different paths','tensor-cores':'Follow input rounding into FP32 sums','attention':'Update attention totals without full score matrices','inference':'Connect cache capacity to inference budgets'}[chapter]
+title={'first-kernel':'What is a CUDA kernel?','pattern-investigation':'Combine counts, bin starts and ranks for stable token grouping','pipelines':'Order copy, compute and buffer reuse before expecting overlap','progress':'Distinguish resource waits, barriers and scheduling dependencies','compaction':'Place surviving token identities with exclusive offsets','scan':'Build output positions from prefix sums','histograms':'Count token destinations without losing updates','hello':'Trace five values through GPU threads','launch-from-input':'Derive CUDA storage and launches from inputs','putting-it-together':'Turn matrix reuse into a testable hypothesis','reduction':'Shared memory and barriers','matmul':'How matrix tiles reuse inputs','devices':'Follow tensor values between CPU and GPU','reading':'Select tensor rows and columns','layout':'Follow tensor views into memory','requests':'Group five reads into memory sectors','scheduling':'Choose a ready warp while another waits','divergence':'Follow active masks through different paths','tensor-cores':'Follow input rounding into FP32 sums','attention':'Update attention totals without full score matrices','inference':'Connect cache capacity to inference budgets'}[chapter]
 WORK = ROOT / f'test-results/{chapter}-recording'
 DEST = ROOT / f'assets/media/{chapter}'
 DEST.mkdir(parents=True, exist_ok=True)
@@ -96,12 +96,14 @@ for cut in cuts:
 concat += [f"file '{slides / (cuts[-1]['id'] + '.png')}'"]
 (WORK / 'frames.txt').write_text('\n'.join(concat))
 video = DEST / f'{chapter}.mp4'
+video_filter = 'scale=1920:1080,fps=24,format=yuv420p' if chapter == 'first-kernel' else 'fps=30,format=yuv420p'
+audio_bitrate = '48k' if chapter == 'first-kernel' else '160k'
 subprocess.run([
     'ffmpeg','-y','-loglevel','warning','-f','concat','-safe','0','-i',str(WORK/'frames.txt'),
     '-i',str(WORK/'narration.wav'),'-i',str(WORK/'captions.srt'),'-i',str(WORK/'chapters.txt'),
     '-map','0:v','-map','1:a','-map','2:s','-map_metadata','3','-map_chapters','3',
-    '-vf','fps=30,format=yuv420p','-c:v','libx264','-preset',os.environ.get('DEMO_FFMPEG_PRESET','veryfast'),'-threads',os.environ.get('DEMO_FFMPEG_THREADS','4'),'-crf','18','-tune','stillimage',
-    '-af','loudnorm=I=-16:TP=-1.5:LRA=11','-ar','48000','-c:a','aac','-b:a','160k',
+    '-vf',video_filter,'-c:v','libx264','-preset',os.environ.get('DEMO_FFMPEG_PRESET','veryfast'),'-threads',os.environ.get('DEMO_FFMPEG_THREADS','4'),'-crf','18','-tune','stillimage',
+    '-af','loudnorm=I=-16:TP=-1.5:LRA=11','-ar','48000','-c:a','aac','-b:a',audio_bitrate,
     '-c:s','mov_text','-metadata:s:s:0','language=eng','-movflags','+faststart','-t',str(round(cursor,3)),str(video)
 ],check=True)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(slides/'s01.png'),'-vf','scale=1920:1080','-frames:v','1',str(DEST/'poster.jpg')],check=True)

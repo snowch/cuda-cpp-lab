@@ -1,0 +1,108 @@
+{
+  "durationSeconds": 57,
+  "bytes": 841274,
+  "scenes": [
+    {
+      "id": "s01",
+      "start": 0,
+      "end": 13.4,
+      "title": "What is a CUDA kernel?"
+    },
+    {
+      "id": "s02",
+      "start": 13.4,
+      "end": 28.57,
+      "title": "Launch one thread"
+    },
+    {
+      "id": "s03",
+      "start": 28.57,
+      "end": 44.925,
+      "title": "Where does the value go?"
+    },
+    {
+      "id": "s04",
+      "start": 44.925,
+      "end": 56.54,
+      "title": "Change the stored value"
+    }
+  ],
+  "cues": [
+    {
+      "id": "s01-c1",
+      "start": 0.6,
+      "end": 4.34,
+      "text": "A CUDA kernel is a function that GPU threads execute."
+    },
+    {
+      "id": "s01-c2",
+      "start": 4.56,
+      "end": 7.82,
+      "text": "In this file, global marks hello as a kernel."
+    },
+    {
+      "id": "s01-c3",
+      "start": 8.04,
+      "end": 11.98,
+      "text": "The thread writes forty-two point zero at output index zero."
+    },
+    {
+      "id": "s02-c1",
+      "start": 14.0,
+      "end": 18.46,
+      "text": "On the CPU, main reserves space in GPU memory for one float."
+    },
+    {
+      "id": "s02-c2",
+      "start": 18.68,
+      "end": 23.51,
+      "text": "The first one requests one block. The second one requests one thread in that block."
+    },
+    {
+      "id": "s02-c3",
+      "start": 23.73,
+      "end": 27.15,
+      "text": "The argument output gives the kernel the address of the float."
+    },
+    {
+      "id": "s03-c1",
+      "start": 29.17,
+      "end": 35.1,
+      "text": "A streaming multiprocessor, or S M, executes instructions for the GPU thread."
+    },
+    {
+      "id": "s03-c2",
+      "start": 35.32,
+      "end": 39.185,
+      "text": "The kernel stores forty-two point zero in GPU memory."
+    },
+    {
+      "id": "s03-c3",
+      "start": 39.405,
+      "end": 43.505,
+      "text": "The CPU copies the value back, and main prints it in the console."
+    },
+    {
+      "id": "s04-c1",
+      "start": 45.525,
+      "end": 49.38,
+      "text": "Change the value in the assignment, then compile and run again."
+    },
+    {
+      "id": "s04-c2",
+      "start": 49.6,
+      "end": 52.47,
+      "text": "The launch still asks for one block and one thread."
+    },
+    {
+      "id": "s04-c3",
+      "start": 52.69,
+      "end": 55.12,
+      "text": "Which value will main print this time?"
+    }
+  ],
+  "speech": {
+    "engine": "Flite",
+    "voice": "slt"
+  }
+}
