@@ -2,7 +2,7 @@
   "id": "./",
   "name": "GPU Lab",
   "short_name": "GPU Lab",
-  "description": "Hands-on GPU architecture lessons for AI practitioners. Learn and experiment offline.",
+  "description": "Hands-on GPU architecture lessons in CUDA C++ for AI practitioners. Learn and experiment offline.",
   "lang": "en-GB",
   "start_url": "./",
   "scope": "./",

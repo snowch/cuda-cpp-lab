@@ -5,6 +5,7 @@ import { v2Course } from '../content/v2-course.mjs';
 import { renderV2Contents, renderV2Lesson, v2Styles } from '../content/v2-view.mjs';
 import { workbenchFrame } from '../content/v2-workbench-frame.mjs';
 import { insertProgramStarters } from '../content/v2-programs.mjs';
+import { renderV2Brand } from '../content/v2-brand.mjs';
 
 const output = process.argv[2];
 if (!output) throw new Error('Pass the preview output path.');
@@ -12,6 +13,7 @@ const firstProgram = await readFile(new URL('../examples/first-kernel.cu', impor
 const workbench = process.argv[3] ? workbenchFrame(await insertProgramStarters(await readFile(process.argv[3], 'utf8'))) : '';
 const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf8');
 const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
+const icon = encode('image/svg+xml', await readFile(new URL('../assets/icon.svg', import.meta.url)));
 const href = (slug, part) => '#' + (part ?? slug);
 const current = 'https://snowch.github.io/gpu-lab/';
 const legacy = slug => current + 'lessons/' + slug + '.html';
@@ -46,12 +48,13 @@ await writeFile(output, `<!doctype html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>GPU Lab V2</title>
+<link rel="icon" type="image/svg+xml" href="${icon}">
 <style>${styling}</style>
 <script type="importmap">${JSON.stringify({ imports })}</script>
 </head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
-<header class="topbar v2-topbar"><a class="brand" href="#contents">GPU Lab V2</a>
+<header class="topbar v2-topbar">${renderV2Brand('#contents', icon)}
 <div class="top-actions"><a href="${current}v1.html">GPU Lab V1</a>
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main" tabindex="-1">${renderV2Contents(href)}</main>

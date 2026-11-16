@@ -13,7 +13,13 @@ def check_v2(browser, url):
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(url)
-        expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA')
+        expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
+        brand = page.get_by_role('link', name='GPU Lab V2 home', exact=True)
+        expect(brand).to_have_attribute('href', './')
+        expect(brand).to_contain_text('CUDA C++')
+        expect(brand.locator('img')).to_have_attribute('alt', '')
+        assert brand.locator('img').evaluate('img => img.complete && img.naturalWidth > 0')
+        assert brand.bounding_box()['height'] >= 44
         expect(page.locator('html')).to_have_attribute('data-theme', theme)
         expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
         page.get_by_role('link', name='GPU Lab V1', exact=True).click()
@@ -31,6 +37,7 @@ def check_v2(browser, url):
                  + ['part-parallel-patterns'] * 6)
         for route, mode, part in zip(routes, modes, parts):
             page.goto(route)
+            expect(page.get_by_role('link', name='GPU Lab V2 home', exact=True)).to_have_attribute('href', '../')
             breadcrumb = page.get_by_role('navigation', name='Breadcrumb')
             expect(breadcrumb.locator('.v2-course-overview')).to_have_attribute('href', '../')
             expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
@@ -59,6 +66,9 @@ def check_v2(browser, url):
 
             expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
             expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
+        page.get_by_role('link', name='GPU Lab V2 home', exact=True).press('Enter')
+        expect(page).to_have_url(url)
+        expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
         for index in [0, 4, 15]:
             page.goto(routes[index])
             part = parts[index]
@@ -116,7 +126,7 @@ def check_v2(browser, url):
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
     page.goto(url + 'v2/')
-    expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA')
+    expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
     page.get_by_role('link', name='GPU Lab V1', exact=True).click()
     expect(page).to_have_url(url + 'v1.html')
     page.goto(url + 'v2/reduction.html')
