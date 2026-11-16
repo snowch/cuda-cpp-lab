@@ -57,7 +57,15 @@ html[data-inline] textarea.has-source-focus {
   background-image:linear-gradient(to bottom,
     transparent var(--source-focus-top),
     #a7e3c82b var(--source-focus-top) var(--source-focus-bottom),
-    transparent var(--source-focus-bottom));
+    transparent var(--source-focus-bottom)),
+    linear-gradient(to bottom,
+      transparent var(--kernel-focus-top),
+      #8fcbff26 var(--kernel-focus-top) var(--kernel-focus-bottom),
+      transparent var(--kernel-focus-bottom)),
+    linear-gradient(to bottom,
+      transparent var(--launch-focus-top),
+      #8fcbff26 var(--launch-focus-top) var(--launch-focus-bottom),
+      transparent var(--launch-focus-bottom));
   background-size:100% var(--source-focus-height);
   background-attachment:local;
   background-repeat:no-repeat;

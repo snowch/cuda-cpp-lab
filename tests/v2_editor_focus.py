@@ -14,10 +14,24 @@ def check_v2_editor_focus(browser, url, root):
                 frame = page.frame_locator('[data-kernel-workbench="hello"]')
                 editor = frame.get_by_role('textbox', name='CUDA source')
                 show = frame.get_by_role('button', name='Show target line')
+                show_launch = frame.get_by_role('button', name='Show launch', exact=True)
                 expect(editor).to_have_class('has-source-focus')
                 expect(frame.locator('#source-focus-help')).to_contain_text('leave it unchanged for now')
                 expect(editor).to_have_attribute('aria-describedby', 'source-focus-help source-focus-missing')
                 starter = editor.input_value()
+                assert editor.evaluate('''e => {
+                    const px = name => parseFloat(e.style.getPropertyValue('--' + name));
+                    const style = getComputedStyle(e), h = parseFloat(style.lineHeight), p = parseFloat(style.paddingTop);
+                    const lineTop = offset => p + (e.value.slice(0, offset).split('\\n').length - 1) * h;
+                    return Math.abs(px('kernel-focus-top') - lineTop(e.value.indexOf('__global__'))) < 1 &&
+                        Math.abs(px('kernel-focus-bottom') - (px('kernel-focus-top') + 3 * h)) < 1 &&
+                        px('kernel-focus-top') < px('source-focus-top') &&
+                        px('kernel-focus-bottom') > px('source-focus-bottom') &&
+                        Math.abs(px('launch-focus-top') - lineTop(e.value.indexOf('hello<<<'))) < 1 &&
+                        Math.abs(px('launch-focus-bottom') - px('launch-focus-top') - h) < 1 &&
+                        lineTop(e.value.indexOf('void check')) > px('kernel-focus-bottom') &&
+                        lineTop(e.value.indexOf('check(cudaMalloc')) < px('launch-focus-top');
+                }'''), 'Highlight the complete three-line kernel and launch, keeping setup code neutral.'
                 target_visible = '''e => {
                     const top = parseFloat(e.style.getPropertyValue('--source-focus-top'));
                     const height = parseFloat(getComputedStyle(e).lineHeight);
@@ -35,6 +49,16 @@ def check_v2_editor_focus(browser, url, root):
                 # Review preceding task, guidance/editor and following output in context.
                 page.locator('[aria-labelledby="v2-first-kernel"]').screenshot(
                     path=str(root / f'test-results/v2-editor-focus-{width}-{theme}.png'))
+                show_launch.focus()
+                show_launch.press('Enter')
+                expect(editor).to_be_focused()
+                assert editor.evaluate('''e => {
+                    const top = parseFloat(e.style.getPropertyValue('--launch-focus-top'));
+                    const bottom = parseFloat(e.style.getPropertyValue('--launch-focus-bottom'));
+                    return top >= e.scrollTop && bottom <= e.scrollTop + e.clientHeight;
+                }'''), 'The launch should be reachable from the keyboard.'
+                editor.screenshot(path=str(root / f'test-results/v2-editor-launch-{width}-{theme}.png'))
+                show.click()
 
                 # Moving the assignment and changing its value must move the highlight.
                 edited = starter.replace('    output[0] = 42.0f;', '\n' * 18 + '    output[0] = 7.0f;')
@@ -55,14 +79,39 @@ def check_v2_editor_focus(browser, url, root):
 
                 # A missing target must not leave a highlight on unrelated setup code.
                 editor.fill(edited.replace('output[0] = 7.0f;', 'return;'))
-                expect(editor).not_to_have_class('has-source-focus')
+                expect(editor).to_have_class('has-source-focus')
+                assert editor.evaluate('e => e.style.getPropertyValue("--source-focus-top") === "0px" && e.style.getPropertyValue("--source-focus-bottom") === "0px"')
                 expect(show).to_be_disabled()
+                expect(show_launch).to_be_enabled()
                 expect(frame.locator('#source-focus-missing')).to_be_visible()
                 frame.get_by_role('button', name='Restore starter').click()
                 expect(editor).to_have_value(starter)
                 expect(editor).to_have_class('has-source-focus')
                 expect(frame.locator('#source-focus-missing')).to_be_hidden()
                 assert editor.evaluate(target_visible), 'Reset should reveal the assignment again.'
+                # Keep the whole kernel when its body gains nested braces, and
+                # ignore braces and fake launches inside comments/string literals.
+                nested = starter.replace('    output[0] = 42.0f;',
+                    '    // } hello<<<8, 8>>>(output);\n    const char* label = "} hello<<<7, 7>>>(output);";\n    if (output) {\n        output[0] = 7.0f;\n    }')
+                nested = '// hello<<<9, 9>>>(output);\n' + nested
+                editor.fill(nested)
+                assert editor.evaluate('''e => {
+                    const h = parseFloat(getComputedStyle(e).lineHeight);
+                    const top = parseFloat(e.style.getPropertyValue('--kernel-focus-top'));
+                    const bottom = parseFloat(e.style.getPropertyValue('--kernel-focus-bottom'));
+                    const launch = parseFloat(e.style.getPropertyValue('--launch-focus-top'));
+                    const actual = e.value.indexOf('hello<<<1, 1>>>');
+                    const expected = parseFloat(getComputedStyle(e).paddingTop) + (e.value.slice(0, actual).split('\\n').length - 1) * h;
+                    return Math.abs(bottom - top - 7 * h) < 1 && Math.abs(launch - expected) < 1;
+                }''')
+                editor.fill(starter.replace('hello<<<1, 1>>>(output);', 'hello<<<1,\n        1>>>(\n        output);'))
+                assert editor.evaluate('''e => Math.abs(parseFloat(e.style.getPropertyValue('--launch-focus-bottom')) -
+                    parseFloat(e.style.getPropertyValue('--launch-focus-top')) - 3 * parseFloat(getComputedStyle(e).lineHeight)) < 1''')
+                editor.fill(starter.replace('hello<<<1, 1>>>(output);', '// launch removed'))
+                expect(show_launch).to_be_disabled()
+                expect(show).to_be_enabled()
+                expect(frame.locator('#source-focus-missing')).to_contain_text('launch of hello')
+                assert editor.evaluate('e => e.style.getPropertyValue("--launch-focus-top") === "0px" && e.style.getPropertyValue("--launch-focus-bottom") === "0px"')
 
                 # Reload restores edited source and refinds its line.
                 editor.fill(edited)
