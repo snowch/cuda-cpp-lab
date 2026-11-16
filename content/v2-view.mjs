@@ -3,6 +3,7 @@ import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
 import { fp32, v2Experiments, v2Run } from '../src/v2-model.mjs';
 import { guidedLessons } from '../src/v2-guided.mjs';
 import { escape } from '../src/continuation-ui.mjs';
+import { courseBreadcrumb, v2Groups as groups } from './v2-course-navigation.mjs';
 import { v2Course } from './v2-course.mjs';
 import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
@@ -40,12 +41,6 @@ const teaching = {
     answer: 'After the device-to-host copy. The kernel has written nine results to the GPU output array before that copy fills the CPU array y.',
   },
 };
-
-const groups = [
-  ['part-cuda-foundations', 'CUDA foundations', 0, 4],
-  ['part-gpu-execution', 'GPU execution and AI workloads', 4, 15],
-  ['part-parallel-patterns', 'Parallel patterns', 15, 21],
-];
 
 export function renderV2Contents(href) {
   return `<header class="intro">
@@ -235,15 +230,8 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   const number = v2Course.indexOf(lesson) + 1;
   const previous = v2Course[number - 2];
   const next = v2Course[number];
-  const [partId, partTitle] = groups.find(([, , start, end]) => start < number && number <= end);
   return `<header class="intro">
-    <nav class="v2-breadcrumb" aria-label="Breadcrumb">
-      <ol>
-        <li><a href="${href('contents')}">Contents</a></li>
-        <li><span aria-hidden="true">›</span><a href="${href('contents', partId)}">${partTitle}</a></li>
-        <li><span aria-hidden="true">›</span><span aria-current="page">${lesson.title}</span></li>
-      </ol>
-    </nav>
+    ${courseBreadcrumb(lesson, href)}
     <p class="eyebrow">Lesson ${number}</p>
     <h1>${lesson.title}</h1><p class="lead">${lesson.goal}</p>
   </header>

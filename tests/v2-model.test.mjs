@@ -193,3 +193,15 @@ test('all 21 lessons pair each reference with its question without repeated sour
     assert.doesNotMatch(html, /data-v2-resource="documentation"/);
   }
 });
+
+import { courseBreadcrumb } from '../content/v2-course-navigation.mjs';
+test('every breadcrumb contains all course destinations and one marked current lesson', () => {
+  for (const lesson of v2Course) {
+    const html = courseBreadcrumb(lesson, (slug,part) => slug === 'contents' ? '../' + (part ? '#'+part : '') : './'+slug+'.html');
+    assert.equal((html.match(/class="v2-course-part"/g) ?? []).length,3);
+    assert.equal((html.match(/class="v2-course-part"[^>]* open/g) ?? []).length,1);
+    for(const item of v2Course) assert.ok(html.includes('href="./'+item.slug+'.html"'),lesson.slug);
+    assert.match(html,/aria-label="Course contents"/);
+    assert.match(html,new RegExp('href="\\./'+lesson.slug+'\\.html" aria-current="page"'));
+  }
+});
