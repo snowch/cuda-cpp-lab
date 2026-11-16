@@ -20,6 +20,12 @@ below the editors let readers predict, step through and inspect selected
 cases. They use original diagrams and data. Their address groupings,
 dependencies and timing explanations are teaching models.
 
+In Lesson 1, the kernel definition and launch appear beside their explanations.
+The full program follows in the editor. The optional recording after the editor
+uses that lesson’s source and follows the launch, store and readback. Build later
+recordings around the relevant lesson’s example and concept. Place references at
+the end so learners can look up the constructs they just used.
+
 For the hosted course, open **App status** and choose **Download for offline use**
 or **Update**. Both save the complete course, including the CUDA compiler. After
 an update, choose **Restart to update**; no separate offline download is needed.

@@ -1,5 +1,6 @@
 // Copyright © 2026 Christopher Snow.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { v2Course } from '../content/v2-course.mjs';
 import { v2Diagram } from '../content/v2-diagrams.mjs';
@@ -80,11 +81,22 @@ test('the 20 model lessons have exercises, transfer prompts and links to the rel
 test('the first lesson introduces a single launch before array indexing', () => {
   const [first, second] = v2Course;
   const page = renderV2Lesson(first, slug => slug + '.html', slug => '../lessons/' + slug + '.html',
-    './cuda-source-workbench.html', '__global__ void hello(float* output) {}');
+    './cuda-source-workbench.html', readFileSync(new URL('../examples/first-kernel.cu', import.meta.url), 'utf8'));
   assert.equal(first.slug, 'first-kernel');
   assert.match(page, /data-kernel-workbench="hello"/);
   assert.doesNotMatch(page, /data-kernel-workbench="scale"|id="v2-run"/);
   assert.ok(page.includes(second.slug + '.html'));
+  const opening = page.indexOf('id="v2-first-source"');
+  const launch = page.indexOf('id="v2-first-launch"');
+  const editor = page.indexOf('data-kernel-workbench="hello"');
+  const diagram = page.indexOf('class="v2-diagram"');
+  const recording = page.indexOf('Watch the kernel launch');
+  const references = page.indexOf('id="v2-first-references"');
+  assert.ok(opening >= 0 && opening < launch && launch < editor && editor < diagram &&
+    diagram < recording && recording < references);
+  assert.match(page, /hello&lt;&lt;&lt;1, 1&gt;&gt;&gt;\(output\);/);
+  assert.match(page, /kind="captions"/);
+  assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
 });
 
 test('every guided source variant produces its expected prediction and trace', () => {

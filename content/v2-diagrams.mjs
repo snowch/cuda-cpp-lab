@@ -49,6 +49,12 @@ function tileReuse() {
 }
 
 const diagrams = {
+  'first-kernel': () => flow('Follow the result from launch to console', [
+    ['CPU · main()', 'Reserve space in GPU memory and launch hello.'],
+    ['GPU · one thread', 'A streaming multiprocessor executes the kernel instructions.'],
+    ['GPU memory · output[0]', 'The kernel stores one float.'],
+    ['CPU · console', 'main() copies back the float and prints it.'],
+  ], 'Which operation in main() moves the result across the CPU–GPU boundary?'),
   'more-threads-than-elements': indices,
   'from-cpu-array-to-gpu-result': () => flow('The two arrays on each side of a launch', [
     ['CPU input x', 'The host copies values to the GPU.'],

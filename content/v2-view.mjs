@@ -6,6 +6,7 @@ import { escape } from '../src/continuation-ui.mjs';
 import { v2Course } from './v2-course.mjs';
 import { programNotes, programTasks } from './v2-programs.mjs';
 import { v2Diagram } from './v2-diagrams.mjs';
+import { renderFirstKernelVideo } from './v2-first-kernel-video.mjs';
 
 const teaching = {
   scale: {
@@ -63,21 +64,38 @@ function workbenchEditor(mode, href, title) {
 }
 
 function renderFirstKernel(workbenchHref, program) {
-  const kernel = program.slice(program.indexOf('__global__'), program.indexOf('\n\nvoid check'));
+  const inlineRecording = workbenchHref && workbenchHref !== 'bundled';
+  const kernel = program.match(/^__global__[^]*?^}/m)?.[0];
+  const launch = program.match(/^\s*(hello<<<[^\n]+;)$/m)?.[1];
+  if (!kernel || !launch) throw new Error('Lesson 1 needs a kernel and launch in the starter.');
+
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
-    <h2 id="v2-first-kernel">Launch one CUDA thread</h2>
-    <p>A CUDA kernel is a function that runs on the GPU. Each GPU thread runs the function once. This example launches just one thread to write a single value.</p>
-    <p>The CPU allocates a GPU buffer for one <code>float</code>. The launch <code>hello&lt;&lt;&lt;1, 1&gt;&gt;&gt;(output)</code> asks for one block with one thread. After the kernel writes <code>output[0]</code>, the CPU copies that value back for the console.</p>
-    ${workbenchHref ? readerTask('Run the kernel. Change 42.0f to 7.0f and run again. Which value does the console show?', 'Try it') : ''}
-    ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable one-thread CUDA kernel and output') :
-      codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}
-    ${workbenchHref ? `<noscript>${codePanel({id: 'v2-first-source', label: 'CUDA C++ · first kernel', source: kernel, explainedLocally: true})}</noscript>` : ''}
-    ${!workbenchHref ? `<details class="more-settings">
-      <summary>Show host code</summary>
-      <p>This complete CUDA program shows the allocation, launch and copy back. Its <code>printf</code> runs on the CPU.</p>
+    <h2 id="v2-first-kernel">What is a CUDA kernel?</h2>
+    <p>A kernel is a function that GPU threads execute. In CUDA C++, <code>__global__</code> declares a kernel. Each thread launched for <code>hello</code> runs its body once. The body stores a value at <code>output[0]</code> in GPU memory.</p>
+    ${codePanel({id: 'v2-first-source', label: 'CUDA C++ · Kernel definition', source: kernel, explainedLocally: true})}
+    <h3>Launch the kernel from main()</h3>
+    <p>The CPU code in <code>main()</code> reserves space for one <code>float</code> in GPU memory. It launches <code>hello</code> and passes the address of that space as <code>output</code>.</p>
+    ${codePanel({id: 'v2-first-launch', label: 'CUDA C++ · Launch inside main()', source: launch, explainedLocally: true})}
+    <p>The first <code>1</code> asks for one block, a group of GPU threads. The second <code>1</code> asks for one thread in that block. After the thread writes the value, <code>main()</code> copies it back and prints it.</p>
+    ${workbenchHref ? readerTask('In hello.cu, compile and run the starter. Change 42.0f to 7.0f in hello and predict the Console output. Compile and run again to check.', 'Try it') : ''}
+    ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable CUDA program with one kernel and its launch') : `<details class="more-settings">
+      <summary>Show complete program</summary>
       ${codePanel({id: 'v2-first-program', label: 'CUDA C++ · complete program', source: program, explainedLocally: true})}
-    </details>` : ''}
-    <p>With five threads running the same function, how does each thread know which element to write?</p>
+    </details>`}
+  </section>
+  <section class="book-section" aria-labelledby="v2-first-path">
+    <h2 id="v2-first-path">Where does the kernel run?</h2>
+    <p>A <strong>streaming multiprocessor (SM)</strong> is a part of the GPU that executes thread instructions.</p>
+    ${v2Diagram('first-kernel')}
+    ${renderFirstKernelVideo(inlineRecording)}
+    <p>In the next lesson, threads run one kernel to process five values. How will each thread choose its own array element?</p>
+  </section>
+  <section class="book-section" aria-labelledby="v2-first-references">
+    <h2 id="v2-first-references">References</h2>
+    <ul class="chapter-reference-list">
+      <li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/intro-to-cuda-cpp.html#launching-kernels" target="_blank" rel="noopener noreferrer">NVIDIA CUDA Programming Guide · Launching kernels <span class="reference-new-tab">(new tab)</span></a><p>Check how the two numbers inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> set the launch size.</p></li>
+      <li><a href="https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html" target="_blank" rel="noopener noreferrer">NVIDIA CUDA Programming Guide · Programming model <span class="reference-new-tab">(new tab)</span></a><p>See how threads are grouped into blocks and grids.</p></li>
+    </ul>
   </section>`;
 }
 
@@ -205,14 +223,14 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </header>
   ${lesson.mode === 'hello' ? renderFirstKernel(workbenchHref, firstProgram) :
     lesson.mode ? renderActivity(lesson, legacy, workbenchHref) : renderGuided(lesson.slug, workbenchHref)}
-  <p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>
+  ${lesson.mode === 'hello' ? '' : `<p><a href="${legacy(lesson.current)}">Explore this topic in GPU Lab V1 →</a></p>`}
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a href="${href(previous?.slug ?? 'contents')}">← ${previous?.title ?? 'Contents'}</a>
     <a href="${href(next?.slug ?? 'contents')}">${next?.title ?? 'Contents'} →</a>
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'v2.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '' } = {}) {
   const base = home ? './' : '../';
   const href = slug => slug === 'contents' ? base : `${home ? './v2/' : './'}${slug}.html`;
