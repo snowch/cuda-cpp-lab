@@ -14,6 +14,10 @@ def check_v2_practical(browser, url, root):
             page.on('pageerror', lambda error: errors.append(str(error)))
             for slug in SLUGS:
                 page.goto(url + 'v2/' + slug + '.html')
+                practice = page.locator('.v2-practice-model')
+                if practice.count():
+                    expect(practice).not_to_have_attribute('open', '')
+                    practice.locator(':scope > summary').click()
                 activity = page.locator('[data-practical]')
                 result = activity.locator('[data-practical-result]')
                 expect(result).to_be_hidden()
@@ -34,11 +38,21 @@ def check_v2_practical(browser, url, root):
                     expect(result).to_be_visible()
                     expect(feedback).to_contain_text('ratio: 2.000')
                 elif slug == 'softmax-capstone':
-                    expect(feedback).to_contain_text('Row failed')
+                    expect(feedback).to_contain_text('Row comparison')
                     activity.locator('textarea').fill('0.0351190 0.2594965 0.7053845')
                     expect(result).to_be_hidden()
                     submit.focus(); page.keyboard.press('Enter')
                     expect(feedback).to_contain_text('This row passes')
+                    if width == 390 and theme == 'light':
+                        activity.locator('textarea').fill('0.0351190 0.2594965 0.7053845 0')
+                        submit.click()
+                        expect(feedback).to_contain_text('4 values for 3 columns')
+                        expect(result).to_contain_text('No column')
+                        activity.locator('textarea').fill('0.0351190 0.2594965')
+                        submit.click()
+                        expect(result).to_contain_text('Missing')
+                        activity.locator('textarea').fill('0.0351190 0.2594965 0.7053845')
+                        submit.click()
                 else:
                     expect(result).to_be_visible()
                 # Actual preceding explanation -> controls/results -> application.
@@ -47,6 +61,8 @@ def check_v2_practical(browser, url, root):
                     page.screenshot(path=str(root / f'test-results/practical-{slug}-{width}-{theme}-{label}.png'))
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (slug,width,theme)
                 page.reload()
+                if practice.count() and not practice.evaluate('el => el.open'):
+                    practice.locator(':scope > summary').click()
                 expect(page.locator('[data-practical-result]')).to_be_visible()
                 if width == 390 and theme == 'light':
                     page.evaluate('''async slug=>{
@@ -56,6 +72,8 @@ def check_v2_practical(browser, url, root):
                         localStorage.removeItem('gpu-lab:practical:1:'+slug);
                     }''', slug)
                     page.reload()
+                    if practice.count() and not practice.evaluate('el => el.open'):
+                        practice.locator(':scope > summary').click()
                     expect(page.locator('[data-practical-result]')).to_be_visible()
                 activity = page.locator('[data-practical]')
                 control = activity.locator('select').first if activity.locator('select').count() else activity.locator('textarea').first if activity.locator('textarea').count() else activity.locator('input').first

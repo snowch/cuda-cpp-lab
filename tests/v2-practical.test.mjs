@@ -71,3 +71,13 @@ test('published trace retains device and event metadata with explicit provenance
  assert.equal(trace.traceEvents[1].dur,605);assert.equal(trace.deviceProperties[0].name,'Tesla V100-DGXS-32GB');
  assert.match(readFileSync('examples/v2-practical/TRACE-SOURCE.md','utf8'),/unknown/);
 });
+
+test('a model-only preview exposes its controls and links to an actual CUDA editor',()=>{
+ for(const lesson of practicalLessons.filter(lesson=>lesson.program)){
+  const html=renderV2Lesson(lesson,s=>s+'.html',s=>'../lessons/'+s+'.html');
+  assert.match(html,/This preview shows code and models/);
+  assert.match(html,/open the CUDA editor on the course site/);
+  assert.doesNotMatch(html,/data-kernel-workbench=|class="more-settings v2-practice-model"/);
+  assert.match(html,/complete CUDA program is read-only/);
+ }
+});

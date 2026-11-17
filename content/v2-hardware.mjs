@@ -30,7 +30,7 @@ export function renderV2Hardware(slug, context = {}) {
       <div class="v2-hw-system">
         <div class="v2-hw-host"><h3>CPU side · CUDA host</h3><div class="v2-hw-peers">
           ${node('cpu', 'CPU', 'main() and CUDA calls.')}
-          ${node('ram', 'System RAM', 'CPU arrays.')}
+          ${node('ram', 'System RAM', 'CPU memory for arrays.')}
         </div></div>
         <p class="v2-hw-link">Host ↔ device · copies move data; launches request execution</p>
         <div class="v2-hw-device"><h3>GPU device</h3>
@@ -57,7 +57,7 @@ export function renderV2Hardware(slug, context = {}) {
           ${node('memory', 'Device memory', 'GPU arrays; separate from the compute chip.')}
         </div>
       </div>
-      <p class="v2-hw-scope">Simplified NVIDIA-style architecture. Boundaries show containment; arrows name relationships. Unit counts, placement, issue widths and timings vary by GPU. A thread or warp is not a dedicated physical processor.</p>
+      <p class="v2-hw-scope">Simplified NVIDIA-style architecture. Boundaries show containment; arrows name relationships. Unit counts, placement, issue widths and timings vary by GPU. ${detail ? 'A thread or warp is' : 'A thread is'} not a dedicated physical processor.</p>
     </figure>
   </section>`;
 }

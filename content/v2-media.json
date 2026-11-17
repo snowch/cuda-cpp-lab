@@ -78,22 +78,22 @@
     "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
   },
   "coalescing": {
-    "durationSeconds": 47,
-    "bytes": 726032,
+    "durationSeconds": 48,
+    "bytes": 737357,
     "scenes": [
       {
         "start": 0,
-        "end": 17.975,
+        "end": 18.245,
         "title": "Read the CUDA example"
       },
       {
-        "start": 17.975,
-        "end": 32.555,
+        "start": 18.245,
+        "end": 32.825,
         "title": "Follow execution"
       },
       {
-        "start": 32.555,
-        "end": 46.865,
+        "start": 32.825,
+        "end": 47.56,
         "title": "Locate the hardware"
       }
     ],
@@ -286,22 +286,22 @@
     "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
   },
   "attention": {
-    "durationSeconds": 50,
-    "bytes": 772183,
+    "durationSeconds": 54,
+    "bytes": 952416,
     "scenes": [
       {
         "start": 0,
-        "end": 19.665,
+        "end": 23.73,
         "title": "Read the CUDA example"
       },
       {
-        "start": 19.665,
-        "end": 33.56,
+        "start": 23.73,
+        "end": 37.625,
         "title": "Follow execution"
       },
       {
-        "start": 33.56,
-        "end": 49.835,
+        "start": 37.625,
+        "end": 53.9,
         "title": "Locate the hardware"
       }
     ],

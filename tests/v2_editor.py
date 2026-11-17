@@ -136,6 +136,13 @@ def check(browser, url, compiler_url, selected):
                 slug, status, frame.locator('#diagnostics').text_content())
             assert expected in result.text_content(), (slug, expected, result.text_content())
             assert '.entry' in frame.locator('#ptx').text_content(), slug
+        if slug in ['coalescing', 'histograms']:
+            extra = code.replace('stride = 1', 'stride = 2') if slug == 'coalescing' else code.replace('{0, 1, 0, 2, 1, 0, 3, 0}', '{0, 0, 0, 0, 0, 0, 0, 0}').replace('blockCounts = true', 'blockCounts = false')
+            editor.fill(extra)
+            run.click()
+            frame.locator('#run:enabled').wait_for(timeout=95000)
+            assert frame.locator('#status').get_attribute('data-error') == 'false'
+            assert ('Sectors touched: 8' if slug == 'coalescing' else '[8, 0, 0, 0]') in console.inner_text()
         if slug in ['matmul', 'matmul-investigation']:
             width = 4 if slug == 'matmul' else 8
             tail = 5 if slug == 'matmul' else 7
@@ -148,7 +155,9 @@ def check(browser, url, compiler_url, selected):
             editor.fill(code.replace('positions[start + rank] = t;', 'if (t != 0) positions[start + rank] = t;'))
             run.click()
             frame.locator('#run:enabled').wait_for(timeout=95_000)
-            assert frame.locator('#status').inner_text() == 'main() returned 1.'
+            assert frame.locator('#status').inner_text() == 'main() finished with exit code 1. Read Console for the program’s checks.'
+            assert frame.locator('#status').get_attribute('data-error') == 'false'
+            assert frame.locator('#status').get_attribute('data-outcome') == 'program-exit'
             assert 'Routing verification failed at slot 0' in console.inner_text()
         context.close()
         print(f'PASS {slug} starter and edit', flush=True)
