@@ -1,37 +1,37 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:05.300
+00:00:00.600 --> 00:00:05.251
 Inside multiply, the block loads left and right tiles into shared memory.
 
-00:00:05.300 --> 00:00:10.520
+00:00:05.471 --> 00:00:09.993
 After the barrier, each output thread accumulates products using those tiles.
 
-00:00:10.520 --> 00:00:13.270
+00:00:10.213 --> 00:00:12.432
 The second barrier protects tile reuse.
 
-00:00:13.270 --> 00:00:24.870
+00:00:12.652 --> 00:00:24.812
 Tail loads contribute zero without leaving a barrier; only valid outputs are written. main checks every product element against an independent CPU reference with nonuniform inputs.
 
-00:00:26.370 --> 00:00:27.500
+00:00:26.832 --> 00:00:27.963
 Load tiles.
 
-00:00:27.500 --> 00:00:29.955
+00:00:28.183 --> 00:00:30.465
 Threads fill shared left and right arrays.
 
-00:00:29.955 --> 00:00:31.575
+00:00:30.685 --> 00:00:31.965
 Reuse operands.
 
-00:00:31.575 --> 00:00:34.665
+00:00:32.185 --> 00:00:35.023
 Several outputs consume the same tile values.
 
-00:00:34.665 --> 00:00:35.970
+00:00:35.243 --> 00:00:36.523
 Protect reuse.
 
-00:00:35.970 --> 00:00:38.960
+00:00:36.743 --> 00:00:39.068
 Synchronise before loading the next tiles.
 
-00:00:40.460 --> 00:00:45.505
+00:00:41.088 --> 00:00:46.656
 Threads reuse shared tiles while each output sum is working state associated with its thread.
 
-00:00:45.505 --> 00:00:51.415
+00:00:46.876 --> 00:00:52.679
 This multiply kernel uses scalar arithmetic; it does not call matrix-unit instructions.

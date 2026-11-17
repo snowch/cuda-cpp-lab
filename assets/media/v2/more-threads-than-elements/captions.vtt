@@ -1,37 +1,37 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:08.295
+00:00:00.600 --> 00:00:08.728
 blockIdx.x identifies a block, blockDim.x its size, and threadIdx.x the local thread index.
 
-00:00:08.295 --> 00:00:10.290
+00:00:08.948 --> 00:00:10.719
 Their combination gives i.
 
-00:00:10.290 --> 00:00:15.995
+00:00:10.939 --> 00:00:18.832
 The caller passes n separately; i < n protects both array accesses when the launch has spare threads.
 
-00:00:17.495 --> 00:00:18.745
+00:00:20.852 --> 00:00:22.132
 Form index i.
 
-00:00:18.745 --> 00:00:21.450
+00:00:22.352 --> 00:00:24.805
 Combine block and local thread indices.
 
-00:00:21.450 --> 00:00:22.635
+00:00:25.025 --> 00:00:26.860
 Check i < n.
 
-00:00:22.635 --> 00:00:25.075
+00:00:27.080 --> 00:00:29.192
 The element count comes from the caller.
 
-00:00:25.075 --> 00:00:26.170
+00:00:29.412 --> 00:00:30.543
 Write or skip.
 
-00:00:26.170 --> 00:00:28.760
+00:00:30.763 --> 00:00:33.173
 Only valid indices access the arrays.
 
-00:00:30.260 --> 00:00:32.570
+00:00:35.193 --> 00:00:37.092
 A block is assigned to an SM.
 
-00:00:32.570 --> 00:00:35.880
+00:00:37.312 --> 00:00:40.619
 More launched threads do not create more execution units.
 
-00:00:35.880 --> 00:00:39.915
+00:00:40.839 --> 00:00:45.233
 A thread beyond n still exists but skips the guarded array operations.

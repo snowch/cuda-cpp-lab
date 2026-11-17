@@ -64,7 +64,7 @@ def decode(r):
     assert abs(duration-media['durationSeconds'])<1 and video.stat().st_size==media['bytes'],r['key']
     selections = '+'.join(f'eq(n,{round((s["start"]+s["end"])/2*30)})' for s in media['scenes'])
     filters = f"[0:v]split=2[check][pick];[pick]select='{selections}'[shots];[0:a]loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json[sound]"
-    command = ['ffmpeg','-y','-xerror','-v','info','-nostats','-i',str(video),'-filter_complex',filters,
+    command = ['ffmpeg','-y','-xerror','-v','info','-nostats','-threads','2','-i',str(video),'-filter_complex',filters,
                '-map','[check]','-map','[sound]','-f','null','-',
                '-map','[shots]','-fps_mode','vfr','-q:v','3',str(folder/'frame-%03d.jpg')]
     result = subprocess.run(command,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)

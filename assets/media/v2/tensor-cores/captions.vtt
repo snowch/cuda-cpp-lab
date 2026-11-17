@@ -1,34 +1,34 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:14.490
+00:00:00.600 --> 00:00:14.573
 Inside tile, left and right are FP16 matrix fragments and sum is an FP32 accumulator fragment. fill_fragment sets the initial accumulator; the loads use a row stride of 16 elements.
 
-00:00:14.490 --> 00:00:20.400
+00:00:14.793 --> 00:00:20.681
 All 32 threads call the same warp-wide operations with matching pointers and parameters.
 
-00:00:21.900 --> 00:00:23.195
+00:00:22.701 --> 00:00:23.960
 Load fragments.
 
-00:00:23.195 --> 00:00:25.560
+00:00:24.180 --> 00:00:26.313
 The warp supplies A and B operands.
 
-00:00:25.560 --> 00:00:27.730
+00:00:26.533 --> 00:00:28.688
 Matrix multiply-accumulate.
 
-00:00:27.730 --> 00:00:31.015
+00:00:28.908 --> 00:00:31.895
 Combine operands with the existing accumulator.
 
-00:00:31.015 --> 00:00:32.350
+00:00:32.115 --> 00:00:33.203
 Store the tile.
 
-00:00:32.350 --> 00:00:34.900
+00:00:33.423 --> 00:00:35.599
 Write the updated accumulator to C.
 
-00:00:36.400 --> 00:00:40.585
+00:00:37.619 --> 00:00:41.587
 Tensor cores are matrix execution units inside an SM.
 
-00:00:40.585 --> 00:00:45.455
+00:00:41.807 --> 00:00:46.159
 A warp collectively supplies register fragments for matrix instructions.
 
-00:00:45.455 --> 00:00:52.525
+00:00:46.379 --> 00:00:54.848
 WMMA’s fragment layout is device-dependent; a source tile is not a diagram of individual tensor-core units.

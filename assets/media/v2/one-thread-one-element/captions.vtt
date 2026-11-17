@@ -1,34 +1,34 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:04.690
+00:00:00.600 --> 00:00:05.187
 runKernel uses i to select the same position in input and output.
 
-00:00:04.690 --> 00:00:09.090
+00:00:05.407 --> 00:00:10.164
 The caller passes n as an element count and supplies separate GPU arrays.
 
-00:00:09.090 --> 00:00:13.170
+00:00:10.384 --> 00:00:14.160
 Every launched thread runs this body; the index chooses its data.
 
-00:00:14.670 --> 00:00:15.990
+00:00:16.180 --> 00:00:17.887
 Read input[i].
 
-00:00:15.990 --> 00:00:18.500
+00:00:18.107 --> 00:00:20.453
 Choose an element using the thread index.
 
-00:00:18.500 --> 00:00:19.690
+00:00:20.673 --> 00:00:21.761
 Multiply.
 
-00:00:19.690 --> 00:00:22.100
+00:00:21.981 --> 00:00:24.136
 Apply the multiplier in runKernel.
 
-00:00:22.100 --> 00:00:23.530
+00:00:24.356 --> 00:00:26.127
 Write output[i].
 
-00:00:23.530 --> 00:00:25.825
+00:00:26.347 --> 00:00:28.459
 Keep the same destination index.
 
-00:00:27.325 --> 00:00:30.160
+00:00:30.479 --> 00:00:33.593
 The SM executes the threads in the assigned block.
 
-00:00:30.160 --> 00:00:35.875
+00:00:33.813 --> 00:00:40.149
 Threads are logical executions with their own values; they do not each own a physical arithmetic unit.

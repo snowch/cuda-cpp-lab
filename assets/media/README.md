@@ -63,9 +63,15 @@ pixels. Scene boundaries use cumulative frame rounding, within half a frame of
 their caption/audio times. The full decoder checks the resulting stream.
 
 The exporters update posters, chapters, caption times, byte counts and existing
-slide PDFs. Silent 4K masters, narrated copies and timecoded shot lists are in
+slide PDFs. Fresh exports produce silent 4K masters, narrated copies and timecoded shot lists in
 `test-results/record-demo-all/out`. Completed exports are reused only when their
 recipe, frames, speech and published file hashes still match.
+
+After confirming a completed recording is pushed, remove its duplicate MP4s in
+`out`, its `encoded-scenes` directory and its assembled `narration.wav` to reclaim
+space. Keep the published assets, raw cue WAVs, native slides and checkpoint JSON
+until the campaign is verified. A silent copy can be reconstructed from the
+published MP4 by copying its video stream without audio.
 
 Review phonemes for CUDA, API names, number formats and indexing notation. Retain
 raw Whisper flags and review both flagged lines and representative passing

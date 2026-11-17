@@ -10,9 +10,16 @@ from urllib.request import urlopen
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
+(ROOT/'test-results/recording-context').mkdir(parents=True,exist_ok=True)
 PORT = 5182
 URL = f'http://127.0.0.1:{PORT}/gpu-lab/'
-production = json.loads((ROOT/'content/recording-production.json').read_text())
+recordings=[]
+for video in sorted((ROOT/'assets/media').rglob('*.mp4')):
+    slug=video.parent.name
+    current=video.parent.parent.name=='v2'
+    metadata=(json.loads((ROOT/'content/v2-media.json').read_text())[slug] if current
+              else json.loads((ROOT/f'content/{slug}-media.json').read_text()))
+    recordings.append({'key':('v2-' if current else '')+slug,'durationSeconds':metadata['durationSeconds']})
 server = subprocess.Popen(['node', 'scripts/serve.mjs', '--dist'], cwd=ROOT,
                           env={**os.environ, 'PORT': str(PORT)}, stdout=subprocess.DEVNULL)
 try:
@@ -34,11 +41,11 @@ try:
         browser = p.chromium.launch(**options)
         for width, theme in [(390, 'light'), (390, 'dark'), (820, 'light'),
                              (820, 'dark'), (1440, 'light'), (1440, 'dark')]:
-            context = browser.new_context(viewport={'width': width, 'height': 950},
+            context = browser.new_context(viewport={'width': width, 'height': 1100},
                                           color_scheme=theme, service_workers='block')
             context.route('https://api.github.com/**', lambda route: route.abort())
             page = context.new_page()
-            for item in production['recordings']:
+            for item in recordings:
                 key = item['key']
                 current = key.startswith('v2-') or key == 'first-kernel'
                 slug = key[3:] if key.startswith('v2-') else key
@@ -84,8 +91,12 @@ try:
                 expect(page.locator('.sm-transcript')).to_have_attribute('open', '')
                 if key in ['first-kernel','inside-sm','v2-reduction','v2-matmul','v2-tensor-cores','v2-token-routing']:
                     video.screenshot(path=str(ROOT/f'test-results/recording-{key}-{width}-{theme}.png'))
+                if theme=='light' and width in [390,1440]:
+                    page.locator('.sm-transcript > summary').press('Enter')
+                    video.evaluate('v=>scrollTo({top:Math.max(0,v.closest(".sm-recording").getBoundingClientRect().top+scrollY-180),behavior:"instant"})')
+                    page.screenshot(path=str(ROOT/f'test-results/recording-context/{key}-{width}.png'))
             context.close()
-            print(f'PASS: all {len(production["recordings"])} recordings: {width}px/{theme}, playback, captions, seeking, keyboard and paused restart',flush=True)
+            print(f'PASS: all {len(recordings)} recordings: {width}px/{theme}, playback, captions, seeking, keyboard and paused restart',flush=True)
         browser.close()
 finally:
     server.terminate()

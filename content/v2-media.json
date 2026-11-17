@@ -1,522 +1,2905 @@
 {
   "one-thread-one-element": {
-    "durationSeconds": 37,
-    "bytes": 585308,
+    "durationSeconds": 42,
+    "bytes": 2195555,
     "scenes": [
       {
-        "start": 0,
-        "end": 14.17,
+        "id": "s01",
+        "start": 0.0,
+        "end": 15.58,
         "title": "Read the CUDA example"
       },
       {
-        "start": 14.17,
-        "end": 26.825,
+        "id": "s02",
+        "start": 15.58,
+        "end": 29.879,
         "title": "Follow execution"
       },
       {
-        "start": 26.825,
-        "end": 36.875,
+        "id": "s03",
+        "start": 29.879,
+        "end": 41.569,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 5.187,
+        "text": "runKernel uses i to select the same position in input and output."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.407,
+        "end": 10.164,
+        "text": "The caller passes n as an element count and supplies separate GPU arrays."
+      },
+      {
+        "id": "s01-c3",
+        "start": 10.384,
+        "end": 14.16,
+        "text": "Every launched thread runs this body; the index chooses its data."
+      },
+      {
+        "id": "s02-c1",
+        "start": 16.18,
+        "end": 17.887,
+        "text": "Read input[i]."
+      },
+      {
+        "id": "s02-c2",
+        "start": 18.107,
+        "end": 20.453,
+        "text": "Choose an element using the thread index."
+      },
+      {
+        "id": "s02-c3",
+        "start": 20.673,
+        "end": 21.761,
+        "text": "Multiply."
+      },
+      {
+        "id": "s02-c4",
+        "start": 21.981,
+        "end": 24.136,
+        "text": "Apply the multiplier in runKernel."
+      },
+      {
+        "id": "s02-c5",
+        "start": 24.356,
+        "end": 26.127,
+        "text": "Write output[i]."
+      },
+      {
+        "id": "s02-c6",
+        "start": 26.347,
+        "end": 28.459,
+        "text": "Keep the same destination index."
+      },
+      {
+        "id": "s03-c1",
+        "start": 30.479,
+        "end": 33.593,
+        "text": "The SM executes the threads in the assigned block."
+      },
+      {
+        "id": "s03-c2",
+        "start": 33.813,
+        "end": 40.149,
+        "text": "Threads are logical executions with their own values; they do not each own a physical arithmetic unit."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 4.587,
+        "s01-c2": 4.757,
+        "s01-c3": 3.776,
+        "s02-c1": 1.707,
+        "s02-c2": 2.347,
+        "s02-c3": 1.088,
+        "s02-c4": 2.155,
+        "s02-c5": 1.771,
+        "s02-c6": 2.112,
+        "s03-c1": 3.115,
+        "s03-c2": 6.336
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "more-threads-than-elements": {
-    "durationSeconds": 41,
-    "bytes": 633173,
+    "durationSeconds": 47,
+    "bytes": 2713225,
     "scenes": [
       {
-        "start": 0,
-        "end": 16.994999999999997,
+        "id": "s01",
+        "start": 0.0,
+        "end": 20.252,
         "title": "Read the CUDA example"
       },
       {
-        "start": 16.994999999999997,
-        "end": 29.759999999999998,
+        "id": "s02",
+        "start": 20.252,
+        "end": 34.593,
         "title": "Follow execution"
       },
       {
-        "start": 29.759999999999998,
-        "end": 40.915,
+        "id": "s03",
+        "start": 34.593,
+        "end": 46.653,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 8.728,
+        "text": "blockIdx.x identifies a block, blockDim.x its size, and threadIdx.x the local thread index."
+      },
+      {
+        "id": "s01-c2",
+        "start": 8.948,
+        "end": 10.719,
+        "text": "Their combination gives i."
+      },
+      {
+        "id": "s01-c3",
+        "start": 10.939,
+        "end": 18.832,
+        "text": "The caller passes n separately; i < n protects both array accesses when the launch has spare threads."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.852,
+        "end": 22.132,
+        "text": "Form index i."
+      },
+      {
+        "id": "s02-c2",
+        "start": 22.352,
+        "end": 24.805,
+        "text": "Combine block and local thread indices."
+      },
+      {
+        "id": "s02-c3",
+        "start": 25.025,
+        "end": 26.86,
+        "text": "Check i < n."
+      },
+      {
+        "id": "s02-c4",
+        "start": 27.08,
+        "end": 29.192,
+        "text": "The element count comes from the caller."
+      },
+      {
+        "id": "s02-c5",
+        "start": 29.412,
+        "end": 30.543,
+        "text": "Write or skip."
+      },
+      {
+        "id": "s02-c6",
+        "start": 30.763,
+        "end": 33.173,
+        "text": "Only valid indices access the arrays."
+      },
+      {
+        "id": "s03-c1",
+        "start": 35.193,
+        "end": 37.092,
+        "text": "A block is assigned to an SM."
+      },
+      {
+        "id": "s03-c2",
+        "start": 37.312,
+        "end": 40.619,
+        "text": "More launched threads do not create more execution units."
+      },
+      {
+        "id": "s03-c3",
+        "start": 40.839,
+        "end": 45.233,
+        "text": "A thread beyond n still exists but skips the guarded array operations."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 8.128,
+        "s01-c2": 1.771,
+        "s01-c3": 7.893,
+        "s02-c1": 1.28,
+        "s02-c2": 2.453,
+        "s02-c3": 1.835,
+        "s02-c4": 2.112,
+        "s02-c5": 1.131,
+        "s02-c6": 2.411,
+        "s03-c1": 1.899,
+        "s03-c2": 3.307,
+        "s03-c3": 4.395
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "from-cpu-array-to-gpu-result": {
-    "durationSeconds": 47,
-    "bytes": 684523,
+    "durationSeconds": 48,
+    "bytes": 2719815,
     "scenes": [
       {
-        "start": 0,
-        "end": 18.105,
+        "id": "s01",
+        "start": 0.0,
+        "end": 19.115,
         "title": "Read the CUDA example"
       },
       {
-        "start": 18.105,
-        "end": 33.095,
+        "id": "s02",
+        "start": 19.115,
+        "end": 34.16,
         "title": "Follow execution"
       },
       {
-        "start": 33.095,
-        "end": 46.185,
+        "id": "s03",
+        "start": 34.16,
+        "end": 48.46,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 10.264,
+        "text": "cudaMalloc reserves GPU storage for d_x and d_y. cudaMemcpy copies sizeof(x) bytes from CPU array x to d_x."
+      },
+      {
+        "id": "s01-c2",
+        "start": 10.484,
+        "end": 17.695,
+        "text": "The later kernel launch passes n elements, and a device-to-host copy fills CPU array y before it is printed."
+      },
+      {
+        "id": "s02-c1",
+        "start": 19.715,
+        "end": 20.717,
+        "text": "Allocate."
+      },
+      {
+        "id": "s02-c2",
+        "start": 20.937,
+        "end": 24.159,
+        "text": "Reserve separate GPU input and output storage."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.379,
+        "end": 25.467,
+        "text": "Copy input."
+      },
+      {
+        "id": "s02-c4",
+        "start": 25.687,
+        "end": 28.268,
+        "text": "Move x from CPU memory to d_x."
+      },
+      {
+        "id": "s02-c5",
+        "start": 28.488,
+        "end": 29.725,
+        "text": "Run and read back."
+      },
+      {
+        "id": "s02-c6",
+        "start": 29.945,
+        "end": 32.74,
+        "text": "Write d_y, then copy its values to y."
+      },
+      {
+        "id": "s03-c1",
+        "start": 34.76,
+        "end": 37.341,
+        "text": "CPU arrays live in system RAM."
+      },
+      {
+        "id": "s03-c2",
+        "start": 37.561,
+        "end": 40.655,
+        "text": "Device arrays live in GPU device memory."
+      },
+      {
+        "id": "s03-c3",
+        "start": 40.875,
+        "end": 47.04,
+        "text": "Allocation reserves storage; copying moves values, and the SM executes the calculation."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 9.664,
+        "s01-c2": 7.211,
+        "s02-c1": 1.003,
+        "s02-c2": 3.221,
+        "s02-c3": 1.088,
+        "s02-c4": 2.581,
+        "s02-c5": 1.237,
+        "s02-c6": 2.795,
+        "s03-c1": 2.581,
+        "s03-c2": 3.093,
+        "s03-c3": 6.165
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "coalescing": {
-    "durationSeconds": 48,
-    "bytes": 737357,
+    "durationSeconds": 51,
+    "bytes": 3147154,
     "scenes": [
       {
-        "start": 0,
-        "end": 18.245,
+        "id": "s01",
+        "start": 0.0,
+        "end": 19.605,
         "title": "Read the CUDA example"
       },
       {
-        "start": 18.245,
-        "end": 32.825,
+        "id": "s02",
+        "start": 19.605,
+        "end": 34.224,
         "title": "Follow execution"
       },
       {
-        "start": 32.825,
-        "end": 47.56,
+        "id": "s03",
+        "start": 34.224,
+        "end": 51.02,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 15.277,
+        "text": "main launches runKernel with one warp of 32 threads. stride sets the distance between input indices, while output remains contiguous. n counts outputs; the input allocation must also cover the largest strided read."
+      },
+      {
+        "id": "s01-c2",
+        "start": 15.497,
+        "end": 18.185,
+        "text": "The host groups returned indices into sectors."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.205,
+        "end": 21.443,
+        "text": "Lane addresses."
+      },
+      {
+        "id": "s02-c2",
+        "start": 21.663,
+        "end": 24.329,
+        "text": "Each lane selects input[lane \u00d7 stride]."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.549,
+        "end": 25.68,
+        "text": "Group addresses."
+      },
+      {
+        "id": "s02-c4",
+        "start": 25.9,
+        "end": 28.481,
+        "text": "Aligned sectors group the requested words."
+      },
+      {
+        "id": "s02-c5",
+        "start": 28.701,
+        "end": 29.939,
+        "text": "Return values."
+      },
+      {
+        "id": "s02-c6",
+        "start": 30.159,
+        "end": 32.804,
+        "text": "Each lane writes its contiguous output slot."
+      },
+      {
+        "id": "s03-c1",
+        "start": 34.824,
+        "end": 38.451,
+        "text": "One warp issues a load with an address for each active lane."
+      },
+      {
+        "id": "s03-c2",
+        "start": 38.671,
+        "end": 41.849,
+        "text": "The memory path groups these addresses into requests."
+      },
+      {
+        "id": "s03-c3",
+        "start": 42.069,
+        "end": 49.6,
+        "text": "Caches may supply data before device memory is accessed; a sector count does not measure device-memory traffic."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 14.677,
+        "s01-c2": 2.688,
+        "s02-c1": 1.237,
+        "s02-c2": 2.667,
+        "s02-c3": 1.131,
+        "s02-c4": 2.581,
+        "s02-c5": 1.237,
+        "s02-c6": 2.645,
+        "s03-c1": 3.627,
+        "s03-c2": 3.179,
+        "s03-c3": 7.531
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "scheduling": {
-    "durationSeconds": 48,
-    "bytes": 722322,
+    "durationSeconds": 51,
+    "bytes": 3056478,
     "scenes": [
       {
-        "start": 0,
-        "end": 19.095,
+        "id": "s01",
+        "start": 0.0,
+        "end": 20.743,
         "title": "Read the CUDA example"
       },
       {
-        "start": 19.095,
-        "end": 32.94,
+        "id": "s02",
+        "start": 20.743,
+        "end": 35.639,
         "title": "Follow execution"
       },
       {
-        "start": 32.94,
-        "end": 47.55,
+        "id": "s03",
+        "start": 35.639,
+        "end": 50.813,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 5.72,
+        "text": "doubleValues gives each thread two elements, separated by blockDim.x."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.94,
+        "end": 14.58,
+        "text": "Each assignment needs a loaded input before its multiply. main sets threads from warpsPerBlock and allocates twice as many elements."
+      },
+      {
+        "id": "s01-c3",
+        "start": 14.8,
+        "end": 19.323,
+        "text": "The teaching trace models this dependency, not compiler instruction order."
+      },
+      {
+        "id": "s02-c1",
+        "start": 21.343,
+        "end": 22.239,
+        "text": "Load."
+      },
+      {
+        "id": "s02-c2",
+        "start": 22.459,
+        "end": 24.613,
+        "text": "A warp requests its input values."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.833,
+        "end": 26.711,
+        "text": "Wait or issue another warp."
+      },
+      {
+        "id": "s02-c4",
+        "start": 26.931,
+        "end": 29.832,
+        "text": "Only instructions with ready operands can issue."
+      },
+      {
+        "id": "s02-c5",
+        "start": 30.052,
+        "end": 31.417,
+        "text": "Multiply and store."
+      },
+      {
+        "id": "s02-c6",
+        "start": 31.637,
+        "end": 34.219,
+        "text": "Use the returned values and write results."
+      },
+      {
+        "id": "s03-c1",
+        "start": 36.239,
+        "end": 40.441,
+        "text": "An SM keeps resident warps and their register values available."
+      },
+      {
+        "id": "s03-c2",
+        "start": 40.661,
+        "end": 45.483,
+        "text": "A warp scheduler selects a ready instruction for an appropriate execution unit."
+      },
+      {
+        "id": "s03-c3",
+        "start": 45.703,
+        "end": 49.393,
+        "text": "Another warp can issue while a load dependency blocks the first."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 5.12,
+        "s01-c2": 8.64,
+        "s01-c3": 4.523,
+        "s02-c1": 0.896,
+        "s02-c2": 2.155,
+        "s02-c3": 1.877,
+        "s02-c4": 2.901,
+        "s02-c5": 1.365,
+        "s02-c6": 2.581,
+        "s03-c1": 4.203,
+        "s03-c2": 4.821,
+        "s03-c3": 3.691
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "divergence": {
     "durationSeconds": 46,
-    "bytes": 689896,
+    "bytes": 2682210,
     "scenes": [
       {
-        "start": 0,
-        "end": 17.535,
+        "id": "s01",
+        "start": 0.0,
+        "end": 17.543,
         "title": "Read the CUDA example"
       },
       {
-        "start": 17.535,
-        "end": 31.305,
+        "id": "s02",
+        "start": 17.543,
+        "end": 31.884,
         "title": "Follow execution"
       },
       {
-        "start": 31.305,
-        "end": 45.525,
+        "id": "s03",
+        "start": 31.884,
+        "end": 46.12,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 3.416,
+        "text": "transform tests the sign of each lane\u2019s value."
+      },
+      {
+        "id": "s01-c2",
+        "start": 3.636,
+        "end": 7.604,
+        "text": "Negative values are negated; the other path doubles its values."
+      },
+      {
+        "id": "s01-c3",
+        "start": 7.824,
+        "end": 16.123,
+        "text": "All 32 threads belong to one warp. alternateSigns in main changes the input signs, rather than the kernel\u2019s branch condition."
+      },
+      {
+        "id": "s02-c1",
+        "start": 18.143,
+        "end": 19.295,
+        "text": "Test signs."
+      },
+      {
+        "id": "s02-c2",
+        "start": 19.515,
+        "end": 22.587,
+        "text": "Each lane evaluates value < 0.0f."
+      },
+      {
+        "id": "s02-c3",
+        "start": 22.807,
+        "end": 24.044,
+        "text": "Execute paths."
+      },
+      {
+        "id": "s02-c4",
+        "start": 24.264,
+        "end": 27.08,
+        "text": "Only participating lanes update their outputs."
+      },
+      {
+        "id": "s02-c5",
+        "start": 27.3,
+        "end": 28.324,
+        "text": "Continue."
+      },
+      {
+        "id": "s02-c6",
+        "start": 28.544,
+        "end": 30.464,
+        "text": "The warp proceeds after the branch."
+      },
+      {
+        "id": "s03-c1",
+        "start": 32.484,
+        "end": 35.151,
+        "text": "A warp instruction has participating lanes."
+      },
+      {
+        "id": "s03-c2",
+        "start": 35.371,
+        "end": 38.763,
+        "text": "Different branch paths can require different active lane sets."
+      },
+      {
+        "id": "s03-c3",
+        "start": 38.983,
+        "end": 44.7,
+        "text": "These lanes are logical positions in a warp, not a drawing of separate dedicated processors."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 2.816,
+        "s01-c2": 3.968,
+        "s01-c3": 8.299,
+        "s02-c1": 1.152,
+        "s02-c2": 3.072,
+        "s02-c3": 1.237,
+        "s02-c4": 2.816,
+        "s02-c5": 1.024,
+        "s02-c6": 1.92,
+        "s03-c1": 2.667,
+        "s03-c2": 3.392,
+        "s03-c3": 5.717
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "reduction": {
-    "durationSeconds": 43,
-    "bytes": 702970,
+    "durationSeconds": 44,
+    "bytes": 2793832,
     "scenes": [
       {
-        "start": 0,
-        "end": 16.84,
+        "id": "s01",
+        "start": 0.0,
+        "end": 16.86,
         "title": "Read the CUDA example"
       },
       {
-        "start": 16.84,
-        "end": 30.625,
+        "id": "s02",
+        "start": 16.86,
+        "end": 30.369,
         "title": "Follow execution"
       },
       {
-        "start": 30.625,
-        "end": 42.735,
+        "id": "s03",
+        "start": 30.369,
+        "end": 43.639,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 3.928,
+        "text": "sum first copies each input to shared scratch storage."
+      },
+      {
+        "id": "s01-c2",
+        "start": 4.148,
+        "end": 7.839,
+        "text": "A block barrier makes those writes available before partner reads."
+      },
+      {
+        "id": "s01-c3",
+        "start": 8.059,
+        "end": 15.44,
+        "text": "Each loop stage adds a partner value, and every thread reaches the following barrier, including threads that skipped the addition."
+      },
+      {
+        "id": "s02-c1",
+        "start": 17.46,
+        "end": 18.804,
+        "text": "Write shared inputs."
+      },
+      {
+        "id": "s02-c2",
+        "start": 19.024,
+        "end": 20.944,
+        "text": "Each thread supplies its own value."
+      },
+      {
+        "id": "s02-c3",
+        "start": 21.164,
+        "end": 22.209,
+        "text": "Synchronise."
+      },
+      {
+        "id": "s02-c4",
+        "start": 22.429,
+        "end": 24.584,
+        "text": "Complete writes before partner reads."
+      },
+      {
+        "id": "s02-c5",
+        "start": 24.804,
+        "end": 26.105,
+        "text": "Combine stages."
+      },
+      {
+        "id": "s02-c6",
+        "start": 26.325,
+        "end": 28.949,
+        "text": "Add partners and synchronise before reuse."
+      },
+      {
+        "id": "s03-c1",
+        "start": 30.969,
+        "end": 35.471,
+        "text": "Shared memory belongs to the SM and is allocated per resident block."
+      },
+      {
+        "id": "s03-c2",
+        "start": 35.691,
+        "end": 42.219,
+        "text": "A block barrier orders participating threads; it does not synchronise other blocks on this SM or elsewhere."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 3.328,
+        "s01-c2": 3.691,
+        "s01-c3": 7.381,
+        "s02-c1": 1.344,
+        "s02-c2": 1.92,
+        "s02-c3": 1.045,
+        "s02-c4": 2.155,
+        "s02-c5": 1.301,
+        "s02-c6": 2.624,
+        "s03-c1": 4.501,
+        "s03-c2": 6.528
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "shared-memory-banks": {
     "durationSeconds": 50,
-    "bytes": 752962,
+    "bytes": 3061811,
     "scenes": [
       {
-        "start": 0,
-        "end": 18.88,
+        "id": "s01",
+        "start": 0.0,
+        "end": 19.469,
         "title": "Read the CUDA example"
       },
       {
-        "start": 18.88,
-        "end": 33.095,
+        "id": "s02",
+        "start": 19.469,
+        "end": 33.576,
         "title": "Follow execution"
       },
       {
-        "start": 33.095,
-        "end": 49.54,
+        "id": "s03",
+        "start": 33.576,
+        "end": 50.095,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 5.763,
+        "text": "readWords cooperatively initialises shared words, then all threads reach a barrier."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.983,
+        "end": 8.564,
+        "text": "Each lane reads words[lane * stride]."
+      },
+      {
+        "id": "s01-c3",
+        "start": 8.784,
+        "end": 11.835,
+        "text": "The returned integers identify word addresses."
+      },
+      {
+        "id": "s01-c4",
+        "start": 12.055,
+        "end": 18.049,
+        "text": "The host calculates service rounds for the stated bank model; the console is not a hardware timer."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.069,
+        "end": 21.627,
+        "text": "Initialise shared words."
+      },
+      {
+        "id": "s02-c2",
+        "start": 21.847,
+        "end": 23.98,
+        "text": "Complete the block barrier before reads."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.2,
+        "end": 25.395,
+        "text": "Select words."
+      },
+      {
+        "id": "s02-c4",
+        "start": 25.615,
+        "end": 27.727,
+        "text": "Each lane forms lane \u00d7 stride."
+      },
+      {
+        "id": "s02-c5",
+        "start": 27.947,
+        "end": 29.077,
+        "text": "Group by bank."
+      },
+      {
+        "id": "s02-c6",
+        "start": 29.297,
+        "end": 32.156,
+        "text": "Distinguish broadcasts from different-word conflicts."
+      },
+      {
+        "id": "s03-c1",
+        "start": 34.176,
+        "end": 38.784,
+        "text": "Shared memory is organised into banks that can serve requests in parallel."
+      },
+      {
+        "id": "s03-c2",
+        "start": 39.004,
+        "end": 42.844,
+        "text": "In this model, word index modulo 32 selects a bank."
+      },
+      {
+        "id": "s03-c3",
+        "start": 43.064,
+        "end": 48.675,
+        "text": "Repeated requests for one word can broadcast; different words in one bank need separate rounds."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 5.163,
+        "s01-c2": 2.581,
+        "s01-c3": 3.051,
+        "s01-c4": 5.995,
+        "s02-c1": 1.557,
+        "s02-c2": 2.133,
+        "s02-c3": 1.195,
+        "s02-c4": 2.112,
+        "s02-c5": 1.131,
+        "s02-c6": 2.859,
+        "s03-c1": 4.608,
+        "s03-c2": 3.84,
+        "s03-c3": 5.611
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "matmul": {
-    "durationSeconds": 53,
-    "bytes": 979076,
+    "durationSeconds": 54,
+    "bytes": 3612813,
     "scenes": [
       {
-        "start": 0,
-        "end": 25.869999999999997,
+        "id": "s01",
+        "start": 0.0,
+        "end": 26.232,
         "title": "Read the CUDA example"
       },
       {
-        "start": 25.869999999999997,
-        "end": 39.959999999999994,
+        "id": "s02",
+        "start": 26.232,
+        "end": 40.488,
         "title": "Follow execution"
       },
       {
-        "start": 39.959999999999994,
-        "end": 52.41499999999999,
+        "id": "s03",
+        "start": 40.488,
+        "end": 54.099,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 5.251,
+        "text": "Inside multiply, the block loads left and right tiles into shared memory."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.471,
+        "end": 9.993,
+        "text": "After the barrier, each output thread accumulates products using those tiles."
+      },
+      {
+        "id": "s01-c3",
+        "start": 10.213,
+        "end": 12.432,
+        "text": "The second barrier protects tile reuse."
+      },
+      {
+        "id": "s01-c4",
+        "start": 12.652,
+        "end": 24.812,
+        "text": "Tail loads contribute zero without leaving a barrier; only valid outputs are written. main checks every product element against an independent CPU reference with nonuniform inputs."
+      },
+      {
+        "id": "s02-c1",
+        "start": 26.832,
+        "end": 27.963,
+        "text": "Load tiles."
+      },
+      {
+        "id": "s02-c2",
+        "start": 28.183,
+        "end": 30.465,
+        "text": "Threads fill shared left and right arrays."
+      },
+      {
+        "id": "s02-c3",
+        "start": 30.685,
+        "end": 31.965,
+        "text": "Reuse operands."
+      },
+      {
+        "id": "s02-c4",
+        "start": 32.185,
+        "end": 35.023,
+        "text": "Several outputs consume the same tile values."
+      },
+      {
+        "id": "s02-c5",
+        "start": 35.243,
+        "end": 36.523,
+        "text": "Protect reuse."
+      },
+      {
+        "id": "s02-c6",
+        "start": 36.743,
+        "end": 39.068,
+        "text": "Synchronise before loading the next tiles."
+      },
+      {
+        "id": "s03-c1",
+        "start": 41.088,
+        "end": 46.656,
+        "text": "Threads reuse shared tiles while each output sum is working state associated with its thread."
+      },
+      {
+        "id": "s03-c2",
+        "start": 46.876,
+        "end": 52.679,
+        "text": "This multiply kernel uses scalar arithmetic; it does not call matrix-unit instructions."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 4.651,
+        "s01-c2": 4.523,
+        "s01-c3": 2.219,
+        "s01-c4": 12.16,
+        "s02-c1": 1.131,
+        "s02-c2": 2.283,
+        "s02-c3": 1.28,
+        "s02-c4": 2.837,
+        "s02-c5": 1.28,
+        "s02-c6": 2.325,
+        "s03-c1": 5.568,
+        "s03-c2": 5.803
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "precision": {
-    "durationSeconds": 53,
-    "bytes": 897027,
+    "durationSeconds": 52,
+    "bytes": 3204824,
     "scenes": [
       {
-        "start": 0,
-        "end": 21.875,
+        "id": "s01",
+        "start": 0.0,
+        "end": 21.099,
         "title": "Read the CUDA example"
       },
       {
-        "start": 21.875,
-        "end": 36.675,
+        "id": "s02",
+        "start": 21.099,
+        "end": 35.717,
         "title": "Follow execution"
       },
       {
-        "start": 36.675,
-        "end": 52.42,
+        "id": "s03",
+        "start": 35.717,
+        "end": 52.023,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 12.269,
+        "text": "dot optionally rounds each FP32 input to FP16 with __float2half_rn and converts it back with __half2float. total remains FP32."
+      },
+      {
+        "id": "s01-c2",
+        "start": 12.489,
+        "end": 19.679,
+        "text": "This starter isolates rounding while its arrays remain FP32; the model separately compares storage formats."
+      },
+      {
+        "id": "s02-c1",
+        "start": 21.699,
+        "end": 23.235,
+        "text": "Read FP32."
+      },
+      {
+        "id": "s02-c2",
+        "start": 23.455,
+        "end": 25.396,
+        "text": "Fetch a value from the input array."
+      },
+      {
+        "id": "s02-c3",
+        "start": 25.616,
+        "end": 26.875,
+        "text": "Optionally round."
+      },
+      {
+        "id": "s02-c4",
+        "start": 27.095,
+        "end": 30.06,
+        "text": "Convert to FP16 and back before adding."
+      },
+      {
+        "id": "s02-c5",
+        "start": 30.28,
+        "end": 32.136,
+        "text": "Accumulate FP32."
+      },
+      {
+        "id": "s02-c6",
+        "start": 32.356,
+        "end": 34.297,
+        "text": "Keep total in the wider format."
+      },
+      {
+        "id": "s03-c1",
+        "start": 36.317,
+        "end": 40.072,
+        "text": "Registers hold a thread\u2019s working operands and accumulator."
+      },
+      {
+        "id": "s03-c2",
+        "start": 40.292,
+        "end": 45.903,
+        "text": "Rounding an operand can change a sum even when the accumulation stays FP32."
+      },
+      {
+        "id": "s03-c3",
+        "start": 46.123,
+        "end": 50.603,
+        "text": "This example uses conversions and scalar additions, not tensor cores."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 11.669,
+        "s01-c2": 7.189,
+        "s02-c1": 1.536,
+        "s02-c2": 1.941,
+        "s02-c3": 1.259,
+        "s02-c4": 2.965,
+        "s02-c5": 1.856,
+        "s02-c6": 1.941,
+        "s03-c1": 3.755,
+        "s03-c2": 5.611,
+        "s03-c3": 4.48
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "tensor-cores": {
-    "durationSeconds": 54,
-    "bytes": 901797,
+    "durationSeconds": 56,
+    "bytes": 3400777,
     "scenes": [
       {
-        "start": 0,
-        "end": 21.4,
+        "id": "s01",
+        "start": 0.0,
+        "end": 22.101,
         "title": "Read the CUDA example"
       },
       {
-        "start": 21.4,
-        "end": 35.9,
+        "id": "s02",
+        "start": 22.101,
+        "end": 37.019,
         "title": "Follow execution"
       },
       {
-        "start": 35.9,
-        "end": 53.525,
+        "id": "s03",
+        "start": 37.019,
+        "end": 56.268,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 14.573,
+        "text": "Inside tile, left and right are FP16 matrix fragments and sum is an FP32 accumulator fragment. fill_fragment sets the initial accumulator; the loads use a row stride of 16 elements."
+      },
+      {
+        "id": "s01-c2",
+        "start": 14.793,
+        "end": 20.681,
+        "text": "All 32 threads call the same warp-wide operations with matching pointers and parameters."
+      },
+      {
+        "id": "s02-c1",
+        "start": 22.701,
+        "end": 23.96,
+        "text": "Load fragments."
+      },
+      {
+        "id": "s02-c2",
+        "start": 24.18,
+        "end": 26.313,
+        "text": "The warp supplies A and B operands."
+      },
+      {
+        "id": "s02-c3",
+        "start": 26.533,
+        "end": 28.688,
+        "text": "Matrix multiply-accumulate."
+      },
+      {
+        "id": "s02-c4",
+        "start": 28.908,
+        "end": 31.895,
+        "text": "Combine operands with the existing accumulator."
+      },
+      {
+        "id": "s02-c5",
+        "start": 32.115,
+        "end": 33.203,
+        "text": "Store the tile."
+      },
+      {
+        "id": "s02-c6",
+        "start": 33.423,
+        "end": 35.599,
+        "text": "Write the updated accumulator to C."
+      },
+      {
+        "id": "s03-c1",
+        "start": 37.619,
+        "end": 41.587,
+        "text": "Tensor cores are matrix execution units inside an SM."
+      },
+      {
+        "id": "s03-c2",
+        "start": 41.807,
+        "end": 46.159,
+        "text": "A warp collectively supplies register fragments for matrix instructions."
+      },
+      {
+        "id": "s03-c3",
+        "start": 46.379,
+        "end": 54.848,
+        "text": "WMMA\u2019s fragment layout is device-dependent; a source tile is not a diagram of individual tensor-core units."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 13.973,
+        "s01-c2": 5.888,
+        "s02-c1": 1.259,
+        "s02-c2": 2.133,
+        "s02-c3": 2.155,
+        "s02-c4": 2.987,
+        "s02-c5": 1.088,
+        "s02-c6": 2.176,
+        "s03-c1": 3.968,
+        "s03-c2": 4.352,
+        "s03-c3": 8.469
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "attention": {
-    "durationSeconds": 54,
-    "bytes": 952416,
+    "durationSeconds": 59,
+    "bytes": 3757275,
     "scenes": [
       {
-        "start": 0,
-        "end": 23.73,
+        "id": "s01",
+        "start": 0.0,
+        "end": 26.325,
         "title": "Read the CUDA example"
       },
       {
-        "start": 23.73,
-        "end": 37.625,
+        "id": "s02",
+        "start": 26.325,
+        "end": 40.645,
         "title": "Follow execution"
       },
       {
-        "start": 37.625,
-        "end": 53.9,
+        "id": "s03",
+        "start": 40.645,
+        "end": 58.913,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 16.707,
+        "text": "Inside onlineAttention, next is the new maximum score found for the tile. expf(x) computes the exponential of an FP32 value; it supplies the rescaling factor and weights. denominator and weighted carry the running totals."
+      },
+      {
+        "id": "s01-c2",
+        "start": 16.927,
+        "end": 24.905,
+        "text": "This correctness example uses one GPU thread over eight keys; it is not a parallel FlashAttention implementation."
+      },
+      {
+        "id": "s02-c1",
+        "start": 26.925,
+        "end": 28.376,
+        "text": "Find tile maximum."
+      },
+      {
+        "id": "s02-c2",
+        "start": 28.596,
+        "end": 30.879,
+        "text": "Compare scores with the running maximum."
+      },
+      {
+        "id": "s02-c3",
+        "start": 31.099,
+        "end": 32.336,
+        "text": "Rescale and add."
+      },
+      {
+        "id": "s02-c4",
+        "start": 32.556,
+        "end": 35.18,
+        "text": "Carry a denominator and weighted sum forward."
+      },
+      {
+        "id": "s02-c5",
+        "start": 35.4,
+        "end": 36.509,
+        "text": "Normalise."
+      },
+      {
+        "id": "s02-c6",
+        "start": 36.729,
+        "end": 39.225,
+        "text": "Divide after processing all key tiles."
+      },
+      {
+        "id": "s03-c1",
+        "start": 41.245,
+        "end": 46.749,
+        "text": "Running totals can remain as thread working state while successive key and value tiles are read."
+      },
+      {
+        "id": "s03-c2",
+        "start": 46.969,
+        "end": 50.489,
+        "text": "Avoiding a full score array changes intermediate storage."
+      },
+      {
+        "id": "s03-c3",
+        "start": 50.709,
+        "end": 57.493,
+        "text": "Real parallel attention kernels also use shared memory and matrix units according to their implementation."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 16.107,
+        "s01-c2": 7.979,
+        "s02-c1": 1.451,
+        "s02-c2": 2.283,
+        "s02-c3": 1.237,
+        "s02-c4": 2.624,
+        "s02-c5": 1.109,
+        "s02-c6": 2.496,
+        "s03-c1": 5.504,
+        "s03-c2": 3.52,
+        "s03-c3": 6.784
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "inference": {
-    "durationSeconds": 44,
-    "bytes": 703810,
+    "durationSeconds": 48,
+    "bytes": 2908358,
     "scenes": [
       {
-        "start": 0,
-        "end": 17.36,
+        "id": "s01",
+        "start": 0.0,
+        "end": 19.627,
         "title": "Read the CUDA example"
       },
       {
-        "start": 17.36,
-        "end": 29.935,
+        "id": "s02",
+        "start": 19.627,
+        "end": 33.179,
         "title": "Follow execution"
       },
       {
-        "start": 29.935,
-        "end": 43.28,
+        "id": "s03",
+        "start": 33.179,
+        "end": 47.607,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 13.059,
+        "text": "append reads cached keys and values for each lane, then writes the next token slot. cached is the number of old tokens, width the values per token, and capacity the allocated token slots."
+      },
+      {
+        "id": "s01-c2",
+        "start": 13.279,
+        "end": 18.207,
+        "text": "The printed byte count accounts for requested payload, not measured memory traffic."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.227,
+        "end": 21.336,
+        "text": "Read history."
+      },
+      {
+        "id": "s02-c2",
+        "start": 21.556,
+        "end": 23.625,
+        "text": "Accumulate old keys and values."
+      },
+      {
+        "id": "s02-c3",
+        "start": 23.845,
+        "end": 25.04,
+        "text": "Append token."
+      },
+      {
+        "id": "s02-c4",
+        "start": 25.26,
+        "end": 27.223,
+        "text": "Write the new key and value slot."
+      },
+      {
+        "id": "s02-c5",
+        "start": 27.443,
+        "end": 28.467,
+        "text": "Read back."
+      },
+      {
+        "id": "s02-c6",
+        "start": 28.687,
+        "end": 31.759,
+        "text": "Inspect the accumulated result on the CPU."
+      },
+      {
+        "id": "s03-c1",
+        "start": 33.779,
+        "end": 38.152,
+        "text": "The key-value cache here is an application data structure in device memory."
+      },
+      {
+        "id": "s03-c2",
+        "start": 38.372,
+        "end": 42.596,
+        "text": "It is distinct from the GPU\u2019s L1 and L2 hardware caches."
+      },
+      {
+        "id": "s03-c3",
+        "start": 42.816,
+        "end": 46.187,
+        "text": "Longer histories request more old key and value data."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 12.459,
+        "s01-c2": 4.928,
+        "s02-c1": 1.109,
+        "s02-c2": 2.069,
+        "s02-c3": 1.195,
+        "s02-c4": 1.963,
+        "s02-c5": 1.024,
+        "s02-c6": 3.072,
+        "s03-c1": 4.373,
+        "s03-c2": 4.224,
+        "s03-c3": 3.371
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "matmul-investigation": {
-    "durationSeconds": 54,
-    "bytes": 1017320,
+    "durationSeconds": 58,
+    "bytes": 4047310,
     "scenes": [
       {
-        "start": 0,
-        "end": 24.855,
+        "id": "s01",
+        "start": 0.0,
+        "end": 28.16,
         "title": "Read the CUDA example"
       },
       {
-        "start": 24.855,
-        "end": 38.97,
+        "id": "s02",
+        "start": 28.16,
+        "end": 42.651,
         "title": "Follow execution"
       },
       {
-        "start": 38.97,
-        "end": 53.785,
+        "id": "s03",
+        "start": 42.651,
+        "end": 58.188,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 9.709,
+        "text": "Inside multiply, tile sets both shared array dimensions and the block\u2019s two-dimensional thread shape. main derives the grid from width and tile."
+      },
+      {
+        "id": "s01-c2",
+        "start": 9.929,
+        "end": 26.74,
+        "text": "Zero padding handles partial tiles while every thread reaches the barriers. main verifies every output against a CPU reference on nonuniform inputs before reporting calculated loads and shared bytes; those counts alone do not identify a faster kernel."
+      },
+      {
+        "id": "s02-c1",
+        "start": 28.76,
+        "end": 29.955,
+        "text": "Choose tile width."
+      },
+      {
+        "id": "s02-c2",
+        "start": 30.175,
+        "end": 32.223,
+        "text": "Set the block shape and shared arrays."
+      },
+      {
+        "id": "s02-c3",
+        "start": 32.443,
+        "end": 33.829,
+        "text": "Verify the product."
+      },
+      {
+        "id": "s02-c4",
+        "start": 34.049,
+        "end": 36.695,
+        "text": "Check correctness before comparing resources."
+      },
+      {
+        "id": "s02-c5",
+        "start": 36.915,
+        "end": 38.387,
+        "text": "Form a hypothesis."
+      },
+      {
+        "id": "s02-c6",
+        "start": 38.607,
+        "end": 41.231,
+        "text": "Measure the real GPU to test performance."
+      },
+      {
+        "id": "s03-c1",
+        "start": 43.251,
+        "end": 47.56,
+        "text": "Each resident block consumes shared storage and registers on its SM."
+      },
+      {
+        "id": "s03-c2",
+        "start": 47.78,
+        "end": 51.94,
+        "text": "Larger tiles can improve reuse while reducing how many blocks fit."
+      },
+      {
+        "id": "s03-c3",
+        "start": 52.16,
+        "end": 56.768,
+        "text": "The teaching resource budget is separate from the device-specific occupancy limits."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 9.109,
+        "s01-c2": 16.811,
+        "s02-c1": 1.195,
+        "s02-c2": 2.048,
+        "s02-c3": 1.387,
+        "s02-c4": 2.645,
+        "s02-c5": 1.472,
+        "s02-c6": 2.624,
+        "s03-c1": 4.309,
+        "s03-c2": 4.16,
+        "s03-c3": 4.608
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "histograms": {
-    "durationSeconds": 49,
-    "bytes": 748152,
+    "durationSeconds": 50,
+    "bytes": 3038428,
     "scenes": [
       {
-        "start": 0,
-        "end": 19.66,
+        "id": "s01",
+        "start": 0.0,
+        "end": 20.252,
         "title": "Read the CUDA example"
       },
       {
-        "start": 19.66,
-        "end": 34.035,
+        "id": "s02",
+        "start": 20.252,
+        "end": 33.953,
         "title": "Follow execution"
       },
       {
-        "start": 34.035,
-        "end": 48.61,
+        "id": "s03",
+        "start": 33.953,
+        "end": 49.761,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 5.443,
+        "text": "Inside histogram, partial holds four counters shared by one four-thread block."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.663,
+        "end": 9.716,
+        "text": "Each thread clears one counter; a barrier precedes atomic updates."
+      },
+      {
+        "id": "s01-c3",
+        "start": 9.936,
+        "end": 18.832,
+        "text": "A second barrier completes those updates before nonzero partials are added to the global counts. main initialises global counts to zero."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.852,
+        "end": 22.281,
+        "text": "Initialise counters."
+      },
+      {
+        "id": "s02-c2",
+        "start": 22.501,
+        "end": 24.357,
+        "text": "Clear shared and global counts."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.577,
+        "end": 25.751,
+        "text": "Count atomically."
+      },
+      {
+        "id": "s02-c4",
+        "start": 25.971,
+        "end": 28.595,
+        "text": "Several threads may target the same category."
+      },
+      {
+        "id": "s02-c5",
+        "start": 28.815,
+        "end": 30.031,
+        "text": "Merge partials."
+      },
+      {
+        "id": "s02-c6",
+        "start": 30.251,
+        "end": 32.533,
+        "text": "Add completed per-block counts globally."
+      },
+      {
+        "id": "s03-c1",
+        "start": 34.553,
+        "end": 40.676,
+        "text": "Per-block shared counters combine local contributions before a merge to device-memory counters."
+      },
+      {
+        "id": "s03-c2",
+        "start": 40.896,
+        "end": 48.341,
+        "text": "An atomic update protects one supported update; it does not replace the block barriers around initialisation and merging."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 4.843,
+        "s01-c2": 4.053,
+        "s01-c3": 8.896,
+        "s02-c1": 1.429,
+        "s02-c2": 1.856,
+        "s02-c3": 1.173,
+        "s02-c4": 2.624,
+        "s02-c5": 1.216,
+        "s02-c6": 2.283,
+        "s03-c1": 6.123,
+        "s03-c2": 7.445
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "scan": {
-    "durationSeconds": 46,
-    "bytes": 741519,
+    "durationSeconds": 47,
+    "bytes": 2892611,
     "scenes": [
       {
-        "start": 0,
-        "end": 17.805,
+        "id": "s01",
+        "start": 0.0,
+        "end": 18.439,
         "title": "Read the CUDA example"
       },
       {
-        "start": 17.805,
-        "end": 31.725,
+        "id": "s02",
+        "start": 18.439,
+        "end": 32.14,
         "title": "Follow execution"
       },
       {
-        "start": 31.725,
-        "end": 45.705,
+        "id": "s03",
+        "start": 32.14,
+        "end": 46.568,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 3.096,
+        "text": "scan stores eight flags in shared values."
+      },
+      {
+        "id": "s01-c2",
+        "start": 3.316,
+        "end": 11.316,
+        "text": "For each step, all threads finish the old stage, read a partner into previous, and reach another barrier before updating shared storage."
+      },
+      {
+        "id": "s01-c3",
+        "start": 11.536,
+        "end": 17.019,
+        "text": "Subtracting flags[t] converts the inclusive prefix to an exclusive offset."
+      },
+      {
+        "id": "s02-c1",
+        "start": 19.039,
+        "end": 20.297,
+        "text": "Read old stage."
+      },
+      {
+        "id": "s02-c2",
+        "start": 20.517,
+        "end": 22.587,
+        "text": "Keep the partner value in previous."
+      },
+      {
+        "id": "s02-c3",
+        "start": 22.807,
+        "end": 23.852,
+        "text": "Synchronise."
+      },
+      {
+        "id": "s02-c4",
+        "start": 24.072,
+        "end": 26.653,
+        "text": "Finish old reads before any thread updates."
+      },
+      {
+        "id": "s02-c5",
+        "start": 26.873,
+        "end": 28.068,
+        "text": "Write new stage."
+      },
+      {
+        "id": "s02-c6",
+        "start": 28.288,
+        "end": 30.72,
+        "text": "Add the partner; repeat at the next distance."
+      },
+      {
+        "id": "s03-c1",
+        "start": 32.74,
+        "end": 36.58,
+        "text": "A shared-memory stage lets a block exchange prefix values."
+      },
+      {
+        "id": "s03-c2",
+        "start": 36.8,
+        "end": 41.877,
+        "text": "Registers keep the partner value separate while a barrier protects the old shared snapshot."
+      },
+      {
+        "id": "s03-c3",
+        "start": 42.097,
+        "end": 45.148,
+        "text": "A block barrier does not order a multi-block scan."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 2.496,
+        "s01-c2": 8.0,
+        "s01-c3": 5.483,
+        "s02-c1": 1.259,
+        "s02-c2": 2.069,
+        "s02-c3": 1.045,
+        "s02-c4": 2.581,
+        "s02-c5": 1.195,
+        "s02-c6": 2.432,
+        "s03-c1": 3.84,
+        "s03-c2": 5.077,
+        "s03-c3": 3.051
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "compaction": {
-    "durationSeconds": 47,
-    "bytes": 697885,
+    "durationSeconds": 50,
+    "bytes": 2934561,
     "scenes": [
       {
-        "start": 0,
-        "end": 17.93,
+        "id": "s01",
+        "start": 0.0,
+        "end": 20.373,
         "title": "Read the CUDA example"
       },
       {
-        "start": 17.93,
-        "end": 30.625,
+        "id": "s02",
+        "start": 20.373,
+        "end": 33.797,
         "title": "Follow execution"
       },
       {
-        "start": 30.625,
-        "end": 46.230000000000004,
+        "id": "s03",
+        "start": 33.797,
+        "end": 49.591,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 13.4,
+        "text": "flag marks selected categories. scanFlags forms exclusive offsets using staged shared-memory scans and collective barriers. scatter writes original token IDs at those unique offsets."
+      },
+      {
+        "id": "s01-c2",
+        "start": 13.62,
+        "end": 18.953,
+        "text": "All three kernels are ordered in one stream; main verifies the complete stable result."
+      },
+      {
+        "id": "s02-c1",
+        "start": 20.973,
+        "end": 22.189,
+        "text": "Flag tokens."
+      },
+      {
+        "id": "s02-c2",
+        "start": 22.409,
+        "end": 24.521,
+        "text": "Record whether each token survives."
+      },
+      {
+        "id": "s02-c3",
+        "start": 24.741,
+        "end": 25.893,
+        "text": "Scan flags."
+      },
+      {
+        "id": "s02-c4",
+        "start": 26.113,
+        "end": 28.801,
+        "text": "Form exclusive offsets with shared stages."
+      },
+      {
+        "id": "s02-c5",
+        "start": 29.021,
+        "end": 30.173,
+        "text": "Scatter IDs."
+      },
+      {
+        "id": "s02-c6",
+        "start": 30.393,
+        "end": 32.377,
+        "text": "Write each selected token once."
+      },
+      {
+        "id": "s03-c1",
+        "start": 34.397,
+        "end": 39.005,
+        "text": "Flags produced in device memory must be ready before scatter consumes them."
+      },
+      {
+        "id": "s03-c2",
+        "start": 39.225,
+        "end": 43.023,
+        "text": "Unique offsets give selected threads distinct destinations."
+      },
+      {
+        "id": "s03-c3",
+        "start": 43.243,
+        "end": 48.171,
+        "text": "Stable output order follows the offsets, not the order in which warps happen to run."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 12.8,
+        "s01-c2": 5.333,
+        "s02-c1": 1.216,
+        "s02-c2": 2.112,
+        "s02-c3": 1.152,
+        "s02-c4": 2.688,
+        "s02-c5": 1.152,
+        "s02-c6": 1.984,
+        "s03-c1": 4.608,
+        "s03-c2": 3.797,
+        "s03-c3": 4.928
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "progress": {
-    "durationSeconds": 42,
-    "bytes": 657524,
+    "durationSeconds": 43,
+    "bytes": 2486178,
     "scenes": [
       {
-        "start": 0,
-        "end": 14.745000000000001,
+        "id": "s01",
+        "start": 0.0,
+        "end": 14.315,
         "title": "Read the CUDA example"
       },
       {
-        "start": 14.745000000000001,
-        "end": 28.17,
+        "id": "s02",
+        "start": 14.315,
+        "end": 29.211,
         "title": "Follow execution"
       },
       {
-        "start": 28.17,
-        "end": 41.355000000000004,
+        "id": "s03",
+        "start": 29.211,
+        "end": 42.999,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 2.456,
+        "text": "exchange launches four threads."
+      },
+      {
+        "id": "s01-c2",
+        "start": 2.676,
+        "end": 12.895,
+        "text": "Every thread writes its shared slot and reaches __syncthreads before the readers condition. readers changes who consumes the values, not who must participate in the barrier."
+      },
+      {
+        "id": "s02-c1",
+        "start": 14.915,
+        "end": 16.323,
+        "text": "Publish shared values."
+      },
+      {
+        "id": "s02-c2",
+        "start": 16.543,
+        "end": 18.505,
+        "text": "All four threads supply a value."
+      },
+      {
+        "id": "s02-c3",
+        "start": 18.725,
+        "end": 19.813,
+        "text": "All arrive."
+      },
+      {
+        "id": "s02-c4",
+        "start": 20.033,
+        "end": 23.767,
+        "text": "Keep the barrier outside t < readers."
+      },
+      {
+        "id": "s02-c5",
+        "start": 23.987,
+        "end": 25.501,
+        "text": "Selected threads read."
+      },
+      {
+        "id": "s02-c6",
+        "start": 25.721,
+        "end": 27.791,
+        "text": "Only the consumer set changes."
+      },
+      {
+        "id": "s03-c1",
+        "start": 29.811,
+        "end": 33.267,
+        "text": "Resident threads can wait for other threads at a block barrier."
+      },
+      {
+        "id": "s03-c2",
+        "start": 33.487,
+        "end": 37.625,
+        "text": "Enough hardware resources alone do not repair a missing participant."
+      },
+      {
+        "id": "s03-c3",
+        "start": 37.845,
+        "end": 41.579,
+        "text": "This safe kernel keeps the barrier outside the conditional reads."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 1.856,
+        "s01-c2": 10.219,
+        "s02-c1": 1.408,
+        "s02-c2": 1.963,
+        "s02-c3": 1.088,
+        "s02-c4": 3.733,
+        "s02-c5": 1.515,
+        "s02-c6": 2.069,
+        "s03-c1": 3.456,
+        "s03-c2": 4.139,
+        "s03-c3": 3.733
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "pipelines": {
-    "durationSeconds": 54,
-    "bytes": 893515,
+    "durationSeconds": 56,
+    "bytes": 3453825,
     "scenes": [
       {
-        "start": 0,
-        "end": 21.435,
+        "id": "s01",
+        "start": 0.0,
+        "end": 22.919,
         "title": "Read the CUDA example"
       },
       {
-        "start": 21.435,
-        "end": 35.23,
+        "id": "s02",
+        "start": 22.919,
+        "end": 37.324,
         "title": "Follow execution"
       },
       {
-        "start": 35.23,
-        "end": 53.425,
+        "id": "s03",
+        "start": 37.324,
+        "end": 56.317,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 11.821,
+        "text": "In main, ready[s] is recorded after the input copy in copy\u2019s stream. cudaStreamWaitEvent orders compute after that event, and process doubles the slot values."
+      },
+      {
+        "id": "s01-c2",
+        "start": 12.041,
+        "end": 17.631,
+        "text": "Later, used[s] is recorded after the output copy; the next reuse waits for it."
+      },
+      {
+        "id": "s01-c3",
+        "start": 17.851,
+        "end": 21.499,
+        "text": "Streams are ordered queues, and events connect their dependencies."
+      },
+      {
+        "id": "s02-c1",
+        "start": 23.519,
+        "end": 25.033,
+        "text": "Copy and record ready."
+      },
+      {
+        "id": "s02-c2",
+        "start": 25.253,
+        "end": 27.216,
+        "text": "Finish supplying the slot\u2019s input."
+      },
+      {
+        "id": "s02-c3",
+        "start": 27.436,
+        "end": 28.737,
+        "text": "Wait and compute."
+      },
+      {
+        "id": "s02-c4",
+        "start": 28.957,
+        "end": 31.219,
+        "text": "Order the kernel after its input event."
+      },
+      {
+        "id": "s02-c5",
+        "start": 31.439,
+        "end": 32.719,
+        "text": "Record consumed."
+      },
+      {
+        "id": "s02-c6",
+        "start": 32.939,
+        "end": 35.904,
+        "text": "Protect the slot until output copying finishes."
+      },
+      {
+        "id": "s03-c1",
+        "start": 37.924,
+        "end": 46.095,
+        "text": "Copy engines can transfer data while SMs execute independent kernels, if the device and workload support overlap."
+      },
+      {
+        "id": "s03-c2",
+        "start": 46.315,
+        "end": 49.259,
+        "text": "Streams express ordering, not dedicated hardware."
+      },
+      {
+        "id": "s03-c3",
+        "start": 49.479,
+        "end": 54.897,
+        "text": "A reusable buffer must wait for its previous consumer, even when its next copy is ready."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 11.221,
+        "s01-c2": 5.589,
+        "s01-c3": 3.648,
+        "s02-c1": 1.515,
+        "s02-c2": 1.963,
+        "s02-c3": 1.301,
+        "s02-c4": 2.261,
+        "s02-c5": 1.28,
+        "s02-c6": 2.965,
+        "s03-c1": 8.171,
+        "s03-c2": 2.944,
+        "s03-c3": 5.419
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   },
   "token-routing": {
     "durationSeconds": 54,
-    "bytes": 929014,
+    "bytes": 3314999,
     "scenes": [
       {
-        "start": 0,
-        "end": 24.1,
+        "id": "s01",
+        "start": 0.0,
+        "end": 24.775,
         "title": "Read the CUDA example"
       },
       {
-        "start": 24.1,
-        "end": 38.335,
+        "id": "s02",
+        "start": 24.775,
+        "end": 38.817,
         "title": "Follow execution"
       },
       {
-        "start": 38.335,
-        "end": 53.730000000000004,
+        "id": "s03",
+        "start": 38.817,
+        "end": 53.971,
         "title": "Locate the hardware"
       }
     ],
+    "cues": [
+      {
+        "id": "s01-c1",
+        "start": 0.6,
+        "end": 4.781,
+        "text": "route first completes shared-memory scans of the four category masks."
+      },
+      {
+        "id": "s01-c2",
+        "start": 5.001,
+        "end": 17.375,
+        "text": "In this final body excerpt, subtracting one from the token\u2019s inclusive category prefix gives its stable rank. start sums earlier category counts; start plus rank gives a unique destination."
+      },
+      {
+        "id": "s01-c3",
+        "start": 17.595,
+        "end": 23.355,
+        "text": "All threads finish the scan barriers before reading prefix, and count precedes route in the same stream."
+      },
+      {
+        "id": "s02-c1",
+        "start": 25.375,
+        "end": 26.591,
+        "text": "Count categories."
+      },
+      {
+        "id": "s02-c2",
+        "start": 26.811,
+        "end": 28.837,
+        "text": "Build counts before routing starts."
+      },
+      {
+        "id": "s02-c3",
+        "start": 29.057,
+        "end": 30.465,
+        "text": "Find start and rank."
+      },
+      {
+        "id": "s02-c4",
+        "start": 30.685,
+        "end": 33.373,
+        "text": "Combine the category region and local order."
+      },
+      {
+        "id": "s02-c5",
+        "start": 33.593,
+        "end": 34.895,
+        "text": "Write token ID."
+      },
+      {
+        "id": "s02-c6",
+        "start": 35.115,
+        "end": 37.397,
+        "text": "Give each token a unique stable slot."
+      },
+      {
+        "id": "s03-c1",
+        "start": 39.417,
+        "end": 42.895,
+        "text": "Device-memory phase results connect counting to placement."
+      },
+      {
+        "id": "s03-c2",
+        "start": 43.115,
+        "end": 49.301,
+        "text": "Atomics can count safely, but the order of atomic arrivals alone does not preserve token order."
+      },
+      {
+        "id": "s03-c3",
+        "start": 49.521,
+        "end": 52.551,
+        "text": "The explicit earlier-token rank supplies stability."
+      }
+    ],
     "speech": {
-      "engine": "Flite",
-      "voice": "slt"
+      "voice": "af_heart",
+      "speed": 1.0,
+      "engine": {
+        "backend": "onnx",
+        "model": "Kokoro-82M v1.0",
+        "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+        "sha256": {
+          "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+          "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+        },
+        "provider": "CPUExecutionProvider"
+      },
+      "durations": {
+        "s01-c1": 4.181,
+        "s01-c2": 12.373,
+        "s01-c3": 5.76,
+        "s02-c1": 1.216,
+        "s02-c2": 2.027,
+        "s02-c3": 1.408,
+        "s02-c4": 2.688,
+        "s02-c5": 1.301,
+        "s02-c6": 2.283,
+        "s03-c1": 3.477,
+        "s03-c2": 6.187,
+        "s03-c3": 3.029
+      },
+      "skill": {
+        "repository": "https://github.com/snowch/claude-skills",
+        "commit": "c9a7c521568632aa216932f4c965df386498602a"
+      },
+      "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
     },
-    "captionTiming": "Sentence cues use individually synthesised audio durations; scenes include a leading half-second and one-second closing hold."
+    "video": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "encoding": {
+      "preset": "veryfast",
+      "crf": 18,
+      "gopFrames": 120,
+      "method": "closed-GOP repetition of native still scenes"
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "bitrate": 160000,
+      "loudnessTargetLUFS": -16,
+      "truePeakTargetDB": -1.5
+    }
   }
 }

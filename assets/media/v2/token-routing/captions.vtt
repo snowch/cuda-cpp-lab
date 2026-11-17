@@ -1,37 +1,37 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:04.845
+00:00:00.600 --> 00:00:04.781
 route first completes shared-memory scans of the four category masks.
 
-00:00:04.845 --> 00:00:17.100
+00:00:05.001 --> 00:00:17.375
 In this final body excerpt, subtracting one from the token’s inclusive category prefix gives its stable rank. start sums earlier category counts; start plus rank gives a unique destination.
 
-00:00:17.100 --> 00:00:23.100
+00:00:17.595 --> 00:00:23.355
 All threads finish the scan barriers before reading prefix, and count precedes route in the same stream.
 
-00:00:24.600 --> 00:00:26.285
+00:00:25.375 --> 00:00:26.591
 Count categories.
 
-00:00:26.285 --> 00:00:28.755
+00:00:26.811 --> 00:00:28.837
 Build counts before routing starts.
 
-00:00:28.755 --> 00:00:30.260
+00:00:29.057 --> 00:00:30.465
 Find start and rank.
 
-00:00:30.260 --> 00:00:33.525
+00:00:30.685 --> 00:00:33.373
 Combine the category region and local order.
 
-00:00:33.525 --> 00:00:34.800
+00:00:33.593 --> 00:00:34.895
 Write token ID.
 
-00:00:34.800 --> 00:00:37.335
+00:00:35.115 --> 00:00:37.397
 Give each token a unique stable slot.
 
-00:00:38.835 --> 00:00:42.945
+00:00:39.417 --> 00:00:42.895
 Device-memory phase results connect counting to placement.
 
-00:00:42.945 --> 00:00:49.290
+00:00:43.115 --> 00:00:49.301
 Atomics can count safely, but the order of atomic arrivals alone does not preserve token order.
 
-00:00:49.290 --> 00:00:52.730
+00:00:49.521 --> 00:00:52.551
 The explicit earlier-token rank supplies stability.
