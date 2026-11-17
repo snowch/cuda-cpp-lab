@@ -18,22 +18,8 @@ transcript, downloads, saved-state return and offline update restoration.
 
 ## Rebuild
 
-Use the pinned Linux
-[record-demo workflow](https://github.com/snowch/claude-skills/tree/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo):
-Kokoro-82M v1.0 ONNX CPU, `af_heart`, speed 1.0. With that revision checked out at
-`/tmp/gpu-authoring-skills`, run from this repository:
-
-```sh
-node scripts/render-reading-recording.mjs
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/tts.py test-results/reading-recording af_heart 1.0
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/phonemes.py test-results/reading-recording --all
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/asr.py test-results/reading-recording small
-uv run scripts/build-recording.py reading
-```
-
-FFmpeg, Chromium and `uv` are required. Use `--slides-only` for a first review.
-The exporter renders at device scale 3, joins exact sentence audio, normalises
-to −16 LUFS / −1.5 dB true-peak targets and regenerates all derived media.
-Review every slide, encoded scene, phoneme and Whisper report; automated
-screening is not human listening approval. Ordinary course builds use committed
-media and never run TTS or download speech models.
+Follow the shared [recording production workflow](../README.md) with the pinned
+record-demo skill, Kokoro v1.0 ONNX CPU, `af_heart` and speed 1.0. It prepares
+the source cues, checks phonemes and speech, and exports native 4K video, captions,
+posters and measured metadata together. Existing speech-specific overrides in the
+renderer are retained. Ordinary course builds use the committed media.

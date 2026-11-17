@@ -1,29 +1,29 @@
 {
-  "durationSeconds": 54,
-  "bytes": 4672186,
+  "durationSeconds": 55,
+  "bytes": 2831030,
   "scenes": [
     {
       "id": "s01",
       "start": 0.0,
-      "end": 12.892,
+      "end": 12.913,
       "title": "What is a CUDA kernel?"
     },
     {
       "id": "s02",
-      "start": 12.892,
-      "end": 28.152,
+      "start": 12.913,
+      "end": 28.173,
       "title": "Launch one thread"
     },
     {
       "id": "s03",
-      "start": 28.152,
-      "end": 43.519,
+      "start": 28.173,
+      "end": 43.54,
       "title": "Where does the value go?"
     },
     {
       "id": "s04",
-      "start": 43.519,
-      "end": 54.277,
+      "start": 43.54,
+      "end": 55.024,
       "title": "Change the stored value"
     }
   ],
@@ -43,61 +43,61 @@
     {
       "id": "s01-c3",
       "start": 7.803,
-      "end": 11.472,
+      "end": 11.493,
       "text": "The thread writes forty-two point zero at output index zero."
     },
     {
       "id": "s02-c1",
-      "start": 13.492,
-      "end": 18.079,
+      "start": 13.513,
+      "end": 18.1,
       "text": "On the CPU, main reserves space in GPU memory for one float."
     },
     {
       "id": "s02-c2",
-      "start": 18.299,
-      "end": 23.056,
+      "start": 18.32,
+      "end": 23.077,
       "text": "The first one requests one block. The second one requests one thread in that block."
     },
     {
       "id": "s02-c3",
-      "start": 23.276,
-      "end": 26.732,
+      "start": 23.297,
+      "end": 26.753,
       "text": "The argument output gives the kernel the address of the float."
     },
     {
       "id": "s03-c1",
-      "start": 28.752,
-      "end": 34.085,
+      "start": 28.773,
+      "end": 34.107,
       "text": "A streaming multiprocessor, or S M, executes instructions for the GPU thread."
     },
     {
       "id": "s03-c2",
-      "start": 34.305,
-      "end": 37.932,
+      "start": 34.327,
+      "end": 37.953,
       "text": "The kernel stores forty-two point zero in GPU memory."
     },
     {
       "id": "s03-c3",
-      "start": 38.152,
-      "end": 42.099,
+      "start": 38.173,
+      "end": 42.12,
       "text": "The CPU copies the value back, and main prints it in the console."
     },
     {
       "id": "s04-c1",
-      "start": 44.119,
-      "end": 47.767,
+      "start": 44.14,
+      "end": 47.788,
       "text": "Change the value in the assignment, then compile and run again."
     },
     {
       "id": "s04-c2",
-      "start": 47.987,
-      "end": 50.717,
+      "start": 48.008,
+      "end": 50.739,
       "text": "The launch still asks for one block and one thread."
     },
     {
       "id": "s04-c3",
-      "start": 50.937,
-      "end": 52.857,
+      "start": 50.959,
+      "end": 53.604,
       "text": "Which value will main print this time?"
     }
   ],
@@ -117,7 +117,7 @@
     "durations": {
       "s01-c1": 4.032,
       "s01-c2": 2.731,
-      "s01-c3": 3.669,
+      "s01-c3": 3.691,
       "s02-c1": 4.587,
       "s02-c2": 4.757,
       "s02-c3": 3.456,
@@ -126,17 +126,24 @@
       "s03-c3": 3.947,
       "s04-c1": 3.648,
       "s04-c2": 2.731,
-      "s04-c3": 1.92
+      "s04-c3": 2.645
     },
     "skill": {
       "repository": "https://github.com/snowch/claude-skills",
       "commit": "c9a7c521568632aa216932f4c965df386498602a"
-    }
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
   },
   "video": {
     "width": 3840,
     "height": 2160,
     "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
   },
   "audio": {
     "codec": "aac",

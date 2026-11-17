@@ -1,10 +1,10 @@
 {
   "durationSeconds": 215,
-  "bytes": 10329114,
+  "bytes": 13309542,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 37.141,
       "title": "Keep identities, not just a count."
     },
@@ -17,25 +17,25 @@
     {
       "id": "s03",
       "start": 74.432,
-      "end": 110.08,
+      "end": 110.059,
       "title": "Write one identity to its own slot."
     },
     {
       "id": "s04",
-      "start": 110.08,
-      "end": 143.979,
+      "start": 110.059,
+      "end": 143.957,
       "title": "Write order need not be input order."
     },
     {
       "id": "s05",
-      "start": 143.979,
-      "end": 176.109,
+      "start": 143.957,
+      "end": 176.088,
       "title": "Pause: change only the selection."
     },
     {
       "id": "s06",
-      "start": 176.109,
-      "end": 214.531,
+      "start": 176.088,
+      "end": 214.509,
       "title": "Offsets preserve the new survivor order."
     }
   ],
@@ -73,43 +73,43 @@
     {
       "id": "s03-c2",
       "start": 91.7,
-      "end": 108.66,
+      "end": 108.639,
       "text": "The output picture shows only writes inspected so far; a question mark labels an unwritten slot. Every kept thread has a distinct destination. This destination contract, rather than the bounds guard alone, prevents conflicting writes and preserves survivor order."
     },
     {
       "id": "s04-c1",
-      "start": 110.68,
-      "end": 124.312,
+      "start": 110.659,
+      "end": 124.291,
       "text": "Inspect the same valid placements in reverse input order. The destinations do not change because they came from the completed scan. A later input may write first without taking an earlier token's output slot."
     },
     {
       "id": "s04-c2",
-      "start": 124.532,
-      "end": 142.559,
+      "start": 124.511,
+      "end": 142.537,
       "text": "The completed token identities match forward inspection and retain input order. These are two chosen valid write sequences, not a GPU scheduling prediction. A block barrier cannot finish a scan produced by other blocks; dependent phases need the required wider ordering."
     },
     {
       "id": "s05-c1",
-      "start": 144.579,
-      "end": 157.741,
+      "start": 144.557,
+      "end": 157.72,
       "text": "Now keep tokens whose category differs from zero. Leave the input identities and reverse inspection order unchanged. Predict the output identities, and derive the destination used by token four."
     },
     {
       "id": "s05-c2",
-      "start": 157.961,
-      "end": 170.889,
+      "start": 157.94,
+      "end": 170.868,
       "text": "Would writing the last surviving token first change its final output position? Explain why matching the old survivor count would not prove that the correct identities were selected. Pause before the comparison."
     },
     {
       "id": "s06-c1",
-      "start": 176.709,
-      "end": 193.797,
+      "start": 176.688,
+      "end": 193.776,
       "text": "Four tokens survive this new selection. Their identities remain in original relative order, as shown in the output. Token four has two earlier survivors, so its destination is two. Reversing the inspected writes changes neither that destination nor stability."
     },
     {
       "id": "s06-c2",
-      "start": 194.017,
-      "end": 213.111,
+      "start": 193.996,
+      "end": 213.089,
       "text": "A skipped thread never writes. With an empty selection, all threads skip and no output slots are used; that differs from an empty input. Return to the chapter to inspect destinations and test all or no survivors. No GPU runtime, allocation cost or speedup is inferred from these placements."
     }
   ],
@@ -132,13 +132,36 @@
       "s02-c1": 17.152,
       "s02-c2": 17.899,
       "s03-c1": 16.448,
-      "s03-c2": 16.96,
+      "s03-c2": 16.939,
       "s04-c1": 13.632,
       "s04-c2": 18.027,
       "s05-c1": 13.163,
       "s05-c2": 12.928,
       "s06-c1": 17.088,
       "s06-c2": 19.093
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

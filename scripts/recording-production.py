@@ -1,3 +1,7 @@
+# /// script
+# requires-python = ">=3.11,<3.13"
+# dependencies = ["playwright==1.58.0", "numpy", "soundfile"]
+# ///
 # Copyright © 2026 Christopher Snow.
 """Regenerate GPU Lab speech through Common Ground's pinned record-demo skill.
 
@@ -152,16 +156,40 @@ def distribute(plan, skill):
               'scriptSha256': digest(skill/'scripts/tts.py')})
 
 
+def resume_worker(skill, worker):
+    """Recover completed cue files from this interrupted, unchanged campaign."""
+    import numpy as np
+    import soundfile as sf
+    folder = WORK/f'worker-{worker}'
+    reference = read(ROOT/'content/first-kernel-media.json')['speech']
+    assert (reference['voice'], reference['speed'], reference['engine']['backend']) == ('af_heart', 1.0, 'onnx')
+    durations, missing = {}, []
+    for scene in read(folder/'scenes.json'):
+        path = folder/'audio'/f'{scene["id"]}.wav'
+        try:
+            audio, sr = sf.read(path, dtype='float32')
+            assert sr == 24000 and audio.ndim == 1 and len(audio) > 2400
+            assert np.isfinite(audio).all() and np.max(np.abs(audio)) < 1
+            durations[scene['id']] = round(len(audio)/sr, 3)
+        except (OSError, RuntimeError, AssertionError):
+            missing.append(scene['id'])
+    write(folder/'audio/durations.json', {**reference, 'durations': durations})
+    print(f'Resume worker {worker}: {len(durations)} complete, {len(missing)} remaining', flush=True)
+    original_script(skill, 'narrate', worker, missing or ['__all_cues_already_complete__'])
+
+
 def refine(plan, skill):
     """Regenerate only speech forms refined after phoneme/ASR inspection."""
-    changed = {}
+    pending = WORK/'refinement-pending.json'
+    changed = read(pending) if pending.exists() else {}
     for r in plan['recordings']:
         for cue in r['cues']:
             say = spoken(cue.get('say', cue['text']))
-            if say != cue.get('say', cue['text']):
+            if say != cue.get('say', cue['text']) or r['key']+'__'+cue['id'] in changed:
                 cue['say'] = say
                 changed[r['key']+'__'+cue['id']] = say
         write(Path(r['work'])/'scenes.json', r['cues'])
+    write(pending, changed)
     write(WORK/'plan.json', plan)
     for worker in range(plan['workers']):
         path = WORK/f'worker-{worker}/scenes.json'
@@ -175,13 +203,61 @@ def refine(plan, skill):
         if selected:
             original_script(skill, 'refine', worker, selected)
     distribute(plan, skill)
+    pending.unlink()
     print('Refined speech forms:', len(changed), flush=True)
+
+
+def screen_batch(skill, worker, number, scenes):
+    """Run the original Whisper checker in resumable batches of unchanged WAVs."""
+    folder = WORK/f'asr-batches/worker-{worker}-{number:02}'
+    (folder/'audio').mkdir(parents=True, exist_ok=True)
+    source = WORK/f'worker-{worker}/audio'
+    inputs = {'scenes': scenes, 'audio': {s['id']: digest(source/(s['id']+'.wav')) for s in scenes},
+              'checkerSha256': digest(skill/'scripts/asr.py'), 'model': 'small.en'}
+    marker = folder/'inputs.json'
+    report = folder/'audio/asr-report.json'
+    if marker.exists() and report.exists() and read(marker) == inputs:
+        assert {s['id'] for s in read(report)['scenes']} == {s['id'] for s in scenes}
+        print(f'Reused speech screen: worker {worker}, batch {number}', flush=True)
+        return folder
+    write(folder/'scenes.json', scenes)
+    for scene in scenes:
+        link = folder/'audio'/(scene['id']+'.wav')
+        if link.is_symlink():
+            link.unlink()
+        assert not link.exists(), f'Unexpected non-link ASR working file: {link}'
+        link.symlink_to(source/(scene['id']+'.wav'))
+    with (folder/'screen.log').open('w') as log:
+        subprocess.run(['uv', 'run', str(skill/'scripts/asr.py'), str(folder), 'small.en'], cwd=ROOT,
+                       env={**os.environ, 'HF_HUB_OFFLINE': '1'}, stdout=log, stderr=subprocess.STDOUT, check=True)
+    result = read(report)
+    assert {s['id'] for s in result['scenes']} == {s['id'] for s in scenes}
+    write(marker, inputs)
+    print(f'Screened worker {worker}, batch {number}: {len(scenes)} cues, {result["flagged"]} raw flags', flush=True)
+    return folder
+
+
+def screen(plan, skill):
+    jobs = []
+    for worker in range(plan['workers']):
+        scenes = read(WORK/f'worker-{worker}/scenes.json')
+        jobs.extend((worker, i//24, scenes[i:i+24]) for i in range(0, len(scenes), 24))
+    with ThreadPoolExecutor(max_workers=plan['workers']) as pool:
+        folders = list(pool.map(lambda job: screen_batch(skill, *job), jobs))
+    for worker in range(plan['workers']):
+        batches = [folder for folder in folders if folder.name.startswith(f'worker-{worker}-')]
+        reports = [read(folder/'audio/asr-report.json') for folder in batches]
+        write(WORK/f'worker-{worker}/audio/asr-report.json', {
+            'method': 'Original record-demo Whisper screening in resumable batches; not listening approval',
+            'model': 'small.en', 'flagged': sum(r['flagged'] for r in reports),
+            'scenes': [scene for r in reports for scene in r['scenes']]})
+        (WORK/f'worker-{worker}/screen.log').write_text('\n'.join((folder/'screen.log').read_text() for folder in batches))
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--skill-dir', type=Path, required=True)
-    parser.add_argument('--stage', choices=['prepare', 'narrate', 'refine', 'phonemes', 'screen', 'build'], required=True)
+    parser.add_argument('--stage', choices=['prepare', 'narrate', 'resume', 'refine', 'phonemes', 'screen', 'build'], required=True)
     parser.add_argument('--workers', type=int, default=2)
     args = parser.parse_args()
     skill = args.skill_dir.resolve()
@@ -191,8 +267,16 @@ def main():
         prepare(args.workers)
         return
     plan = read(WORK/'plan.json')
+    if args.stage == 'resume':
+        with ThreadPoolExecutor(max_workers=plan['workers']) as pool:
+            list(pool.map(lambda i: resume_worker(skill, i), range(plan['workers'])))
+        distribute(plan, skill)
+        return
     if args.stage == 'refine':
         refine(plan, skill)
+        return
+    if args.stage == 'screen':
+        screen(plan, skill)
         return
     if args.stage == 'build':
         from recording_export import export

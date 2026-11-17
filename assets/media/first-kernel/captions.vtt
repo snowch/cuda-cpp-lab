@@ -6,32 +6,32 @@ A CUDA kernel is a function that GPU threads execute.
 00:00:04.852 --> 00:00:07.583
 In this file, global marks hello as a kernel.
 
-00:00:07.803 --> 00:00:11.472
+00:00:07.803 --> 00:00:11.493
 The thread writes forty-two point zero at output index zero.
 
-00:00:13.492 --> 00:00:18.079
+00:00:13.513 --> 00:00:18.100
 On the CPU, main reserves space in GPU memory for one float.
 
-00:00:18.299 --> 00:00:23.056
+00:00:18.320 --> 00:00:23.077
 The first one requests one block. The second one requests one thread in that block.
 
-00:00:23.276 --> 00:00:26.732
+00:00:23.297 --> 00:00:26.753
 The argument output gives the kernel the address of the float.
 
-00:00:28.752 --> 00:00:34.085
+00:00:28.773 --> 00:00:34.107
 A streaming multiprocessor, or S M, executes instructions for the GPU thread.
 
-00:00:34.305 --> 00:00:37.932
+00:00:34.327 --> 00:00:37.953
 The kernel stores forty-two point zero in GPU memory.
 
-00:00:38.152 --> 00:00:42.099
+00:00:38.173 --> 00:00:42.120
 The CPU copies the value back, and main prints it in the console.
 
-00:00:44.119 --> 00:00:47.767
+00:00:44.140 --> 00:00:47.788
 Change the value in the assignment, then compile and run again.
 
-00:00:47.987 --> 00:00:50.717
+00:00:48.008 --> 00:00:50.739
 The launch still asks for one block and one thread.
 
-00:00:50.937 --> 00:00:52.857
+00:00:50.959 --> 00:00:53.604
 Which value will main print this time?

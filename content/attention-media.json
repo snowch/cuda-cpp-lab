@@ -1,53 +1,53 @@
 {
   "durationSeconds": 243,
-  "bytes": 11982692,
+  "bytes": 15640819,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
-      "end": 26.475,
+      "start": 0.0,
+      "end": 26.453,
       "title": "Attention combines weighted values."
     },
     {
       "id": "s02",
-      "start": 26.475,
-      "end": 56.533,
+      "start": 26.453,
+      "end": 56.512,
       "title": "Full intermediates need reads and writes."
     },
     {
       "id": "s03",
-      "start": 56.533,
-      "end": 85.632,
+      "start": 56.512,
+      "end": 85.611,
       "title": "Keep totals while visiting key tiles."
     },
     {
       "id": "s04",
-      "start": 85.632,
-      "end": 115.179,
+      "start": 85.611,
+      "end": 115.157,
       "title": "A later larger score changes the scale."
     },
     {
       "id": "s05",
-      "start": 115.179,
-      "end": 145.173,
+      "start": 115.157,
+      "end": 145.152,
       "title": "Include every key before taking the final result."
     },
     {
       "id": "s06",
-      "start": 145.173,
-      "end": 178.347,
+      "start": 145.152,
+      "end": 178.325,
       "title": "Count the scratch for one query."
     },
     {
       "id": "s07",
-      "start": 178.347,
-      "end": 208.835,
+      "start": 178.325,
+      "end": 208.813,
       "title": "Pause: use four keys per tile."
     },
     {
       "id": "s08",
-      "start": 208.835,
-      "end": 243.352,
+      "start": 208.813,
+      "end": 243.331,
       "title": "Regrouping preserves the final calculation."
     }
   ],
@@ -55,97 +55,97 @@
     {
       "id": "s01-c1",
       "start": 0.6,
-      "end": 11.651,
+      "end": 11.629,
       "text": "Chapter Twelve starts with eight queries and eight keys, each four components wide. Query\u2013key comparisons produce scores. Softmax turns the scores into weights that sum to one."
     },
     {
       "id": "s01-c2",
-      "start": 11.871,
-      "end": 25.055,
+      "start": 11.849,
+      "end": 25.033,
       "text": "Each output component combines those weights with the matching components of the value rows. We follow query zero's component zero. Higher scores receive more weight, but the result depends on the value rows too."
     },
     {
       "id": "s02-c1",
-      "start": 27.075,
-      "end": 38.979,
+      "start": 27.053,
+      "end": 38.957,
       "text": "Materialising means storing a temporary result in full for a later operation to read. Here both scores and weights have eight rows and eight columns, one entry for every query\u2013key pair."
     },
     {
       "id": "s02-c2",
-      "start": 39.199,
-      "end": 55.113,
+      "start": 39.177,
+      "end": 55.092,
       "text": "Count one write and one read for each matrix, assuming four-byte storage. That gives one thousand and twenty-four intermediate bytes. This selected accounting excludes the inputs, outputs, caching and other traffic; it is not measured DRAM traffic."
     },
     {
       "id": "s03-c1",
-      "start": 57.133,
-      "end": 69.293,
+      "start": 57.112,
+      "end": 69.272,
       "text": "Online softmax visits a few keys at a time. Keep the largest score seen, a normalisation total, and four weighted output totals. The diagrams show just weighted component zero."
     },
     {
       "id": "s03-c2",
-      "start": 69.513,
-      "end": 84.212,
+      "start": 69.492,
+      "end": 84.191,
       "text": "Subtract the current largest score before exponentiating. Add these unnormalised weights to the normalisation total, and their value products to the weighted total. Divide the two totals for an estimate using the keys visited so far."
     },
     {
       "id": "s04-c1",
-      "start": 86.232,
-      "end": 98.051,
+      "start": 86.211,
+      "end": 98.029,
       "text": "The next tile raises the largest score from negative one to one point five. Earlier contributions now need a new common scale: exponentiate the old maximum minus the new maximum."
     },
     {
       "id": "s04-c2",
-      "start": 98.271,
-      "end": 113.759,
+      "start": 98.249,
+      "end": 113.737,
       "text": "The factor is about zero point zero eight two. Multiply both retained totals by that factor, then add this tile's contributions on the new scale. Scaling both together preserves their previous ratio; scaling only one would change the meaning."
     },
     {
       "id": "s05-c1",
-      "start": 115.779,
-      "end": 128.579,
+      "start": 115.757,
+      "end": 128.557,
       "text": "Later tiles can raise the maximum again. Update both totals each time, using factor one when the maximum stays unchanged. Only after every key is included is the estimate the final output."
     },
     {
       "id": "s05-c2",
-      "start": 128.799,
-      "end": 143.753,
+      "start": 128.777,
+      "end": 143.732,
       "text": "The final ratio agrees with the full-matrix reference. All eight output vectors are compared, not just the component drawn here. The tiny difference reflects floating-point operation order in JavaScript doubles, not measured GPU error."
     },
     {
       "id": "s06-c1",
-      "start": 145.773,
-      "end": 159.299,
+      "start": 145.752,
+      "end": 159.277,
       "text": "With two keys per tile, the single-query algorithm needs eight floating-point slots: two tile scores, four weighted totals, the largest score and the normalisation total. Four-byte accounting makes that thirty-two bytes."
     },
     {
       "id": "s06-c2",
-      "start": 159.519,
-      "end": 176.927,
+      "start": 159.497,
+      "end": 176.905,
       "text": "Online mode writes no full score or weight matrix in this accounting. Inputs and outputs still exist, and tile rereads and the browser's inspection arrays are excluded. This is an algorithmic scratch budget, not a production kernel allocation or total memory traffic."
     },
     {
       "id": "s07-c1",
-      "start": 178.947,
-      "end": 190.744,
+      "start": 178.925,
+      "end": 190.723,
       "text": "Apply the update rule with four keys per tile. The first tile's largest score is one point five; the second tile includes a score of two. Will both retained totals need the same new scale?"
     },
     {
       "id": "s07-c2",
-      "start": 190.964,
-      "end": 203.615,
+      "start": 190.943,
+      "end": 203.593,
       "text": "Predict whether regrouping changes the final weighted result. Then count the single-query scratch using tile width plus four weighted components plus two scalars. Pause before checking the comparison."
     },
     {
       "id": "s08-c1",
-      "start": 209.435,
-      "end": 222.363,
+      "start": 209.413,
+      "end": 222.341,
       "text": "The new factor is about zero point six zero seven. Both retained totals use it before the second tile is added. The final ratio matches the same full-matrix reference, within floating-point roundoff."
     },
     {
       "id": "s08-c2",
-      "start": 222.583,
-      "end": 241.932,
+      "start": 222.561,
+      "end": 241.911,
       "text": "Four plus four plus two gives ten floats, or forty bytes in the chosen accounting. Return to Chapter Twelve and separate saved intermediates, temporary scratch and complete traffic. This small recurrence illustrates the algorithm; it does not execute a production FlashAttention kernel or predict GPU time."
     }
   ],
@@ -163,7 +163,7 @@
       "provider": "CPUExecutionProvider"
     },
     "durations": {
-      "s01-c1": 11.051,
+      "s01-c1": 11.029,
       "s01-c2": 13.184,
       "s02-c1": 11.904,
       "s02-c2": 15.915,
@@ -179,6 +179,29 @@
       "s07-c2": 12.651,
       "s08-c1": 12.928,
       "s08-c2": 19.349
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

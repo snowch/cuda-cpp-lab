@@ -18,21 +18,8 @@ transcript, downloads, saved-state return and offline update restoration.
 
 ## Rebuild
 
-Use the pinned [record-demo workflow](https://github.com/snowch/claude-skills/tree/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo):
-Kokoro v1.0 ONNX CPU, af_heart, speed 1.0, matching the existing recaps.
-From this repository, with that skill checked out at /tmp/gpu-authoring-skills:
-
-```sh
-node scripts/render-putting-it-together-recording.mjs
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/tts.py test-results/putting-it-together-recording af_heart 1.0
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/phonemes.py test-results/putting-it-together-recording --all
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/asr.py test-results/putting-it-together-recording small
-uv run scripts/build-recording.py putting-it-together
-```
-
-The exporter captures native 4K slides at device scale 3, joins exact speech
-cues and uses −16 LUFS / −1.5 dB true-peak normalisation targets. It checks
-slide overflow and regenerates the PDF, poster, captions and media metadata.
-Review the diagram frames, phonemes and full ASR reports. Automated speech
-screening is not human listening approval or learner testing. Ordinary course
-builds use committed media and never run TTS or download speech models.
+Follow the shared [recording production workflow](../README.md) with the pinned
+record-demo skill, Kokoro v1.0 ONNX CPU, `af_heart` and speed 1.0. It prepares
+the source cues, checks phonemes and speech, and exports native 4K video, captions,
+posters and measured metadata together. Existing speech-specific overrides in the
+renderer are retained. Ordinary course builds use the committed media.

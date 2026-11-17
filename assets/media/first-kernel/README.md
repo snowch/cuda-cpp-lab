@@ -15,8 +15,7 @@ Kokoro v1.0 ONNX CPU, `af_heart`, speed 1.0. It has native 3840 × 2160 frames,
 Measured timing, byte count and speech provenance are in
 `content/first-kernel-media.json`.
 
-The current sample is part of the unfinished 42-recording rebuild. Prepare the
-campaign with `scripts/recording-production.py` and the separately checked-out
-skill, generate its cue WAVs, then export this sample with
-`python scripts/build-recording.py first-kernel`. Normal course builds use the
-committed recording and do not run speech synthesis.
+Follow the [shared production guide](../README.md) to prepare the campaign and
+generate its cue WAVs with the separately checked-out skill. Export this recording
+with `python scripts/build-recording.py first-kernel`. Normal course builds use
+the committed recording and do not run speech synthesis.

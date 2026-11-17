@@ -33,6 +33,7 @@ jobs:
       - run: python -m playwright install --only-shell chromium
         timeout-minutes: 10
       - run: python tests/offline.py
+      - run: python tests/recordings.py
       - run: python tests/browser.py
       - run: python tests/v2_editor.py matmul matmul-investigation compaction token-routing
       - run: python tests/v2_practical_cuda.py

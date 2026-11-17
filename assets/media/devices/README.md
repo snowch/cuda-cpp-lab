@@ -21,25 +21,8 @@ downloads, parent-state return and paused offline restoration use the common pla
 
 ## Rebuild
 
-Use the pinned Linux
-[record-demo workflow](https://github.com/snowch/claude-skills/tree/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo):
-Kokoro-82M v1.0 ONNX CPU, `af_heart`, speed 1.0. The following assumes that revision
-is checked out at `/tmp/gpu-authoring-skills`. FFmpeg, Chromium and `uv` are needed.
-The deck writer supplies CUDA's pronunciation and spells RAM as R–A–M for speech
-while captions retain ordinary text. `devicesSpeechText` pins the three letter
-sounds rather than relying on acronym heuristics.
-
-```sh
-node scripts/render-devices-recording.mjs
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/tts.py test-results/devices-recording af_heart 1.0
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/phonemes.py test-results/devices-recording --all
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/asr.py test-results/devices-recording small
-uv run scripts/build-recording.py devices
-```
-
-Use `--slides-only` to review before encoding. The exporter renders at device
-scale 3, joins measured sentence audio, normalises to −16 LUFS with a −1.5 dB
-true-peak target, and regenerates captions, chapters, slides, poster and metadata.
-Review every slide, encoded scene and phoneme and Whisper reports. Automated
-screening is not human listening approval. Regenerate all affected derived media
-after a revision. Ordinary course builds use committed media and never run TTS.
+Follow the shared [recording production workflow](../README.md) with the pinned
+record-demo skill, Kokoro v1.0 ONNX CPU, `af_heart` and speed 1.0. It prepares
+the source cues, checks phonemes and speech, and exports native 4K video, captions,
+posters and measured metadata together. Existing speech-specific overrides in the
+renderer are retained. Ordinary course builds use the committed media.
