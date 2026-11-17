@@ -89,6 +89,8 @@ Each extracted frame is compared with its reviewed native source (SSIM > 0.99),
 checking scene order and preservation after packet repetition and muxing.
 It publishes hashes and measurements in `content/recording-production.json` and
 the original speech-screen results in `docs/recording-speech-screen.json`.
+That file also records speech-only forms separately from canonical captions;
+unexpanded comparison operators block the final report.
 The repository test rejects media changes that invalidate that evidence.
 
 Inspect slide sequences and encoded frames. Verify native dimensions, full

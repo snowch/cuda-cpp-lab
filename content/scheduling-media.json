@@ -1,53 +1,53 @@
 {
   "durationSeconds": 225,
-  "bytes": 11047808,
+  "bytes": 14600178,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
-      "end": 33.195,
+      "start": 0.0,
+      "end": 33.088,
       "title": "A multiply needs its loaded input."
     },
     {
       "id": "s02",
-      "start": 33.195,
-      "end": 62.165,
+      "start": 33.088,
+      "end": 62.059,
       "title": "One warp leaves waiting slots."
     },
     {
       "id": "s03",
-      "start": 62.165,
-      "end": 87.659,
+      "start": 62.059,
+      "end": 87.637,
       "title": "Another ready warp can issue."
     },
     {
       "id": "s04",
-      "start": 87.659,
-      "end": 111.915,
+      "start": 87.637,
+      "end": 111.893,
       "title": "Two waiting warps still leave gaps."
     },
     {
       "id": "s05",
-      "start": 111.915,
-      "end": 137.877,
+      "start": 111.893,
+      "end": 137.856,
       "title": "Readiness changes with the cycle."
     },
     {
       "id": "s06",
-      "start": 137.877,
-      "end": 164.565,
+      "start": 137.856,
+      "end": 164.544,
       "title": "More warps also add instructions."
     },
     {
       "id": "s07",
-      "start": 164.565,
-      "end": 192.216,
+      "start": 164.544,
+      "end": 192.195,
       "title": "Pause: shorten only the load wait."
     },
     {
       "id": "s08",
-      "start": 192.216,
-      "end": 224.579,
+      "start": 192.195,
+      "end": 224.557,
       "title": "Issue the ready warp\u2019s instruction."
     }
   ],
@@ -61,91 +61,91 @@
     {
       "id": "s01-c2",
       "start": 13.172,
-      "end": 31.775,
+      "end": 31.668,
       "text": "Our teaching scheduler gives each resident warp two repetitions of load, multiply, store. Resident means already assigned resources on one streaming multiprocessor, or SM. This chosen instruction stream does not trace PyTorch's implementation or compute its tensor values."
     },
     {
       "id": "s02-c1",
-      "start": 33.795,
-      "end": 46.467,
+      "start": 33.688,
+      "end": 46.36,
       "text": "A model cycle is one discrete step. Our machine can start at most one instruction per cycle. Load latency six means the dependent multiply cannot start until six cycles after its load."
     },
     {
       "id": "s02-c2",
-      "start": 46.687,
-      "end": 60.745,
+      "start": 46.58,
+      "end": 60.639,
       "text": "Warp zero starts its load at cycle zero. At cycles one through five it is waiting, so the issue slots are idle. The multiply starts at cycle six. These cycles are teaching assumptions, not measured GPU time."
     },
     {
       "id": "s03-c1",
-      "start": 62.765,
-      "end": 73.24,
+      "start": 62.659,
+      "end": 73.133,
       "text": "Now begin with two resident warps, both ready at cycle zero. The scheduler selects warp zero first, then searches from the following warp for the next ready instruction."
     },
     {
       "id": "s03-c2",
-      "start": 73.46,
-      "end": 86.239,
+      "start": 73.353,
+      "end": 86.217,
       "text": "At cycle one, warp zero is waiting but warp one is ready. Warp one starts its load. The SM can issue useful work while another warp waits; it does not need a separate arithmetic unit for each warp."
     },
     {
       "id": "s04-c1",
-      "start": 88.259,
-      "end": 98.712,
+      "start": 88.237,
+      "end": 98.691,
       "text": "At cycle two, both warps are waiting for their loaded inputs. Neither can start its multiply, so this issue slot is idle. Cycles three through five are idle too."
     },
     {
       "id": "s04-c2",
-      "start": 98.932,
-      "end": 110.495,
+      "start": 98.911,
+      "end": 110.473,
       "text": "Another resident warp helps only when it has an instruction ready to start. This scheduler skips waiting and completed warps. It never leaves a slot idle when an unfinished warp is ready."
     },
     {
       "id": "s05-c1",
-      "start": 112.515,
-      "end": 122.84,
+      "start": 112.493,
+      "end": 122.819,
       "text": "At cycle six, warp zero's first load is usable. Warp one's load started a cycle later, so it is still waiting. The scheduler starts warp zero's multiply."
     },
     {
       "id": "s05-c2",
-      "start": 123.06,
-      "end": 136.457,
+      "start": 123.039,
+      "end": 136.436,
       "text": "At cycle seven, warp one becomes ready and starts its multiply. The cards show state before the selected instruction starts. Registers belong to threads; the execution hardware is shared by resident warps."
     },
     {
       "id": "s06-c1",
-      "start": 138.477,
-      "end": 149.336,
+      "start": 138.456,
+      "end": 149.315,
       "text": "Keep load latency at six and compare one, two and four resident warps. Idle slots fall from ten to eight to four. Four warps still do not fill every wait in this example."
     },
     {
       "id": "s06-c2",
-      "start": 149.556,
-      "end": 163.145,
+      "start": 149.535,
+      "end": 163.124,
       "text": "Each warp adds six instructions, so issued work rises from six to twelve to twenty-four. These different workloads do not establish a speedup. The model ends when the final store starts, without a later store-completion wait."
     },
     {
       "id": "s07-c1",
-      "start": 165.165,
-      "end": 176.067,
+      "start": 165.144,
+      "end": 176.045,
       "text": "Apply the readiness rule to a new case: two resident warps, with load latency three instead of six. Warp zero loads at cycle zero and warp one loads at cycle one."
     },
     {
       "id": "s07-c2",
-      "start": 176.287,
-      "end": 186.996,
+      "start": 176.265,
+      "end": 186.975,
       "text": "Predict whether cycle two is idle. Then choose which warp can start its multiply at cycle three. Pause and explain using the load start times, before checking the answer."
     },
     {
       "id": "s08-c1",
-      "start": 192.816,
-      "end": 204.933,
+      "start": 192.795,
+      "end": 204.912,
       "text": "At cycle two, neither load is ready, so the slot is idle. At cycle three, warp zero's input is usable, while warp one must wait until cycle four. Warp zero starts its multiply."
     },
     {
       "id": "s08-c2",
-      "start": 205.153,
-      "end": 223.159,
+      "start": 205.132,
+      "end": 223.137,
       "text": "Return to Chapter Seven and distinguish a waiting warp from an idle issue slot. This single-issue, round-robin machine omits resource-limited residency, bandwidth competition and real instruction latencies. More resident warps alone do not prove higher GPU performance."
     }
   ],
@@ -164,11 +164,11 @@
     },
     "durations": {
       "s01-c1": 12.352,
-      "s01-c2": 18.603,
+      "s01-c2": 18.496,
       "s02-c1": 12.672,
       "s02-c2": 14.059,
       "s03-c1": 10.475,
-      "s03-c2": 12.779,
+      "s03-c2": 12.864,
       "s04-c1": 10.453,
       "s04-c2": 11.563,
       "s05-c1": 10.325,
@@ -179,6 +179,29 @@
       "s07-c2": 10.709,
       "s08-c1": 12.117,
       "s08-c2": 18.005
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

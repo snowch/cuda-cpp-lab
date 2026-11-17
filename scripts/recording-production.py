@@ -29,8 +29,11 @@ def read(path):
 
 
 def write(path, value):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False) + '\n')
+    path=Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pending=path.with_name('.'+path.name+'.pending')
+    pending.write_text(json.dumps(value, indent=2, ensure_ascii=False) + '\n')
+    pending.replace(path)
 
 
 def digest(path):
@@ -62,11 +65,19 @@ def spoken(text):
         'keepCategory': 'keep category', 'C[0,0]': 'C at row zero, column zero',
         'expf(x)': 'exp F of x', '__syncthreads()': 'sync threads',
         'input[lane × stride]': 'input at lane times stride',
+        '__syncthreads': 'sync threads', '__float2half_rn': 'float to half, round to nearest,',
+        '__half2float': 'half to float', 'fill_fragment': 'fill fragment', 'WMMA': 'W M M A',
+        'sizeof(x)': 'size of x', 'expf': 'exp F',
     }
     for token, replacement in aliases.items():
         text = text.replace(token, replacement)
     text = re.sub(r'(?<!\[)\bCUDA\b', '[CUDA](/ˈkuːdə/)', text, flags=re.I)
     text = text.replace('Which value will main print this time?', 'Which value will the function main print this time?')
+    text = text.replace('value < 0.0f', 'whether value is less than zero')
+    text = text.replace('Check i < n.', 'Check whether i is less than n.')
+    text = text.replace('i < n protects', 'the check that i is less than n protects')
+    text = text.replace('Keep the barrier outside t < readers.',
+                        'Keep the barrier outside the condition t is less than readers.')
     return text.replace('↔', 'to').replace('×', 'times').replace('→', 'then')
 
 
@@ -149,7 +160,9 @@ def distribute(plan, skill):
         durations = {}
         for cue in r['cues']:
             key = r['key']+'__'+cue['id']
-            shutil.copyfile(worker/'audio'/f'{key}.wav', folder/f'{cue["id"]}.wav')
+            pending=folder/f'.{cue["id"]}.pending.wav'
+            shutil.copyfile(worker/'audio'/f'{key}.wav',pending)
+            pending.replace(folder/f'{cue["id"]}.wav')
             durations[cue['id']] = speech['durations'][key]
         write(folder/'durations.json', {**speech, 'durations': durations,
               'skill': {'repository': SKILL_URL, 'commit': SKILL_COMMIT},

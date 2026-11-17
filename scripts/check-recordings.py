@@ -113,6 +113,8 @@ def report(plan):
     assert {s['id'] for s in speech_rows}=={r['key']+'__'+c['id'] for r in plan['recordings'] for c in r['cues']}
     reviews=read(WORK/'speech-review.json')
     assert set(flagged)==set(reviews),'Every raw ASR flag needs an explicit review'
+    spoken_forms={r['key']+'__'+c['id']:c.get('say',c['text']) for r in plan['recordings'] for c in r['cues']}
+    assert not any(re.search(r'[<>]',say) for say in spoken_forms.values()),'Expand code comparisons before narration'
     entries=[]
     for r in plan['recordings']:
         media=metadata(r);video=ROOT/r['video']
@@ -136,7 +138,7 @@ def report(plan):
           'asrModel':'small.en','asrCueCount':len(speech_rows),'rawFlagCount':len(flagged),'recordings':entries,
           'reviewLimits':'Author review and independent ASR; no human listening approval or learner study.'})
     write(ROOT/'docs/recording-speech-screen.json',{'model':'small.en','method':'Original pinned record-demo checker in resumable batches',
-          'rawFlags':flagged,'reviews':reviews,'scenes':speech_rows})
+          'rawFlags':flagged,'reviews':reviews,'spokenForms':spoken_forms,'scenes':speech_rows})
     print('Production evidence:',len(entries),'videos,',len(speech_rows),'screened cues,',len(flagged),'reviewed raw flags',flush=True)
 
 

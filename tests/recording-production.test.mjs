@@ -24,6 +24,10 @@ test('every published recording matches the decoded and speech-screened producti
   assert.equal(new Set(screen.scenes.map(cue => cue.id)).size, screen.scenes.length);
   assert.deepEqual(Object.keys(screen.rawFlags).sort(), Object.keys(screen.reviews).sort());
   const screened = new Set(screen.scenes.map(cue => cue.id));
+  assert.deepEqual(Object.keys(screen.spokenForms).sort(), [...screened].sort());
+  for (const spoken of Object.values(screen.spokenForms)) {
+    assert.doesNotMatch(spoken, /[<>]/, 'Code comparisons need spoken words; Kokoro can omit symbolic operators');
+  }
   let cues = 0;
   for (const item of production.recordings) {
     const directory = item.video.slice(0, item.video.lastIndexOf('/'));
