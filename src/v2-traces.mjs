@@ -9,7 +9,7 @@ import { escape, table } from './continuation-ui.mjs';
 const vector = values => '[' + values.join(', ') + ']';
 const float = value => Number.isInteger(value) ? value.toFixed(1) : Number(value.toPrecision(7)).toString();
 const floats = values => vector(values.map(float));
-const metrics = rows => table(['Quantity', 'Result'], rows, 'Run summary');
+const metrics = rows => table(['Quantity', 'Result'], rows, 'Model result');
 const steps = (events, heading, headers, rows) => events.map((event, index) =>
   table(headers, rows(event), typeof heading === 'string' ? heading + ' ' + (index + 1) : heading(event)));
 const single = html => [html];
@@ -34,10 +34,10 @@ const traces = {
     };
   },
   divergence(pattern) {
-    const { lanes, trace, paths, utilisation } = branchWarp({ pattern, negativeOps: 1 });
+    const { lanes, trace, paths } = branchWarp({ pattern, negativeOps: 1 });
     return {
       answer: paths,
-      summary: metrics([['Paths taken', paths], ['Active lane slots', (utilisation * 100).toFixed(1) + '%']]),
+      summary: metrics([['Paths taken', paths]]),
       frames: steps(trace, event => event.label, ['Lane', 'Input', 'Participation', 'Output from this path'],
         event => lanes.map(lane => [lane.id, float(lane.input), event.mask.includes(lane.id) ? 'Active' : 'Other path',
           event.mask.includes(lane.id) ? float(lane.output) : '—'])),

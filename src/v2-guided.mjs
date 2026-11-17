@@ -61,7 +61,7 @@ export function mountGuided(root) {
     if (!state.ran) {
       summary.replaceChildren();
       trace.replaceChildren();
-      feedback.textContent = 'Predict the result, then run the model.';
+      feedback.textContent = 'Optionally enter a prediction, then click Run model.';
       return;
     }
     run = runTrace(slug, currentValue());

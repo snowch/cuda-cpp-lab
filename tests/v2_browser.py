@@ -48,7 +48,8 @@ def check_v2(browser, url):
             expect(page.locator('.v2-hw-chip [data-hardware="memory"]')).to_have_count(0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), route
             workbench = page.frame_locator(f'[data-kernel-workbench="{mode}"]')
-            expect(workbench.get_by_role('button', name='Export .cu')).to_be_visible()
+            expect(workbench.get_by_text('Editor tools', exact=True)).to_be_visible()
+            expect(workbench.get_by_role('button', name='Export .cu')).to_be_hidden()
             if mode == 'hello':
                 expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'output\[0\] = 42\.0f'))
                 expect(workbench.get_by_role('textbox', name='CUDA source')).to_have_value(re.compile(r'hello<<<1, 1>>>'))
@@ -102,7 +103,7 @@ def check_v2(browser, url):
             expect(page.get_by_text('Compare your explanation')).to_be_visible()
 
         page.goto(url + 'v2/reduction.html')
-        page.get_by_text('Explore the execution model').click()
+        page.locator('.v2-starter-model > summary').click()
         expect(page.locator('.v2-diagram')).to_contain_text('All threads arrive before any partner read.')
         choice = page.locator('#v2-choice')
         choice.select_option('0')
@@ -128,7 +129,7 @@ def check_v2(browser, url):
     expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
     expect(page.get_by_role('link', name='GPU Lab V1', exact=True)).to_have_count(0)
     page.goto(url + 'v2/reduction.html')
-    page.get_by_text('Explore the execution model').click()
+    page.locator('.v2-starter-model > summary').click()
     expect(page.locator('#v2-source')).to_be_visible()
     expect(page.get_by_role('button', name='Run model')).to_be_disabled()
     expect(page.locator('#v2-result')).to_be_hidden()

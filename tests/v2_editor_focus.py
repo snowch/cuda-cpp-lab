@@ -42,7 +42,7 @@ def check_v2_editor_focus(browser, url, root):
                 show = frame.get_by_role('button', name='Show target line')
                 show_launch = frame.get_by_role('button', name='Show launch', exact=True)
                 expect(editor).to_have_class('has-source-focus')
-                expect(frame.locator('#source-focus-help')).to_contain_text('leave it unchanged for now')
+                expect(frame.locator('#source-focus-help')).to_contain_text('stay unchanged for now')
                 expect(editor).to_have_attribute('aria-describedby', 'source-focus-help source-focus-missing')
                 starter = editor.input_value()
                 assert editor.evaluate('''e => {
@@ -109,6 +109,7 @@ def check_v2_editor_focus(browser, url, root):
                 assert editor.evaluate(target_visible), (width, theme, 'keyboard target')
                 assert editor.evaluate('e => e.selectionStart === e.selectionEnd'), 'Finding a line must not select code for accidental replacement.'
                 assert editor.input_value() == edited
+                frame.get_by_text('Editor tools', exact=True).click()
                 with page.expect_download() as info:
                     frame.get_by_role('button', name='Export .cu').click()
                 assert info.value.suggested_filename == 'hello.cu'

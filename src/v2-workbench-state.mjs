@@ -4,6 +4,7 @@ import {registerExperiment} from './experiment-state.mjs';
 const editor = document.getElementById('source');
 const status = document.getElementById('status');
 const diagnostics = document.getElementById('diagnostics');
+const messages = document.getElementById('compiler-messages');
 const ptx = document.getElementById('ptx');
 const ptxPanel = document.getElementById('ptx-panel');
 const consoleOutput = document.getElementById('program-output');
@@ -20,6 +21,7 @@ registerExperiment('v2-cuda-workbench', () => ({
   console: consoleOutput.textContent, consoleHidden: consoleOutput.hidden,
   operations: operations.querySelector('pre').textContent, operationsHidden: operations.hidden,
   status: status.textContent, error: status.dataset.error === 'true',
+  outcome: status.dataset.outcome ?? '', messagesOpen: messages.open,
   diagnostics: diagnostics.textContent, diagnosticsHidden: diagnostics.hidden,
   ptx: ptx.textContent, ptxHidden: ptxPanel.hidden,
 }), saved => {
@@ -39,8 +41,12 @@ registerExperiment('v2-cuda-workbench', () => ({
   operations.hidden = saved.operationsHidden;
   status.textContent = saved.status;
   status.dataset.error = String(Boolean(saved.error));
+  status.dataset.outcome = saved.outcome === 'program-exit' ? 'program-exit' : '';
   diagnostics.textContent = saved.diagnostics;
   diagnostics.hidden = saved.diagnosticsHidden;
+  messages.hidden = saved.diagnosticsHidden;
+  messages.open = saved.error || saved.messagesOpen === true;
+  messages.dataset.error = String(Boolean(saved.error));
   ptx.textContent = saved.ptx;
   ptxPanel.hidden = saved.ptxHidden;
 });

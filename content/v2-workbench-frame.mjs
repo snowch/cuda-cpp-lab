@@ -39,11 +39,15 @@ html[data-inline] button { background:#223d35; border-color:#557268; color:#edf8
 html[data-inline] button.primary { background:#a7e3c8; color:#172f29; border-color:#a7e3c8; }
 html[data-inline] :focus-visible { outline-color:#a7e3c8; }
 html[data-inline] #status,html[data-inline] tbody td:last-child { color:#a7e3c8; }
-html[data-inline] #status[data-error="true"],html[data-inline] #diagnostics { color:#ffaea2; }
+html[data-inline] #status[data-error="true"],html[data-inline] #compiler-messages[data-error="true"] #diagnostics { color:#ffaea2; }
+html[data-inline] #status[data-outcome="program-exit"] { color:#b8cdc4; }
 html[data-inline] .card table th,html[data-inline] .card table td { border-color:#49615c; }
 html[data-inline] .card pre { background:#0f211d; border-color:#49615c; }
-html[data-inline] .kernel-tools { display:flex; flex-wrap:wrap; gap:6px; }
-html[data-inline] .kernel-tools button { min-height:34px; font-size:.8rem; }
+html[data-inline] .kernel-tools { margin:0; }
+html[data-inline] .kernel-tools summary { min-height:44px; padding:10px 2px; cursor:pointer; }
+html[data-inline] .kernel-tools[open] { flex-basis:100%; }
+html[data-inline] .kernel-tool-actions { display:flex; flex-wrap:wrap; gap:6px; }
+html[data-inline] .kernel-tools button { min-height:44px; font-size:.8rem; }
 html[data-inline] .editor-label { align-items:center; flex-wrap:wrap; }
 html[data-inline] .editor-label label { font-family:var(--mono); }
 html[data-inline] .controls { align-items:center; justify-content:flex-end; }
@@ -54,7 +58,7 @@ html[data-inline] .source-focus strong { color:#a7e3c8; }
 html[data-inline] .source-focus code { font-family:var(--mono); }
 html[data-inline="hello"] textarea { font-size:16px; }
 html[data-inline] .source-focus button { margin-top:8px; min-height:44px; }
-html[data-inline] #source-focus-missing { margin-top:8px; color:#ffaea2; }
+html[data-inline] #source-focus-missing { margin-top:8px; color:#b8cdc4; }
 html[data-inline] .source-editor { background:#0f211d; border-radius:7px; }
 html[data-inline] .source-editor textarea {
   --source-neutral-ink:#edf8f1;
@@ -111,8 +115,13 @@ if (document.documentElement.dataset.inline) {
   ${mountFirstKernelFocus.toString()}
   if (inlineMode === 'hello') mountFirstKernelFocus(editor, reset);
   const filename = profile === 'hello' ? 'hello.cu' : advanced || inlineMode === 'coalescing' ? inlineMode + '.cu' : 'runKernel.cu';
-  const toolbar = document.createElement('div');
+  const toolbar = document.createElement('details');
   toolbar.className = 'kernel-tools';
+  toolbar.id = 'editor-tools';
+  const toolTitle = document.createElement('summary');
+  toolTitle.textContent = 'Editor tools';
+  const toolActions = document.createElement('div');
+  toolActions.className = 'kernel-tool-actions';
   const exportSource = document.createElement('button');
   exportSource.type = 'button';
   exportSource.textContent = 'Export .cu';
@@ -127,7 +136,10 @@ if (document.documentElement.dataset.inline) {
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   });
-  toolbar.append(reset, exportSource);
+  toolActions.append(reset, exportSource);
+  toolbar.append(toolTitle, toolActions);
+  const compilerNote = document.querySelector('.card > .note');
+  if (compilerNote) toolbar.append(compilerNote);
   const label = document.querySelector('.editor-label');
   label.querySelector('label').textContent = filename;
   editor.setAttribute('aria-label', 'CUDA source');

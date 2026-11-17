@@ -5,7 +5,7 @@ export function mountFirstKernelFocus(editor, reset) {
   const view = document.defaultView;
   const guidance = document.createElement('div');
   guidance.className = 'source-focus';
-  guidance.innerHTML = `<p id="source-focus-help">The <code>hello</code> kernel and its launch in <code>main()</code> are highlighted. <strong>Change this:</strong> the value assigned to <code>output[0]</code> (<code>42.0f</code> in the starter). The remaining code allocates memory, checks errors and reads back the result; you can leave it unchanged for now.</p>
+  guidance.innerHTML = `<p id="source-focus-help">The starter highlights <code>hello</code> and its launch in <code>main()</code>. <strong>Change this:</strong> the value assigned to <code>output[0]</code>. The memory setup, error checks and readback can stay unchanged for now.</p>
     <button type="button">Show target line</button>
     <button type="button" data-show-launch>Show launch</button>
     <p id="source-focus-missing" hidden>The output assignment in hello could not be found. Restore starter to return to the example.</p>`;
@@ -47,9 +47,8 @@ export function mountFirstKernelFocus(editor, reset) {
     target = assignment ? header.index + header[0].length + assignment.index : null;
     launch = /\bhello\s*<<<[^;]*?>>>\s*\([^;]*?\)\s*;/.exec(code);
     missing.hidden = Boolean(kernel && target !== null && launch);
-    missing.textContent = missing.hidden ? '' : !kernel ? 'The complete hello kernel could not be found. Restore starter to return to the example.' :
-      target === null ? 'The output assignment in hello could not be found. Restore starter to return to the example.' :
-        'The launch of hello could not be found. Restore starter to return to the example.';
+    const missingPart = !kernel ? 'complete hello kernel' : target === null ? 'output assignment in hello' : 'launch of hello';
+    missing.textContent = missing.hidden ? '' : 'The highlight cannot find the ' + missingPart + ' in this edit. You can still compile and run. To keep this edit before restoring the example, open Editor tools and use Export .cu before Restore starter.';
     show.disabled = target === null;
     showLaunch.disabled = !launch;
     editor.classList.toggle('has-source-focus', Boolean(kernel || launch));

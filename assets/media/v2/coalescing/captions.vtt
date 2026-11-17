@@ -1,34 +1,34 @@
 WEBVTT
 
-00:00:00.500 --> 00:00:13.735
-runKernel launches one warp of 32 threads. stride sets the distance between input indices, while output remains contiguous. n counts outputs; the input allocation must also cover the largest strided read.
+00:00:00.500 --> 00:00:14.005
+main launches runKernel with one warp of 32 threads. stride sets the distance between input indices, while output remains contiguous. n counts outputs; the input allocation must also cover the largest strided read.
 
-00:00:13.735 --> 00:00:16.975
+00:00:14.005 --> 00:00:17.245
 The host groups returned indices into sectors.
 
-00:00:18.475 --> 00:00:19.965
+00:00:18.745 --> 00:00:20.235
 Lane addresses.
 
-00:00:19.965 --> 00:00:22.990
+00:00:20.235 --> 00:00:23.260
 Each lane selects input[lane × stride].
 
-00:00:22.990 --> 00:00:24.515
+00:00:23.260 --> 00:00:24.785
 Group addresses.
 
-00:00:24.515 --> 00:00:27.185
+00:00:24.785 --> 00:00:27.455
 Aligned sectors group the requested words.
 
-00:00:27.185 --> 00:00:28.540
+00:00:27.455 --> 00:00:28.810
 Return values.
 
-00:00:28.540 --> 00:00:31.555
+00:00:28.810 --> 00:00:31.825
 Each lane writes its contiguous output slot.
 
-00:00:33.055 --> 00:00:36.630
+00:00:33.325 --> 00:00:36.900
 One warp issues a load with an address for each active lane.
 
-00:00:36.630 --> 00:00:39.900
+00:00:36.900 --> 00:00:40.170
 The memory path groups these addresses into requests.
 
-00:00:39.900 --> 00:00:45.865
-Caches may supply data before device memory is accessed; a sector count is not a count of DRAM reads.
+00:00:40.170 --> 00:00:46.560
+Caches may supply data before device memory is accessed; a sector count does not measure device-memory traffic.

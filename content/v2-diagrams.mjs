@@ -38,7 +38,7 @@ function sectors() {
   return figure('Eight lanes accessing aligned global memory', `<table class="v2-grid-table">
     <thead><tr><td></td><th scope="col">Bytes 0–31</th><th scope="col">Bytes 32–63</th></tr></thead>
     <tbody>${cases.join('')}</tbody></table>`,
-    'The same eight lanes each read one FP32 word. Spreading out their addresses changes which sectors supply the values.');
+    'This small diagram shows eight lanes; the program launches 32. Each lane reads one FP32 word. Spreading out the addresses changes which sectors supply those values.');
 }
 
 function tileReuse() {
@@ -59,8 +59,8 @@ const diagrams = {
   'more-threads-than-elements': indices,
   'from-cpu-array-to-gpu-result': () => flow('The two arrays on each side of a launch', [
     ['CPU input x', 'The host copies values to the GPU.'],
-    ['GPU input d_x', 'Each kernel thread reads its element.'],
-    ['GPU output d_y', 'Each kernel thread writes its result.'],
+    ['GPU input d_x', 'Threads with i < n read their input elements.'],
+    ['GPU output d_y', 'Those threads write matching output elements.'],
     ['CPU output y', 'The host copies the completed results back.'],
   ], 'Allocation creates the GPU storage. The two copies move values across the CPU–GPU boundary.'),
   coalescing: sectors,
@@ -69,7 +69,7 @@ const diagrams = {
     ['Wait for the value', 'A cannot multiply yet. A ready warp B can issue here.'],
     ['Multiply', 'A can issue when its value arrives.'],
   ], 'This dependency belongs to warp A. It need not stop warp B.'),
-  reduction: () => flow('One stage of a block reduction', [
+  reduction: () => flow('From shared inputs to the next reduction stage', [
     ['Write inputs', 'Each thread writes its own shared word.'],
     ['Block barrier', 'All threads arrive before any partner read.'],
     ['Read and add', 'Selected threads write partial sums.'],
@@ -78,12 +78,12 @@ const diagrams = {
   matmul: tileReuse,
   'tensor-cores': () => flow('Inputs and accumulator in one WMMA operation', [
     ['A and B fragments', 'Each operand holds part of an FP16 tile.'],
-    ['Warp multiplies', 'All lanes issue the matrix operation together.'],
+    ['Warp multiplies', 'The warp executes a collective matrix operation; all 32 lanes participate.'],
     ['Accumulator fragment', 'Add the dot products to the FP32 values already here.'],
   ], 'The warp can use the updated accumulator again with a new pair of input tiles.'),
   attention: () => flow('How online attention carries state between tiles', [
     ['Score tile', 'Compare this tile’s scores with the running maximum.'],
-    ['Rescale old totals', 'If the maximum rises, shrink the previous denominator and weighted sum.'],
+    ['Rescale old totals', 'Multiply the earlier denominator and weighted sum by exp(old maximum − new maximum).'],
     ['Update totals', 'Add this tile’s contributions and pass the new state forward.'],
   ], 'After the final tile, divide the weighted sum by the denominator.'),
   inference: () => figure('One layer of the key-value cache during decode',

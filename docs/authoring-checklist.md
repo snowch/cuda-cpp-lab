@@ -36,6 +36,38 @@ Use the book’s existing audience, curriculum and shared components as constrai
   inspecting the result or checking its teaching purpose. Do not claim learner
   testing without observations from learners.
 
+## Clear wording and uncluttered UI
+
+Review learner-facing headings, instructions, labels, examples and feedback sentence
+by sentence against the stated prerequisites.
+
+- [ ] Make each sentence's role clear: context, explanation, learner action,
+  automatic behaviour or result interpretation. Distinguish prepared inputs and
+  setup from changes the learner must make.
+- [ ] Name the actual control or editable location, exact change, when to run and
+  output fields to inspect. Follow the action in the interface; never ask the
+  learner to edit a read-only excerpt or inspect an output that is not provided.
+- [ ] Give comparisons a question and name their quantities and units. Define
+  needed terms before relying on them; explain only helpers needed for the task.
+  Distinguish observations, illustrative models, assumptions and production claims.
+- [ ] Keep one progression: purpose → question → prepared state → action → result
+  → explanation → next experiment. Essential instructions stay visible. Remove
+  repetition and filler instead of adding more disclosures.
+- [ ] Collapse only optional inspection, notes, references or alternate explanations.
+  Use descriptive labels, merge overlapping sections, and nest disclosures only
+  for a clear benefit such as comparing an answer after attempting a question.
+- [ ] Make the primary action prominent. Put unrelated exports and diagnostics in
+  optional tools; show secondary controls and status when useful. Keep execution
+  errors visible and distinguish them from program-written checks and predictions.
+  A valid changed result must not be labelled an execution failure merely because
+  it differs from the original example.
+- [ ] Keep terminology, headings and visual treatment consistent; preserve readable
+  prose and sufficient code, diagram and result width.
+- [ ] For substantive changes, run original examples and suggested edits as a
+  learner, including relevant sizes, themes and keyboard paths. Preserve saved
+  work. Report functional verification separately from learning effectiveness:
+  passing tests does not demonstrate understanding.
+
 ## Learning journey
 
 - [ ] Name the calculation, inputs, destination or comparison in titles and instructions:

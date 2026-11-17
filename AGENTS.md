@@ -8,6 +8,11 @@ small copy changes: review the preceding, changed and following sections in the 
 page before marking the change complete. Passing automated checks does not replace
 that review.
 
+Apply the checklist's **Clear wording and uncluttered UI** review to headings,
+instructions, labels, examples and feedback. Verify requested edits and comparisons
+through the actual controls, distinguish execution from example/prediction checks,
+and preserve saved learner work.
+
 For every new or edited learner-facing page, exercise, diagram or recording,
 use both a relevant design/UX skill and a learning/instructional-design skill when
 available. Complete the checklist’s [design and learning review](docs/authoring-checklist.md#design-and-learning-review)

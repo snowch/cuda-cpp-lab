@@ -2,6 +2,7 @@
 import { verificationCase, gridStride, blockScan, residency, checkSoftmax, analyseBenchmark } from './v2-practical-model.mjs';
 import { escape } from './continuation-ui.mjs';
 import { registerExperiment } from './experiment-state.mjs';
+import { practicalActivities } from './v2-practical-instructions.mjs';
 const f=v=>Number.isFinite(v)?(Number.isInteger(v)?v.toFixed(1):Number(v.toPrecision(6)).toString()):String(v);
 const row=(values)=>'<tr>'+values.map(v=>`<td>${escape(v)}</td>`).join('')+'</tr>';
 const table=(caption,headers,rows)=>`<div class="v2-practical-table"><table class="v2-result-table"><caption>${caption}</caption><thead><tr>${headers.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`;
@@ -9,7 +10,7 @@ function calculate(slug,values) {
  const n=Number(values.n),prediction=Number(values.prediction);
  if(slug==='verify-every-output') {
   const m=verificationCase(values.kind,values.candidate);
-  return {message:m.ok?'All four values pass this case.':'Verification failed: '+m.failures.length+' mismatches; first index '+m.first+'.',html:table('Matrix result comparison · FP32 tolerance',['Index','Candidate','CPU reference','Check'],m.expected.map((v,i)=>[i,f(m.actual[i]),f(v),m.failures.some(x=>x.index===i)?'Mismatch':'Pass']))};
+  return {message:m.ok?'All four values pass this case.':'Candidate comparison: '+m.failures.length+' mismatches; first index '+m.first+'. The model ran successfully; inspect the differing values.',html:table('Matrix result comparison · FP32 tolerance',['Index','Candidate','CPU reference','Check'],m.expected.map((v,i)=>[i,f(m.actual[i]),f(v),m.failures.some(x=>x.index===i)?'Mismatch':'Pass']))};
  }
  if(slug==='grid-stride-loops') {
   const m=gridStride(n,Number(values.blocks)),visits=m.visits[0].length;
@@ -26,7 +27,7 @@ function calculate(slug,values) {
  }
  if(slug==='softmax-capstone') {
   const m=checkSoftmax(values.kind,values.values);
-  return {message:m.ok?'This row passes elementwise tolerance and row-sum checks. Continue with other shapes.':`Row failed: ${m.failures.length} element mismatches; sum = ${f(m.sum)}. Compare the first differing column.`,html:table('Softmax row · atol 1e-5, rtol 1e-4',['Column','Your value','Stable reference'],m.expected.map((v,i)=>[i,f(m.actual[i]),f(v)]))};
+  return {message:m.ok?'This row passes elementwise tolerance and row-sum checks. Continue with other shapes.':`Row comparison: ${m.actual.length} values for ${m.expected.length} columns; ${m.failures.length} element mismatches; sum = ${f(m.sum)}. Compare Your value with Stable reference.`,html:table('Softmax row · atol 1e-5, rtol 1e-4',['Column','Your value','Stable reference'],Array.from({length:Math.max(m.actual.length,m.expected.length)},(_,i)=>[i,i<m.actual.length?f(m.actual[i]):'Missing',i<m.expected.length?f(m.expected[i]):'No column']))+'<p>The row sum must be within 1e-4 of 1.0, and every column must pass its elementwise comparison.</p>'};
  }
  const m=analyseBenchmark(JSON.parse(values.report));
  return {message:`${m.gpu}: ${m.elements} checked elements. Separate/fused median ratio: ${m.ratio.toFixed(3)}. ${m.overlap?'Sample ranges overlap; investigate variability.':'Sample ranges do not overlap in this report.'}`,html:table('Imported kernel-only timings · milliseconds per variant',['Variant','Median (ms)','Min (ms)','Max (ms)'],m.rows.map(r=>[r.name,r.median.toPrecision(6),r.min.toPrecision(6),r.max.toPrecision(6)]))+'<p>Imported values are your report, not browser measurements. The schema checks report completeness; it cannot authenticate how the GPU run was performed.</p>'};
@@ -39,7 +40,9 @@ export function mountPractical(root=document) {
   const read=()=>Object.fromEntries(fields.map(f=>[f.name,f.value]));
   function render() {
    result.hidden=true;result.replaceChildren();
-   feedback.textContent='Choose a case, then run or check it.';
+   feedback.textContent=practicalActivities[slug].ready;
+   const prepared=activity.querySelector('[data-practical-inputs]');
+   if(prepared){const inputs=verificationCase(state.values.kind,'correct');prepared.textContent='Matrix A: ['+inputs.a.map(f).join(', ')+']; Matrix B: ['+inputs.b.map(f).join(', ')+']. Each list stores two rows of two values.';}
    if(state.ran){try{const r=calculate(slug,state.values);feedback.textContent=r.message;result.innerHTML=r.html;result.hidden=false;}catch(error){feedback.textContent=error instanceof SyntaxError?'Invalid JSON. Paste a complete benchmark report.':error.message;}}
   }
   function save(){try{localStorage.setItem(key,JSON.stringify(state));}catch{/* Storage is optional. */}}

@@ -10,13 +10,22 @@ CASES = [
  ('verify-every-output', [('correctIndex = true','correctIndex = false')], 'mismatches: 33'),
  ('grid-stride-loops', [('output[i] = input[i] * 2.5f;', 'if (i != 6) output[i] = input[i] * 2.5f;')], 'mismatches: 1'),
  ('grid-stride-loops', [('count = 70','count = 0')], 'no allocation or launch'),
+ ('grid-stride-loops', [('count = 70','count = 31')], 'mismatches: 0'),
+ ('grid-stride-loops', [('count = 70','count = 33')], 'mismatches: 0'),
  ('grid-stride-loops', [('count = 70','count = 129'),('blocks = 2','blocks = 1')], 'mismatches: 0'),
  ('multi-block-scan', [('if (i < n) offsets[i] =', 'if (i < n && i != 0) offsets[i] =')], 'mismatches: 1'),
  ('multi-block-scan', [('count = 70','count = 0')], 'no allocation or launch'),
  ('multi-block-scan', [('count = 70','count = 65')], 'mismatches: 0'),
+ ('multi-block-scan', [('count = 70','count = 31')], 'mismatches: 0'),
+ ('multi-block-scan', [('count = 70','count = 33')], 'mismatches: 0'),
  ('multi-block-scan', [('count = 70','count = 1024')], 'mismatches: 0'),
  ('softmax-capstone', None, 'mismatches: 102'),
  ('softmax-capstone', 'reference', 'mismatches: 0'),
+ ('softmax-capstone', [('rows = 3','rows = 2'),('columns = 33','columns = 7')], 'mismatches: 0'),
+ ('softmax-capstone', [('columns = 33','columns = 31')], 'mismatches: 0'),
+ ('softmax-capstone', [('rows = 3','rows = 5'),('columns = 33','columns = 65')], 'mismatches: 0'),
+ ('softmax-capstone', [('rows = 3','rows = 1'),('columns = 33','columns = 3'),('float input[count], actual[count], expected[count];', 'float input[count], actual[count], expected[count];\n    const float test[] = {-2.0f, 0.0f, 1.0f};'),('input[i] = shift + static_cast<float>((i * 7 + i / columns) % 17 - 8) * 0.25f;', 'input[i] = test[i];')], 'Row 0: 0.035'),
+ ('softmax-capstone', [('input[i] = shift + static_cast<float>((i * 7 + i / columns) % 17 - 8) * 0.25f;', 'input[i] = shift;')], 'mismatches: 0'),
  ('softmax-capstone', [('rows = 3','rows = 1'),('columns = 33','columns = 1')], 'mismatches: 0'),
  ('softmax-capstone', [('columns = 33','columns = 65'),('shift = 1000.0f','shift = 0.0f')], 'mismatches: 0'),
  ('softmax-capstone', [('rows = 3','rows = 128'),('columns = 33','columns = 1')], 'mismatches: 0'),
@@ -45,6 +54,8 @@ def check(browser,url,compiler):
         # Deliberately failing programs must also report a non-zero process exit.
         if expected in ['mismatches: 33','mismatches: 102','mismatches: 1']:
             assert 'Ran main() and the kernel' not in page.locator('#status').inner_text()
+            assert page.locator('#status').get_attribute('data-error') == 'false'
+            assert page.locator('#status').get_attribute('data-outcome') == 'program-exit'
         else:
             assert page.locator('#status').inner_text()=='Ran main() and the kernel in GPGPU-Sim.'
         print('PASS practical CUDA',slug,changes,flush=True)

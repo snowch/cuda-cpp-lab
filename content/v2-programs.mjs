@@ -5,23 +5,23 @@ import { practicalLessons } from './v2-practical-catalog.mjs';
 import { practicalSource } from './v2-practical-source.mjs';
 
 export const programTasks = {
-  coalescing: 'Predict the sector count at stride 1. Run the program, change stride inside runKernel to 2, then try 32.',
-  scheduling: 'Change warpsPerBlock from 1 to 2. Predict the number of lanes and total elements. Check the launch and result before tracing a load dependency in the execution model.',
-  divergence: 'Set alternateSigns to false. Predict how many lanes take each branch and check the result for lane 1.',
-  reduction: 'Change threads from 4 to 8. Which values contribute to the new sum? Find the barrier between successive partner reads.',
-  'shared-memory-banks': 'Change stride from 32 to 33. Read the returned addresses and compare the calculated bank service rounds.',
-  matmul: 'Change tile from 2 to 4. Compare the calculated loads and check that both kernels still agree on the product.',
-  precision: 'Set narrowInputs to false. Compare the rounded operands and the FP32 sum. The inputs change format while the accumulator stays FP32.',
-  'tensor-cores': 'Change startingValue from 0.0f to 4.0f. Predict C[0,0] and inspect the generated PTX for the warp matrix instructions.',
-  attention: 'Change keysPerTile from 2 to 4. Predict the number of tiles and compare the weighted value in the two runs.',
-  inference: 'Change cached from 4 to 8. Predict how many more bytes the kernel reads from the old key-value cache.',
-  'matmul-investigation': 'Change tile from 2 to 4. Compare the product, calculated global loads, and shared storage per block.',
-  histograms: 'Replace the destination array with eight zeroes. Predict the bin counts and compare the results from the two atomic kernels.',
-  scan: 'Set inclusive to false. Explain why the new value at index 5 equals the old value at index 4.',
-  compaction: 'Change keepCategory from 0 to 1. Predict the token IDs that survive and check their order.',
-  progress: 'Change readers from 2 to 4. Compare the four outputs and identify which threads must still participate in the barrier.',
-  pipelines: 'Set overlap to false. Compare the final array and the number of chunk synchronizations in main().',
-  'token-routing': 'Set hot to true. Predict which token lands in slot 1 and check the ordering of tokens within each destination.',
+  "coalescing": "In runKernel, change stride from 1 to 2, then to 32. Before each run, predict Sectors touched. In Console, use input[i * stride] in the kernel to explain that count: why do neighbouring lanes share fewer sectors as stride increases?",
+  "scheduling": "Above doubleValues, change warpsPerBlock from 1 to 2. Predict Threads and values, then compare those fields in Console after running again. Both runs double every input; the optional model examines idle instruction slots rather than timing these runs.",
+  "divergence": "Above transform, change alternateSigns from true to false. Predict the value printed for lane 1, then run again and check Lane 0 and lane 1 in Console. Which branch now handles every input?",
+  "reduction": "Above sum, change threads from 4 to 8. Predict Sum for inputs 1.0 through 8.0, then run again and check Sum in Console. In the kernel, find the barrier that separates one stage’s writes from the next stage’s partner reads.",
+  "shared-memory-banks": "Above readWords, change stride from 32 to 33. Predict Modelled service rounds, then run again. Use words[lane * stride] in readWords and the word-index modulo 32 rule to explain why the calculated rounds change. These are address-model counts, not measured time.",
+  "matmul": "Above multiply, change tile from 2 to 4. Run again and check mismatches is 0. Compare input loads in this tiled algorithm and shared bytes per block in Console: how does reuse change the storage each block needs? The CPU reference checks the product; this is not a timing comparison.",
+  "precision": "Above dot, change narrowInputs from true to false. Predict whether FP32 accumulation will stay zero, then run again and read that field in Console. Use the conversion in dot to explain the difference. The program prints the sum, not the individual rounded operands.",
+  "tensor-cores": "Inside tile, change startingValue from 0.0f to 4.0f. Predict C[0,0], then run again and check C[0,0] in Console. Does the matrix operation replace the starting value or add to it? Optionally open Inspect generated PTX to locate the matrix instructions.",
+  "attention": "Above onlineAttention, change keysPerTile from 2 to 4. Predict Tiles, then run again. In Console, compare Tiles and weighted value: does processing fewer tiles change the final weighted value?",
+  "inference": "Above append, change cached from 4 to 8. Predict Old cache read in bytes, then run again. Compare Old cache read and append in Console: which grows with the old token count, and which stays fixed?",
+  "matmul-investigation": "Above multiply, change tile from 2 to 4. Run again and check mismatches is 0. Compare input loads in this tiled algorithm and shared bytes per block in Console. Explain the reuse/storage trade-off before choosing a real GPU measurement.",
+  "histograms": "In main(), replace the eight entries of categories with zeroes. Predict Counts, then run again and read Counts in Console. Next change blockCounts from true to false above histogram and rerun: should moving the counters change the four bin totals?",
+  "scan": "Above scan, change inclusive from true to false. Predict Index 5 and index 7, then run again and inspect both fields in Console. Explain why the exclusive value at index 5 omits that position’s own flag.",
+  "compaction": "Above flag, change keepCategory from 0 to 1. Predict the token IDs that survive, then run again. Read the Kept token lines in Console and check that IDs remain in their original input order.",
+  "progress": "Above exchange, change readers from 2 to 4. Predict the four Read outputs, then run again and inspect them in Console. In the kernel, check that the condition changes the readers after the barrier; every thread still reaches the barrier.",
+  "pipelines": "Above process, change overlap from true to false. Run again and compare First output, last output and chunk synchronizations in Console. Does the added synchronisation change the values? These counts do not measure physical overlap or elapsed time.",
+  "token-routing": "Above count, change hot from false to true. Predict which token appears in Slot 1, then run again. Inspect all Slot lines in Console: are tokens with the same destination still ordered by their original IDs?"
 };
 
 export const programNotes = {

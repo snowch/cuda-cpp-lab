@@ -15,12 +15,24 @@ import { renderV2Video } from './v2-lesson-video.mjs';
 import { renderFirstKernelVideo } from './v2-first-kernel-video.mjs';
 import { renderV2Brand } from './v2-brand.mjs';
 
+const modelTopics = {
+  scale: 'thread outputs', bounds: 'thread indices and bounds', copies: 'allocation and copies',
+  coalescing: 'lane addresses and sectors', scheduling: 'ready and waiting warps',
+  divergence: 'active lanes and branch paths', reduction: 'shared reduction stages',
+  'shared-memory-banks': 'shared-bank requests', matmul: 'input-tile reuse',
+  precision: 'input rounding', 'tensor-cores': 'warp-wide matrix calls',
+  attention: 'online softmax steps', inference: 'cache-data accounting',
+  'matmul-investigation': 'SM resource limits', histograms: 'atomic counter updates',
+  scan: 'prefix stages', compaction: 'stable write offsets', progress: 'barrier participation',
+  pipelines: 'buffer dependencies and overlap', 'token-routing': 'stable destination ranks',
+};
+
 const teaching = {
   scale: {
     before: 'Now give the kernel five input values. Each thread reads one input and writes the result to the same index in the output array.',
     terms: [['FP32', 'A floating-point value stored in four bytes.']],
     inspect: 'In runKernel, the index i selects both the input and the output. The f on 2.0f makes the multiplier an FP32 value.',
-    task: 'Run with a multiplier of 2.0. Change it to 3.0 and predict what thread 2 will write. Run again and follow that row.',
+    task: 'Set Multiplier to 2.0 and click Run model. In the Modelled values table, find Thread index 2. Set Multiplier to 3.0, predict that row’s Output and run again. Which inputs or indices change?',
     transfer: 'If you change the multiplier to 0.5, do the threads pick different inputs?',
     answer: 'No. The thread indices stay the same. The result at index 2 changes to 1.5 because its input is still 3.0.',
   },
@@ -29,7 +41,7 @@ const teaching = {
     terms: [['Block', 'A group of threads launched together.'],
       ['Bounds check', 'A condition that prevents a thread from accessing an array beyond its valid indices.']],
     inspect: 'blockIdx.x is the block number. blockDim.x is its size. threadIdx.x is the thread’s index within that block. Multiplying the block number by the block size and adding the local index gives i.',
-    task: 'Run two blocks of four threads. Then choose three threads per block and predict which thread indices will stop before reading or writing.',
+    task: 'The model calculates the block count for five inputs automatically. Set Threads per block to 4 and click Run model. Set it to 3, predict which Index i rows will show Skipped under Array access, then run again.',
     transfer: 'The input still has five values. Why does one block of eight threads skip the same indices as two blocks of four?',
     answer: 'Both launches produce indices 0 through 7. The grouping changes, and the condition i < n still allows indices 0 through 4.',
   },
@@ -38,7 +50,7 @@ const teaching = {
     terms: [['Host', 'The CPU side of a CUDA program.'], ['Device', 'The GPU side of a CUDA program.'],
       ['Allocation', 'A request for enough storage to hold the data.']],
     inspect: 'n is the number of elements in x. sizeof(x) gives its size in bytes. cudaMalloc reserves storage, and cudaMemcpy moves the values between the host and device.',
-    task: 'Run with five inputs and step through the four operations. Change to nine inputs and predict the size of each GPU allocation and the number of blocks.',
+    task: 'Set Number of inputs to 5 and click Run model. Use Next step to follow allocation, input copy, kernel and output copy. Set Number of inputs to 9, predict bytes per GPU array and the block count, then run and step again. Inspect the feedback and GPU input/output boxes.',
     transfer: 'With nine inputs, when can the CPU first read the results from y?',
     answer: 'After the device-to-host copy. The kernel has written nine results to the GPU output array before that copy fills the CPU array y.',
   },
@@ -48,6 +60,7 @@ export function renderV2Contents(href) {
   return `<header class="intro">
     <h1>Learn the GPU through CUDA C++</h1>
     <p class="lead">Start with one small CUDA C++ program. Edit code, predict the result and run an experiment. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
+    <p>Before you start, be comfortable with basic programming and array indexing. The course introduces CUDA and GPU architecture.</p>
     <p>No installation or GPU required. Compile and run CUDA C++ examples in this browser using GPU simulation.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
   </header>
@@ -72,13 +85,13 @@ function renderFirstKernel(workbenchHref, program) {
 
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
     <h2 id="v2-first-kernel">What is a CUDA kernel?</h2>
-    <p>A kernel is a function that GPU threads execute. In CUDA C++, <code>__global__</code> declares a kernel. Each thread launched for <code>hello</code> runs its body once. The body stores a value at <code>output[0]</code> in GPU memory.</p>
+    <p>A kernel is a function that runs on the GPU. A GPU thread is one execution of its instructions. In CUDA C++, <code>__global__</code> declares a kernel. Each thread launched for <code>hello</code> runs its body once. The body stores a value at <code>output[0]</code> in GPU memory.</p>
     ${codePanel({id: 'v2-first-source', label: 'CUDA C++ · Kernel definition', source: kernel, explainedLocally: true})}
     <h3>Launch the kernel from main()</h3>
     <p>The CPU code in <code>main()</code> reserves space for one <code>float</code> in GPU memory. It launches <code>hello</code> and passes the address of that space as <code>output</code>.</p>
     ${codePanel({id: 'v2-first-launch', label: 'CUDA C++ · Launch inside main()', source: launch, explainedLocally: true})}
     <p>The first <code>1</code> asks for one block, a group of GPU threads. The second <code>1</code> asks for one thread in that block. After the thread writes the value, <code>main()</code> copies it back and prints it.</p>
-    ${workbenchHref ? readerTask('In hello.cu, compile and run the starter. Change 42.0f to 7.0f in hello and predict the Console output. Compile and run again to check.', 'Try it') : ''}
+    ${workbenchHref ? readerTask('Click Compile and run to see 42.0 in Console. In the CUDA source editor, change output[0] = 42.0f to output[0] = 7.0f inside hello. Predict the next Console value, then click Compile and run again to check.', 'Try it') : ''}
     ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable CUDA program with one kernel and its launch') : `<details class="more-settings">
       <summary>Show complete program</summary>
       ${codePanel({id: 'v2-first-program', label: 'CUDA C++ · complete program', source: program, explainedLocally: true})}
@@ -99,8 +112,8 @@ function renderStarter(slug, workbenchHref) {
     ${codePanel({id: 'v2-starter-source', label: context.label, source: context.code, explainedLocally: true})}
     <p>${escape(context.explanation)}</p>
     ${codePanel({id: 'v2-starter-launch', label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
-    <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. See <code>main()</code> in the ${workbenchHref ? 'editor' : 'complete program'} for the storage and dimension definitions. These excerpts describe the fixed starter.</p>
-    ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : '<p>Editing the program does not change these fixed excerpts.</p>'}`;
+    <p>The dimensions inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> choose the grid and block size; the parentheses pass kernel arguments. The ${workbenchHref ? 'CUDA source editor' : 'complete program'} contains the storage and dimension definitions. These are fixed starter excerpts; editing CUDA source does not update them.</p>
+    ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : ''}`;
 }
 
 function renderContext(slug) {
@@ -113,12 +126,11 @@ function renderContext(slug) {
 
 function renderWorkbench(mode, href) {
   const tasks = {
-    scale: 'Change 2.0f to 3.0f. Predict the output at index 2, then compile and run.',
-    bounds: 'In main(), change threadsPerBlock from 4 to 3. Predict how many threads launch. Run, then open Trace CUDA calls to check.',
-    copies: 'Add 6.0f, 7.0f, 8.0f and 9.0f to x in main(). Run and open Trace CUDA calls. Compare the copy sizes and launch with the five-input run.',
+    scale: 'In runKernel in the CUDA source editor, change the multiplier in input[i] * 2.0f to 3.0f. Predict the third value (index 2) in Console’s Output array, then click Compile and run again. Which array positions change?',
+    bounds: 'In main() in the CUDA source editor, change threadsPerBlock from 4 to 3. Predict the total launched threads, then click Compile and run again. Open Trace CUDA calls and inspect the blocks × threads launch line. Does Console’s Output array change?',
+    copies: 'In main() in the CUDA source editor, append 6.0f, 7.0f, 8.0f and 9.0f to array x. Predict the bytes copied and the block count, then click Compile and run again. In Trace CUDA calls, compare the cudaMemcpy byte counts and blocks × threads line with the five-input run. Check that Console’s Output contains nine values.',
   };
-  return `<h3>Run the CUDA program</h3>
-    <p>No installation or GPU is required. Edit and run the complete CUDA program in this browser. The run checks the program in simulation; it does not measure a physical GPU.</p>
+  return `<p>The CUDA source editor below contains the complete program. Click Compile and run with the starter and wait for Console output. Then make the change in Try it and run again. Console shows output from main(); the run uses GPU simulation and does not measure physical GPU time.</p>
     ${readerTask(tasks[mode], 'Try it')}
     ${workbenchEditor(mode, href, 'Editable CUDA program and output')}`;
 }
@@ -137,11 +149,12 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     ${renderStarter(slug, workbenchHref)}
   </section>
   <section class="book-section v2-experiment" data-v2-mode="${mode}" aria-labelledby="v2-activity">
-    <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Change hello.cu'}</h2>
-    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug) + '<details class="more-settings v2-starter-model"><summary>Explore a model of the starter program</summary>' : ''}
+    <h2 id="v2-activity">${workbenchHref ? 'Edit and run CUDA' : 'Run the model'}</h2>
+    ${workbenchHref ? renderWorkbench(mode, workbenchHref) + renderContext(slug) + `<details class="more-settings v2-starter-model"><summary>Explore the model: ${modelTopics[mode]}</summary>` : ''}
     ${!workbenchHref ? renderContext(slug) : ''}
+    ${workbenchHref ? '<h3>Test the model settings</h3>' : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">No installation or GPU is required. Run model applies the shown CUDA operation in the browser. ${workbenchHref ? 'Compile and run the complete program in the editor above.' : 'This preview runs the teaching model.'} For optional local execution, use the <a href="${legacy('desktop')}#first-cuda">desktop CUDA setup</a>.</p>
+    <p class="chapter-browser-note">Run model calculates the source shown in this panel. ${workbenchHref ? 'The CUDA source editor runs a separate complete program.' : 'This preview runs the teaching model.'}</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -159,9 +172,9 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     </div>
     <div id="v2-result" hidden></div>
     <details class="more-settings">
-      <summary>Complete hello.cu</summary>
+      <summary>Read the complete model program</summary>
       ${codePanel({ id: 'v2-full', label: 'CUDA C++ · complete program', source: initial.source, explainedLocally: true })}
-      <button id="v2-download" type="button" disabled>Download hello.cu</button>
+      <button id="v2-download" type="button" disabled>Download model program</button>
     </details>
     ${workbenchHref ? '</details>' : ''}
   </section>
@@ -183,18 +196,18 @@ function renderGuided(slug, workbenchHref) {
   </section>
   ${workbenchHref ? `<section class="book-section" aria-labelledby="v2-cuda-editor">
     <h2 id="v2-cuda-editor">Edit and run CUDA</h2>
-    <p>No installation or GPU is required. Edit and run the complete CUDA program in this browser. The run checks the program in simulation; it does not measure a physical GPU.</p>
+    <p>The CUDA source editor below contains the complete program. Click Compile and run with the starter and wait for Console output. Then make the change in Try it and run again. Console shows output from main(); the run uses GPU simulation and does not measure physical GPU time.</p>
     ${programNotes[slug] ? `<p>${programNotes[slug]}</p>` : ''}
     ${readerTask(programTasks[slug], 'Try it')}
     ${workbenchEditor(slug, workbenchHref, 'Editable CUDA program and output')}
   </section>
   ${renderContext(slug)}
-  <details class="more-settings v2-starter-model"><summary>Explore the execution model</summary>` : renderContext(slug)}
+  <details class="more-settings v2-starter-model"><summary>Explore the model: ${modelTopics[slug]}</summary>` : renderContext(slug)}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
     ${lessonContexts[slug].introduction ? `<p>${escape(lesson.before)}</p>` : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">No installation or GPU is required. The controls change the source shown below. Run model traces the selected starter case using the assumptions above. These controls do not execute changes from the CUDA editor.</p>
+    <p class="chapter-browser-note">Use the selector to choose a model case and enter a prediction if you wish. Click Run model to see its result and use Next step to follow the trace where available. This panel uses its stated inputs and assumptions.${workbenchHref ? ' It does not run edits from the CUDA source editor.' : ''}</p>
     <noscript><p class="notice">Enable JavaScript to change settings and run the model. You can still read the starter and compare the final explanation below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -208,7 +221,7 @@ function renderGuided(slug, workbenchHref) {
         <label for="v2-prediction">${lesson.question}</label>
         <input id="v2-prediction" type="number" step="any" placeholder="Optional" disabled>
         <button class="primary" id="v2-run" disabled>Run model</button>
-        <p id="v2-feedback" role="status">Predict the result, then run the model.</p>
+        <p id="v2-feedback" role="status">Optionally enter a prediction, then click Run model.</p>
       </form>
     </div>
     <div id="v2-result" hidden>
