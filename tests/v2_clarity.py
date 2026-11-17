@@ -78,7 +78,7 @@ def check_v2_clarity(browser, url, root):
         frame.get_by_role('button', name='Export .cu').press('Enter')
     assert info.value.path().read_text() == nonzero
     assert editor.input_value() == nonzero
-    frame.get_by_role('button', name='Restore starter').click()
+    frame.get_by_role('button', name='Restore starter').press('Enter')
     expect(editor).to_have_value(starter)
     expect(output).to_be_empty()
     context.close()
