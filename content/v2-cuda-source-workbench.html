@@ -1519,7 +1519,8 @@ function launchWorker() {
       operations.hidden = !data.events.length;
       status.dataset.outcome = data.exitCode ? 'program-exit' : 'completed';
       status.textContent = data.exitCode ? 'main() finished with exit code ' + data.exitCode + '. Read Console for the program’s checks.' :
-        data.ptx ? 'Ran main() and the kernel in GPGPU-Sim.' : 'Ran main(). No kernel was launched.';
+        (advanced ? data.events.some(event => event.includes(' · grid ')) : Boolean(data.ptx))
+          ? 'Ran main() and the kernel in GPGPU-Sim.' : 'Ran main(). No kernel was launched.';
     } else {
       showValues(data.output);
       status.textContent = 'Compiled and ran in GPGPU-Sim.';
