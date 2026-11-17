@@ -83,7 +83,6 @@ void runKernel(
 <section class="card" aria-labelledby="output-title">
 <h2 id="output-title">Simulated output</h2>
 <p class="sub">The lesson launches two blocks of four threads and passes five input values.</p>
-<p class="sub" id="program-check-note" hidden>Console contains output from main(), including any checks written there. If you change the intended calculation, update its independent CPU reference too. A different output value alone is not an execution error.</p>
 <table aria-label="Input and simulated output values">
 <thead><tr><th scope="col">Index</th><th scope="col">Input</th><th scope="col">Output</th></tr></thead>
 <tbody id="values"></tbody>
@@ -1405,10 +1404,9 @@ const consoleOutput = document.querySelector('#program-output');
 const operations = document.querySelector('#program-operations');
 if (fullProgram) {
   editor.value = advanced ? lab.programs[mode] : profile ? lab.firstProgram : mode === 'coalescing' ? lab.coalescingProgram : lab.arrayProgram;
-  document.querySelector('#output-title + p').textContent = 'Output from main() in this browser.';
+  document.querySelector('#output-title + p').textContent = 'Output from main(), including any checks written there. A different output value alone is not an execution error.';
   values.closest('table').hidden = true;
   consoleOutput.hidden = false;
-  document.querySelector('#program-check-note').hidden = false;
 } else if (profile) {
   editor.value = lab.firstKernel;
   document.querySelector('#output-title + p').textContent = 'One block, one thread, one output value.';
