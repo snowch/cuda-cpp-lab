@@ -1,5 +1,6 @@
 # Copyright © 2026 Christopher Snow.
 """Play every published recording, seek captions and preserve paused position."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -20,6 +21,12 @@ for video in sorted((ROOT/'assets/media').rglob('*.mp4')):
     metadata=(json.loads((ROOT/'content/v2-media.json').read_text())[slug] if current
               else json.loads((ROOT/f'content/{slug}-media.json').read_text()))
     recordings.append({'key':('v2-' if current else '')+slug,'durationSeconds':metadata['durationSeconds']})
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--only',nargs='+',help='Recheck selected recording keys after a media change')
+args=parser.parse_args()
+if args.only:
+    assert set(args.only)<={r['key'] for r in recordings},'Unknown recording key'
+    recordings=[r for r in recordings if r['key'] in args.only]
 server = subprocess.Popen(['node', 'scripts/serve.mjs', '--dist'], cwd=ROOT,
                           env={**os.environ, 'PORT': str(PORT)}, stdout=subprocess.DEVNULL)
 try:
@@ -47,7 +54,7 @@ try:
                                           color_scheme=theme, service_workers='block')
             context.route('https://api.github.com/**', lambda route: route.abort())
             page = context.new_page()
-            selected=recordings if theme=='light' and width in [390,1440] else [r for r in recordings if r['key'] in representative]
+            selected=recordings if args.only or (theme=='light' and width in [390,1440]) else [r for r in recordings if r['key'] in representative]
             for item in selected:
                 key = item['key']
                 current = key.startswith('v2-') or key == 'first-kernel'

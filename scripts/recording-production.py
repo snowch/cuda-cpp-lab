@@ -68,6 +68,7 @@ def spoken(text):
         '__syncthreads': 'sync threads', '__float2half_rn': 'float to half, round to nearest,',
         '__half2float': 'half to float', 'fill_fragment': 'fill fragment', 'WMMA': 'W M M A',
         'sizeof(x)': 'size of x', 'expf': 'exp F',
+        'IDs': 'identifiers',
     }
     for token, replacement in aliases.items():
         text = text.replace(token, replacement)
