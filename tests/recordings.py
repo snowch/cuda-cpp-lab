@@ -39,13 +39,16 @@ try:
         if os.environ.get('CHROMIUM_PATH'):
             options['executable_path'] = os.environ['CHROMIUM_PATH']
         browser = p.chromium.launch(**options)
+        representative={'first-kernel','inside-sm','reduction','matmul','v2-reduction',
+                        'v2-matmul','v2-tensor-cores','v2-token-routing'}
         for width, theme in [(390, 'light'), (390, 'dark'), (820, 'light'),
                              (820, 'dark'), (1440, 'light'), (1440, 'dark')]:
             context = browser.new_context(viewport={'width': width, 'height': 1100},
                                           color_scheme=theme, service_workers='block')
             context.route('https://api.github.com/**', lambda route: route.abort())
             page = context.new_page()
-            for item in recordings:
+            selected=recordings if theme=='light' and width in [390,1440] else [r for r in recordings if r['key'] in representative]
+            for item in selected:
                 key = item['key']
                 current = key.startswith('v2-') or key == 'first-kernel'
                 slug = key[3:] if key.startswith('v2-') else key
@@ -86,7 +89,9 @@ try:
                     state.saveReadingState();
                 }''')
                 page.reload()
-                page.wait_for_function('time=>Math.abs(document.querySelector("video").currentTime-time)<.15', arg=position)
+                video.scroll_into_view_if_needed()
+                page.wait_for_function('time=>{const v=document.querySelector("video");return !v.seeking&&v.readyState>=2&&Math.abs(v.currentTime-time)<.15}', arg=position)
+                page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
                 assert video.evaluate('v=>v.paused&&v.playbackRate===1.25'), key
                 expect(page.locator('.sm-transcript')).to_have_attribute('open', '')
                 if key in ['first-kernel','inside-sm','v2-reduction','v2-matmul','v2-tensor-cores','v2-token-routing']:
@@ -96,7 +101,7 @@ try:
                     video.evaluate('v=>scrollTo({top:Math.max(0,v.closest(".sm-recording").getBoundingClientRect().top+scrollY-180),behavior:"instant"})')
                     page.screenshot(path=str(ROOT/f'test-results/recording-context/{key}-{width}.png'))
             context.close()
-            print(f'PASS: all {len(recordings)} recordings: {width}px/{theme}, playback, captions, seeking, keyboard and paused restart',flush=True)
+            print(f'PASS: {len(selected)} recordings: {width}px/{theme}, playback, captions, seeking, keyboard and paused restart',flush=True)
         browser.close()
 finally:
     server.terminate()

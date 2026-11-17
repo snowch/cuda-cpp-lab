@@ -63,14 +63,21 @@ def decode(r):
     duration = float(probe['format']['duration'])
     assert abs(duration-media['durationSeconds'])<1 and video.stat().st_size==media['bytes'],r['key']
     selections = '+'.join(f'eq(n,{round((s["start"]+s["end"])/2*30)})' for s in media['scenes'])
-    filters = f"[0:v]split=2[check][pick];[pick]select='{selections}'[shots];[0:a]loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json[sound]"
-    command = ['ffmpeg','-y','-xerror','-v','info','-nostats','-threads','2','-i',str(video),'-filter_complex',filters,
-               '-map','[check]','-map','[sound]','-f','null','-',
-               '-map','[shots]','-fps_mode','vfr','-q:v','3',str(folder/'frame-%03d.jpg')]
+    # Select after decoding: every source frame is checked, while only the scene
+    # images are queued for JPEG output. A second full-size video output can
+    # buffer hundreds of 4K frames while waiting for the first selected image.
+    filters = f"[0:v]select='{selections}'[shots];[0:a]loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json[sound]"
+    command = ['ffmpeg','-y','-xerror','-v','verbose','-nostats','-threads','2','-i',str(video),'-filter_complex_threads','2','-filter_complex',filters,
+               '-map','[sound]','-f','null','-',
+               '-map','[shots]','-fps_mode','vfr','-threads:v','1','-q:v','3',str(folder/'frame-%03d.jpg')]
     result = subprocess.run(command,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
     (folder/'decode.log').write_text(result.stderr)
     if result.returncode:
         raise RuntimeError(r['key']+': '+result.stderr[-3000:])
+    decoded_lines=[line for line in result.stderr.splitlines() if '(video)' in line and 'frames decoded' in line]
+    assert len(decoded_lines)==1,'Missing source decode count: '+r['key']
+    decoded_count=int(re.search(r'(\d+) frames decoded',decoded_lines[0])[1])
+    assert decoded_count==int(picture['nb_frames']),'Not all source frames decoded: '+r['key']
     matches = re.findall(r'\{\s*"input_i"[^}]+\}',result.stderr)
     assert matches,'Missing measured loudness: '+r['key']
     loudness = json.loads(matches[-1])
@@ -90,7 +97,8 @@ def decode(r):
     evidence = {'inputs':recipe,'width':picture['width'],'height':picture['height'],'fps':30,
                 'audioSampleRate':int(sound['sample_rate']),'durationSeconds':duration,
                 'chapters':len(probe['chapters']),'measuredLUFS':float(loudness['input_i']),
-                'measuredTruePeakDB':float(loudness['input_tp']),'minSceneSSIM':min(similarities),'fullDecode':True}
+                'measuredTruePeakDB':float(loudness['input_tp']),'minSceneSSIM':min(similarities),
+                'decodedFrameCount':decoded_count,'fullDecode':True}
     write(marker,evidence)
     print('Decoded and measured:',r['key'],duration,'seconds',flush=True)
     return evidence
