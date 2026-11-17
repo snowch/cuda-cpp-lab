@@ -39,10 +39,6 @@ def check(browser,url,compiler):
         # A fresh draft per case; the local reference is the same source rendered in the solution.
         if slug=='softmax-capstone' and changes is not None:
             source=(ROOT/'examples/v2-practical/softmax-reference.cu').read_text()
-        elif expected == 'no allocation or launch':
-            assert page.locator('#status').inner_text() == 'Ran main(). No kernel was launched.'
-            assert page.locator('#program-operations').is_hidden()
-            assert page.locator('#ptx-panel').is_visible()
         else:
             source=(ROOT/('examples/v2-practical/'+slug+'.cu')).read_text() if slug!='softmax-capstone' else None
         if source is not None:
@@ -60,6 +56,10 @@ def check(browser,url,compiler):
             assert 'Ran main() and the kernel' not in page.locator('#status').inner_text()
             assert page.locator('#status').get_attribute('data-error') == 'false'
             assert page.locator('#status').get_attribute('data-outcome') == 'program-exit'
+        elif expected == 'no allocation or launch':
+            assert page.locator('#status').inner_text() == 'Ran main(). No kernel was launched.'
+            assert page.locator('#program-operations').is_hidden()
+            assert page.locator('#ptx-panel').is_visible()
         else:
             assert page.locator('#status').inner_text()=='Ran main() and the kernel in GPGPU-Sim.'
         print('PASS practical CUDA',slug,changes,flush=True)
