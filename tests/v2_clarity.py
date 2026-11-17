@@ -30,6 +30,7 @@ def check_v2_clarity(browser, url, root):
     expect(messages).to_be_visible()
     expect(messages).not_to_have_attribute('open', '')
     expect(frame.locator('#diagnostics')).to_contain_text('learner-review-warning')
+    assert '\x1b' not in frame.locator('#diagnostics').text_content()
     messages.locator(':scope > summary').press('Enter')
     expect(messages).to_have_attribute('open', '')
     # Preserve the draft, output and inspected warning through the existing snapshot.
@@ -49,6 +50,8 @@ def check_v2_clarity(browser, url, root):
     expect(frame.locator('#status')).to_have_attribute('data-error', 'true')
     expect(messages).to_have_attribute('open', '')
     expect(frame.locator('#diagnostics')).to_be_visible()
+    error_text = frame.locator('#diagnostics').text_content()
+    assert 'error:' in error_text and '\x1b' not in error_text
     assert editor.input_value().endswith('this is not CUDA;\n')
     messages.screenshot(path=str(root / 'test-results/clarity-compile-error.png'))
 

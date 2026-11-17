@@ -1478,10 +1478,14 @@ function shutDown() {
   clearTimeout(timeout);
 }
 
+function diagnosticText(text = '') {
+  return text.replace(/\u001b\[[0-9;]*m/g, '');
+}
+
 function fail(message, details = '') {
   status.dataset.error = 'true';
   status.textContent = message;
-  diagnostics.textContent = details;
+  diagnostics.textContent = diagnosticText(details);
   diagnostics.hidden = !details;
   compilerMessages.hidden = !details;
   compilerMessages.open = Boolean(details);
@@ -1524,7 +1528,7 @@ function launchWorker() {
     }
     ptx.textContent = data.ptx || '';
     ptxPanel.hidden = !data.ptx;
-    diagnostics.textContent = data.diagnostics;
+    diagnostics.textContent = diagnosticText(data.diagnostics);
     diagnostics.hidden = !data.diagnostics;
     compilerMessages.hidden = !data.diagnostics;
     compilerMessages.open = false;
