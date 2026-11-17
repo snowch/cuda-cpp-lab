@@ -14,7 +14,7 @@ for (const [index, lesson] of v2Course.entries()) {
     {title:'Read the CUDA example', text:c.explanation, visual:`<pre>${escape(c.code)}</pre>`},
     {title:'Follow execution', text:c.stages.map(([a,b])=>a+'. '+b).join(' '), visual:c.stages.map(([a,b],i)=>`${i?'<div class="arrow">↓</div>':''}<div class="stage"><strong>${escape(a)}</strong><span>${escape(b)}</span></div>`).join('')},
     {title:'Locate the hardware', text:c.hardware, visual:hardware},
-  ].map((scene,i)=>({...scene,html:`<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body><article class="slide"><header><strong>GPU Lab V2 · Lesson ${index+1}</strong><span>${i+1} / 3</span></header><main><div><h1>${escape(scene.title)}</h1><p>${escape(scene.text)}</p></div><div>${scene.visual}</div></main><footer><span>Conceptual example · no hardware timing trace</span><span>© 2026 Christopher Snow</span></footer></article></body></html>`}));
+  ].map((scene,i)=>({...scene,html:`<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body><article class="slide"><header><strong>GPU Lab · Lesson ${index+1}</strong><span>${i+1} / 3</span></header><main><div><h1>${escape(scene.title)}</h1><p>${escape(scene.text)}</p></div><div>${scene.visual}</div></main><footer><span>Conceptual example · no hardware timing trace</span><span>© 2026 Christopher Snow</span></footer></article></body></html>`}));
   inputs.push({slug:lesson.slug, title:lesson.title, scenes});
 }
 await mkdir('test-results/v2-recordings', {recursive:true});

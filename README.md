@@ -2,76 +2,57 @@
 
 Copyright © 2026 Christopher Snow.
 
-An interactive book and set of labs for AI practitioners who want to understand how GPUs execute tensor
-operations. Familiarity with Python, arrays and basic tensor shapes is enough to start.
-CUDA arrives through small programs tied to the hardware model.
+[GPU Lab](https://snowch.github.io/gpu-lab/) is an interactive CUDA C++ course for
+AI practitioners who want to understand how GPUs execute their programs. Edit,
+compile and run complete CUDA examples in your browser using GPU simulation.
+No installation or GPU is required.
 
-[GPU Lab V2](https://snowch.github.io/gpu-lab/) is the default course. Its first four
-lessons let you edit, compile and run complete CUDA programs in the browser.
+Start with one thread writing one value, then follow memory access, warp execution,
+synchronisation and the parallel patterns behind AI workloads. The examples assume
+basic programming and array indexing; each lesson introduces the CUDA concepts it
+uses. Browser models and simulated execution do not measure physical GPU performance.
 
-## GPU Lab V1
+## CUDA foundations
 
-The [V1 course overview](https://snowch.github.io/gpu-lab/v1.html) leads to the
-original book and labs below.
+1. [Write your first GPU value](https://snowch.github.io/gpu-lab/v2/first-kernel.html): Launch one thread, write one value, and read it back in main().
+2. [One thread, one element](https://snowch.github.io/gpu-lab/v2/one-thread-one-element.html): Change a CUDA multiplier and follow each input to its output.
+3. [More threads than elements](https://snowch.github.io/gpu-lab/v2/more-threads-than-elements.html): Change the block size and see which threads stop at the bounds check.
+4. [From CPU array to GPU result](https://snowch.github.io/gpu-lab/v2/from-cpu-array-to-gpu-result.html): Change the input length and follow allocation, copies and the kernel launch.
 
-[Repair a kernel](https://snowch.github.io/gpu-lab/lessons/kernel.html) is a hands-on
-workshop for understanding and debugging CUDA kernels. Repair the kernel,
-check lengths 8/32/35, replay reads and writes in the browser model, and compile and run
-the corresponding CUDA C++ program on an NVIDIA GPU after downloading it. The browser
-simulates supported CUDA expressions on the CPU; it neither compiles CUDA nor executes
-GPU code. Generated CUDA programs include their host setup but have not yet been
-compiled or validated on an NVIDIA GPU.
+## GPU execution and AI workloads
 
+5. [Same load, different addresses](https://snowch.github.io/gpu-lab/v2/coalescing.html): Change a warp’s input stride and predict which 32-byte sectors its reads touch.
+6. [What runs while a warp waits?](https://snowch.github.io/gpu-lab/v2/scheduling.html): Follow a load dependency and compare what happens with one ready warp or two.
+7. [When lanes take different branches](https://snowch.github.io/gpu-lab/v2/divergence.html): Change the signs in a warp’s inputs and track which lanes execute each branch.
+8. [Add values across a block](https://snowch.github.io/gpu-lab/v2/reduction.html): Trace a block reduction and identify the barrier that makes each partial sum safe to read.
+9. [When shared-memory addresses collide](https://snowch.github.io/gpu-lab/v2/shared-memory-banks.html): Change the stride of a shared-memory read and group the simultaneous requests by bank.
+10. [Reuse inputs in a matrix tile](https://snowch.github.io/gpu-lab/v2/matmul.html): Compare a direct CUDA matrix product with a tiled kernel and trace which loads the tile reuses.
+11. [What changes when inputs use fewer bits?](https://snowch.github.io/gpu-lab/v2/precision.html): Change the input format and compare rounded operands, storage and the resulting sum.
+12. [How a warp cooperates on a matrix tile](https://snowch.github.io/gpu-lab/v2/tensor-cores.html): Follow a CUDA warp-level matrix operation and distinguish its input fragments from its accumulator.
+13. [Keep less intermediate data in attention](https://snowch.github.io/gpu-lab/v2/attention.html): Compare full score storage with a tiled calculation that carries an online softmax state.
+14. [Follow the key-value cache during inference](https://snowch.github.io/gpu-lab/v2/inference.html): Change sequence length and account for the key-value data read and appended during decoding.
+15. [Investigate a matrix multiplication](https://snowch.github.io/gpu-lab/v2/matmul-investigation.html): Choose a tile width, predict its resource trade-off and decide what to measure on a GPU.
 
-Follow the fourteen core chapters:
+## Parallel patterns
 
-1. [How does a GPU double five values?](https://snowch.github.io/gpu-lab/lessons/hello.html): Double five input values, then trace each result through threads, indices and a CUDA kernel.
-2. [Where are tensor values stored?](https://snowch.github.io/gpu-lab/lessons/devices.html): Copy five inputs from CPU to GPU memory, multiply them, then copy the results back.
-3. [How does a CUDA program manage GPU memory?](https://snowch.github.io/gpu-lab/lessons/launch-from-input.html): Derive counts from an input array, allocate GPU storage, copy values, launch a kernel and read back the results.
-4. [How do we select values from a tensor?](https://snowch.github.io/gpu-lab/lessons/reading.html): Select rows and columns, then multiply the chosen values.
-5. [How are tensor values arranged in memory?](https://snowch.github.io/gpu-lab/lessons/layout.html): Locate row and column values in memory, compare strides, then make a packed copy.
-6. [How do threads read tensor values?](https://snowch.github.io/gpu-lab/lessons/requests.html): Compare the memory sectors read by five threads for a row, a column and a packed copy.
-7. [What runs while a warp waits for data?](https://snowch.github.io/gpu-lab/lessons/scheduling.html): Follow a warp waiting for an input value, then let another ready warp run.
-8. [What if lanes need different calculations?](https://snowch.github.io/gpu-lab/lessons/divergence.html): Compare lanes that double positive inputs with lanes that negate negative inputs.
-9. [How do threads add values together?](https://snowch.github.io/gpu-lab/lessons/reduction.html): Add four or eight input values using shared memory and block barriers.
-10. [How can matrix multiplication reuse its inputs?](https://snowch.github.io/gpu-lab/lessons/matmul.html): Compare repeated loads with shared tiles in matrix multiplication.
-11. [What changes when matrix inputs use fewer bits?](https://snowch.github.io/gpu-lab/lessons/tensor-cores.html): Compare FP32, FP16 and BF16 inputs, then inspect how rounding affects the sum.
-12. [How can attention use less memory?](https://snowch.github.io/gpu-lab/lessons/attention.html): Combine value rows using attention weights, then compare full score matrices with tiles.
-13. [What limits an inference step?](https://snowch.github.io/gpu-lab/lessons/inference.html): Count cached keys and values, then estimate limits from data transfers and arithmetic.
-14. [Investigate a matrix multiplication](https://snowch.github.io/gpu-lab/lessons/putting-it-together.html): Compare matrix tile widths, count input loads and resource use, then choose what to measure on a GPU.
+16. [Count token destinations safely](https://snowch.github.io/gpu-lab/v2/histograms.html): Trace competing updates and compare global atomics with per-block partial counts.
+17. [Build positions from prefix sums](https://snowch.github.io/gpu-lab/v2/scan.html): Step through shared-memory scan stages and convert inclusive totals to exclusive offsets.
+18. [Pack surviving tokens in order](https://snowch.github.io/gpu-lab/v2/compaction.html): Use selection flags and exclusive offsets to explain each surviving token’s write destination.
+19. [Find a parallel program’s progress dependency](https://snowch.github.io/gpu-lab/v2/progress.html): Find which threads reach a block barrier and explain why the rest must also arrive.
+20. [Overlap copies with computation](https://snowch.github.io/gpu-lab/v2/pipelines.html): Order copies, kernels and buffer reuse with explicit dependencies.
+21. [Investigate stable token routing](https://snowch.github.io/gpu-lab/v2/token-routing.html): Combine counts, starts and ranks to place every token once, then design a performance measurement.
 
-Optional [Part II: Parallel patterns](https://snowch.github.io/gpu-lab/#parallel-patterns) follows the core book with six completed chapters:
+## Practical GPU investigations
 
-15. [What if many threads update the same value?](https://snowch.github.io/gpu-lab/lessons/histograms.html): Count token categories with atomics, then compare global counters with per-block partial counts.
-16. [How can threads compute running totals?](https://snowch.github.io/gpu-lab/lessons/scan.html): Follow staged prefix sums, then turn inclusive totals into exclusive output offsets.
-17. [Where should each surviving token go?](https://snowch.github.io/gpu-lab/lessons/compaction.html): Turn selection flags into unique output positions, then preserve token order while packing the survivors.
-18. [Why can a parallel program stop making progress?](https://snowch.github.io/gpu-lab/lessons/progress.html): Break a dining-philosopher wait cycle, diagnose barrier participation and separate resource ordering from scheduling progress.
-19. [How can copying overlap computation?](https://snowch.github.io/gpu-lab/lessons/pipelines.html): Trace copy/compute dependencies, protect two reusable slots and compare explicitly synthetic schedules.
-20. [Investigate stable token routing](https://snowch.github.io/gpu-lab/lessons/pattern-investigation.html): Choose the required output, combine counts with unique stable destinations, then design a hardware measurement.
+22. [Check every GPU result](https://snowch.github.io/gpu-lab/v2/verify-every-output.html): Compare every output with a CPU reference, then diagnose a safe indexing error.
+23. [Process more inputs than the launch has threads](https://snowch.github.io/gpu-lab/v2/grid-stride-loops.html): Give each input one owner with a grid-stride loop, including tails and empty inputs.
+24. [Carry a prefix across blocks](https://snowch.github.io/gpu-lab/v2/multi-block-scan.html): Combine local scans, block totals and block starts in an ordered GPU pipeline.
+25. [Explain an SM resource trade-off](https://snowch.github.io/gpu-lab/v2/resource-tradeoffs.html): Calculate a residency limit and identify which hardware observation could test an optimisation.
+26. [Measure a GPU kernel fairly](https://snowch.github.io/gpu-lab/v2/measure-a-kernel.html): Separate correctness, kernel timing and profiling, then interpret recorded evidence.
+27. [Build and verify a stable softmax](https://snowch.github.io/gpu-lab/v2/softmax-capstone.html): Implement an independent row-wise kernel, verify unseen shapes and explain its bottleneck.
 
-Each example retains its own controls, diagram and results. The
-[PyTorch companion](examples/book-opening.py) checks these operations using real
-PyTorch: `python examples/book-opening.py --device cpu` or `--device cuda`.
-CPU mode checks values/layouts without GPU transfers; CUDA mode needs an NVIDIA
-GPU and has not yet been validated on hardware. Neither mode is a benchmark.
-Chapters 7–14 reuse the verified numerical engines with a new progressive teaching
-flow. They retain their original URLs. Each experiment owns its controls, result
-and trace; static worked examples remain readable without JavaScript.
-
-[Memory access](https://snowch.github.io/gpu-lab/lessons/memory.html),
-[shared-memory banks](https://snowch.github.io/gpu-lab/lessons/shared-memory.html),
-[kernel repair](https://snowch.github.io/gpu-lab/lessons/kernel.html) and
-[GPU map](https://snowch.github.io/gpu-lab/lessons/meet-gpu.html) remain optional
-labs and references. All published pages include documentation exercises with local
-answer comparisons. See [migration decisions](docs/chapter-migration.md).
-
-The teaching models do not interpret CUDA. Their counts and toy scheduling cycles do not
-predict physical DRAM traffic, measured elapsed time, or speedups on a particular GPU.
-See [the model contract](docs/model.md) and [course plan](docs/plan.md).
-
-[The visual review](docs/visual-review.md) records where each lesson needed a layout,
-dependency, sequence or data-flow diagram. Those diagrams are linked to model state and trace
-positions, alongside the existing experiment views.
+Original book and lab URLs remain available for existing bookmarks.
+See [the model contract](docs/model.md) for the scope of the teaching models.
 
 ## Run examples on your desktop
 
@@ -166,10 +147,11 @@ and online-attention pseudocode in the lessons are illustrations rather than exe
 - `src/model.mjs`: pure address model; all figure values derive from its result.
 - `src/architecture.mjs`: scheduling, divergent paths and shared-memory bank models.
 - `src/ai-models.mjs`: reductions, tiled matmul, numeric conversion, attention and inference budgets.
-- `content/lessons.mjs`: lesson prose and a shared static page renderer used during the build.
-- `content/remaining-lessons.mjs`, `src/ai-lesson.mjs`: remaining lesson content and computed views.
-- `src/lesson.mjs`, `src/theme.mjs`: shared experiment controls and theme persistence.
-- `index.html`: course introduction and roadmap.
+- `content/v2-course.mjs`, `content/v2-view.mjs`: current course catalogue and page renderer.
+- `content/v2-cuda-source-workbench.html`: editable CUDA programs and compiler integration.
+- `src/v2-model.mjs`, `src/v2-traces.mjs`: teaching models and execution traces.
+- `src/theme.mjs`: theme persistence.
+- `index.html`, `content/lessons.mjs`: original book pages retained for existing URLs.
 - `content/memory.html`, `src/app.mjs`, `src/style.css`: Lab 01 and its interactive views.
 - `tests/`: model invariants, boundary cases, browser interactions and responsive layout.
 - `examples/`: optional runnable CUDA exercises.
@@ -178,13 +160,3 @@ and online-attention pseudocode in the lessons are illustrations rather than exe
 Inspired by the model-driven learning approach in [Digital Design](https://github.com/snowch/digital-design)
 and [Assembly Lab](https://github.com/snowch/assembly-lab). This small standalone prototype does
 not yet integrate `snowch/learning-platform`; migration is a separate curriculum/platform decision.
-
-
-Start with **Hello, GPU** (`lessons/hello.html`): change a multiplier and see how
-each thread connects an input to an output. Five sections flow down one page, each with its own visual and independent controls.
-They introduce indices, blocks and
-bounds checks before revealing a complete CUDA kernel. The browser simulation makes
-no GPU execution claim. **Repair a kernel** follows; the eight architecture labs
-remain available independently.
-
-Download chapter 1’s CUDA program and [run it on an NVIDIA GPU or locally through GPGPU-Sim](docs/run-cuda.md). The desktop container is also used by CI.

@@ -13,8 +13,9 @@ def check_v2(browser, url):
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(url)
+        expect(page).to_have_title('GPU Lab')
         expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
-        brand = page.get_by_role('link', name='GPU Lab V2 home', exact=True)
+        brand = page.get_by_role('link', name='GPU Lab home', exact=True)
         expect(brand).to_have_attribute('href', './')
         expect(brand).to_contain_text('CUDA C++')
         expect(brand.locator('img')).to_have_attribute('alt', '')
@@ -22,11 +23,7 @@ def check_v2(browser, url):
         assert brand.bounding_box()['height'] >= 44
         expect(page.locator('html')).to_have_attribute('data-theme', theme)
         expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
-        page.get_by_role('link', name='GPU Lab V1', exact=True).click()
-        expect(page).to_have_url(url + 'v1.html')
-        expect(page.locator('.roadmap h3')).to_have_count(14)
-        page.get_by_role('link', name='Go to GPU Lab V2').click()
-        expect(page).to_have_url(url)
+        expect(page.get_by_role('link', name='GPU Lab V1', exact=True)).to_have_count(0)
         routes = page.locator('.v2-list li[data-course-kind="core"] a').evaluate_all('links => links.map(link => link.href)')
         assert len(routes) == 21
         expect(page.get_by_role('link', name='Start with your first kernel')).to_have_attribute('href', './v2/first-kernel.html')
@@ -37,7 +34,9 @@ def check_v2(browser, url):
                  + ['part-parallel-patterns'] * 6)
         for route, mode, part in zip(routes, modes, parts):
             page.goto(route)
-            expect(page.get_by_role('link', name='GPU Lab V2 home', exact=True)).to_have_attribute('href', '../')
+            expect(page).to_have_title(page.locator('h1').inner_text() + ' · GPU Lab')
+            expect(page.locator('.topbar a[href$="v1.html"]')).to_have_count(0)
+            expect(page.get_by_role('link', name='GPU Lab home', exact=True)).to_have_attribute('href', '../')
             breadcrumb = page.get_by_role('navigation', name='Breadcrumb')
             expect(breadcrumb.locator('.v2-course-overview')).to_have_attribute('href', '../')
             expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
@@ -66,7 +65,7 @@ def check_v2(browser, url):
 
             expect(workbench.get_by_text('Software licences', exact=True)).to_be_hidden()
             expect(page.get_by_role('link', name='Software licences', exact=True)).to_have_count(1)
-        page.get_by_role('link', name='GPU Lab V2 home', exact=True).press('Enter')
+        page.get_by_role('link', name='GPU Lab home', exact=True).press('Enter')
         expect(page).to_have_url(url)
         expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
         for index in [0, 4, 15]:
@@ -127,8 +126,7 @@ def check_v2(browser, url):
     page = context.new_page()
     page.goto(url + 'v2/')
     expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
-    page.get_by_role('link', name='GPU Lab V1', exact=True).click()
-    expect(page).to_have_url(url + 'v1.html')
+    expect(page.get_by_role('link', name='GPU Lab V1', exact=True)).to_have_count(0)
     page.goto(url + 'v2/reduction.html')
     page.get_by_text('Explore the execution model').click()
     expect(page.locator('#v2-source')).to_be_visible()

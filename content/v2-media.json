@@ -1,7 +1,7 @@
 {
   "one-thread-one-element": {
     "durationSeconds": 37,
-    "bytes": 586760,
+    "bytes": 585308,
     "scenes": [
       {
         "start": 0,
@@ -27,7 +27,7 @@
   },
   "more-threads-than-elements": {
     "durationSeconds": 41,
-    "bytes": 634987,
+    "bytes": 633173,
     "scenes": [
       {
         "start": 0,
@@ -53,7 +53,7 @@
   },
   "from-cpu-array-to-gpu-result": {
     "durationSeconds": 47,
-    "bytes": 686613,
+    "bytes": 684523,
     "scenes": [
       {
         "start": 0,
@@ -79,7 +79,7 @@
   },
   "coalescing": {
     "durationSeconds": 47,
-    "bytes": 728984,
+    "bytes": 726032,
     "scenes": [
       {
         "start": 0,
@@ -105,7 +105,7 @@
   },
   "scheduling": {
     "durationSeconds": 48,
-    "bytes": 724488,
+    "bytes": 722322,
     "scenes": [
       {
         "start": 0,
@@ -131,7 +131,7 @@
   },
   "divergence": {
     "durationSeconds": 46,
-    "bytes": 692791,
+    "bytes": 689896,
     "scenes": [
       {
         "start": 0,
@@ -157,7 +157,7 @@
   },
   "reduction": {
     "durationSeconds": 43,
-    "bytes": 705883,
+    "bytes": 702970,
     "scenes": [
       {
         "start": 0,
@@ -183,7 +183,7 @@
   },
   "shared-memory-banks": {
     "durationSeconds": 50,
-    "bytes": 755039,
+    "bytes": 752962,
     "scenes": [
       {
         "start": 0,
@@ -209,7 +209,7 @@
   },
   "matmul": {
     "durationSeconds": 53,
-    "bytes": 982069,
+    "bytes": 979076,
     "scenes": [
       {
         "start": 0,
@@ -235,7 +235,7 @@
   },
   "precision": {
     "durationSeconds": 53,
-    "bytes": 900617,
+    "bytes": 897027,
     "scenes": [
       {
         "start": 0,
@@ -261,7 +261,7 @@
   },
   "tensor-cores": {
     "durationSeconds": 54,
-    "bytes": 905868,
+    "bytes": 901797,
     "scenes": [
       {
         "start": 0,
@@ -287,7 +287,7 @@
   },
   "attention": {
     "durationSeconds": 50,
-    "bytes": 774903,
+    "bytes": 772183,
     "scenes": [
       {
         "start": 0,
@@ -313,7 +313,7 @@
   },
   "inference": {
     "durationSeconds": 44,
-    "bytes": 706875,
+    "bytes": 703810,
     "scenes": [
       {
         "start": 0,
@@ -339,7 +339,7 @@
   },
   "matmul-investigation": {
     "durationSeconds": 54,
-    "bytes": 1020938,
+    "bytes": 1017320,
     "scenes": [
       {
         "start": 0,
@@ -365,7 +365,7 @@
   },
   "histograms": {
     "durationSeconds": 49,
-    "bytes": 750451,
+    "bytes": 748152,
     "scenes": [
       {
         "start": 0,
@@ -391,7 +391,7 @@
   },
   "scan": {
     "durationSeconds": 46,
-    "bytes": 737598,
+    "bytes": 741519,
     "scenes": [
       {
         "start": 0,
@@ -417,7 +417,7 @@
   },
   "compaction": {
     "durationSeconds": 47,
-    "bytes": 700319,
+    "bytes": 697885,
     "scenes": [
       {
         "start": 0,
@@ -443,7 +443,7 @@
   },
   "progress": {
     "durationSeconds": 42,
-    "bytes": 659925,
+    "bytes": 657524,
     "scenes": [
       {
         "start": 0,
@@ -469,7 +469,7 @@
   },
   "pipelines": {
     "durationSeconds": 54,
-    "bytes": 894645,
+    "bytes": 893515,
     "scenes": [
       {
         "start": 0,
@@ -495,7 +495,7 @@
   },
   "token-routing": {
     "durationSeconds": 54,
-    "bytes": 932824,
+    "bytes": 929014,
     "scenes": [
       {
         "start": 0,

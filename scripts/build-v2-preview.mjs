@@ -47,7 +47,7 @@ await writeFile(output, `<!doctype html>
 <html lang="en-GB">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><title>GPU Lab V2</title>
+<meta name="color-scheme" content="light dark"><title>GPU Lab</title>
 <link rel="icon" type="image/svg+xml" href="${icon}">
 <style>${styling}</style>
 <script type="importmap">${JSON.stringify({ imports })}</script>
@@ -55,7 +55,7 @@ await writeFile(output, `<!doctype html>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar v2-topbar">${renderV2Brand('#contents', icon)}
-<div class="top-actions"><a href="${current}v1.html">GPU Lab V1</a>
+<div class="top-actions">
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
 <main id="main" class="v2-main" tabindex="-1">${renderV2Contents(href)}</main>
 ${templates}
@@ -82,7 +82,7 @@ function route() {
     });
   }
   const title = main.querySelector('h1').textContent;
-  document.title = title + ' · GPU Lab V2';
+  document.title = title + ' · GPU Lab';
   const part = document.getElementById(slug);
   if (part?.matches('.v2-list h2')) {
     part.focus({ preventScroll: true });
