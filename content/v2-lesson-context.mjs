@@ -125,3 +125,27 @@ const introductions = {
   pipelines: 'Four chunks pass through two reusable GPU storage slots. CUDA streams queue the copies and kernels, and events order their dependencies. The starter checks the resulting values; the optional model explores overlap using explicitly synthetic durations.',
 };
 for (const [slug, introduction] of Object.entries(introductions)) lessonContexts[slug].introduction = introduction;
+
+// Essential reading before the editor. Keep these bridges separate from the
+// recorded talk tracks above: changing a lesson must not silently rewrite a
+// published recording's transcript without regenerating its audio and captions.
+const preparations = {
+  'one-thread-one-element': [
+    'blockIdx.x is the block number, blockDim.x is the number of threads per block, and threadIdx.x is the thread’s index within its block. The expression for i combines them into an array index. The condition i < n allows only valid indices to read and write the arrays. Lesson 3 explores launches with extra threads.',
+  ],
+  'from-cpu-array-to-gpu-result': [
+    'The program calculates n, the number of input elements, from x automatically. sizeof(x) gives the input size in bytes: five FP32 values occupy 20 bytes. Appending values to x updates both quantities for the next run.',
+    'In each cudaMemcpy call, the arguments give the destination address, source address, byte count and copy direction, in that order. cudaMemcpyHostToDevice selects CPU-to-GPU copying; cudaMemcpyDeviceToHost selects GPU-to-CPU copying. CUDA_CHECK reports CUDA errors; keep these supplied checks unchanged.',
+  ],
+  matmul: [
+    'dim3 threads(tile, tile) makes a two-dimensional block. threadIdx.x selects a local column and threadIdx.y a local row. multiply combines these with blockIdx.x and blockIdx.y to choose each output’s column and row. Row-major storage places neighbouring columns next to each other in an array; row * width + col selects one matrix element.',
+  ],
+  compaction: [
+    'A CUDA stream is an ordered queue of operations. These three launches use the same default stream: scanFlags reads the completed flags from flag, and scatter reads the completed offsets from scanFlags. Lesson 20 explores dependencies between different streams.',
+  ],
+  pipelines: [
+    'The starter uses cudaMallocHost to allocate pinned CPU memory: memory the operating system keeps in RAM so CUDA can transfer it asynchronously. Pinned memory supports transfer and computation overlap when the GPU and workload allow it; streams alone do not guarantee overlap.',
+    'In process<<<1, width, 0, compute>>>, the third argument requests zero extra bytes of dynamic shared memory, and the fourth selects the compute stream. Dynamic shared memory is block-local storage whose size is supplied at launch; this kernel does not use it.',
+  ],
+};
+for (const [slug, preparation] of Object.entries(preparations)) lessonContexts[slug].preparation = preparation;
