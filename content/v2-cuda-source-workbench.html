@@ -1460,24 +1460,28 @@ function readDraft(key) {
   }
 }
 
-function writeDraft(key, value) {
-  try {
-    localStorage.setItem(key, value);
-    try { sessionStorage.removeItem(key); } catch {}
-    return 'browser';
-  } catch {
+function writeDraft(key, value, maximumScope = 'browser') {
+  if (maximumScope === 'page') return 'page';
+  if (maximumScope === 'browser') {
     try {
-      sessionStorage.setItem(key, value);
-      return 'tab';
-    } catch {
-      return 'page';
-    }
+      localStorage.setItem(key, value);
+      try { sessionStorage.removeItem(key); } catch {}
+      return 'browser';
+    } catch {}
+  }
+  try {
+    sessionStorage.setItem(key, value);
+    return 'tab';
+  } catch {
+    return 'page';
   }
 }
 
 const saved = readDraft(storageKey);
 editor.value = saved.value ?? starter;
-let previousDraft = readDraft(restoreKey).value || null;
+const recovery = readDraft(restoreKey);
+let previousDraft = recovery.value || null;
+let recoveryScope = previousDraft === null ? 'browser' : recovery.scope;
 undoReset.hidden = previousDraft === null;
 if (editor.value !== starter) status.textContent = 'Saved draft restored. Compile and run to see its output.';
 showSaveScope(saved.scope);
@@ -1640,16 +1644,19 @@ stop.addEventListener('click', () => {
 function edited() {
   clearMessages('Source changed. Compile and run to check this draft.');
   showPreviousResult();
-  showSaveScope(writeDraft(storageKey, editor.value));
+  if (previousDraft !== null && recoveryScope !== 'browser') {
+    recoveryScope = writeDraft(restoreKey, previousDraft);
+  }
+  // Only replace the durable draft after its recovery copy is also durable.
+  showSaveScope(writeDraft(storageKey, editor.value, recoveryScope));
 }
 
 editor.addEventListener('input', edited);
 reset.addEventListener('click', () => {
-  if (editor.value !== starter) {
-    previousDraft = editor.value;
-    writeDraft(restoreKey, previousDraft);
-    undoReset.hidden = false;
-  }
+  if (editor.value === starter) return;
+  previousDraft = editor.value;
+  recoveryScope = 'page';
+  undoReset.hidden = false;
   editor.value = starter;
   hasResult = false;
   showValues();
@@ -1665,6 +1672,7 @@ undoReset.addEventListener('click', () => {
   if (previousDraft === null) return;
   editor.value = previousDraft;
   previousDraft = null;
+  recoveryScope = 'browser';
   writeDraft(restoreKey, '');
   undoReset.hidden = true;
   edited();
