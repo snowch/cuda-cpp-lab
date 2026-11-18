@@ -11,36 +11,49 @@ let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for upda
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
 let unavailable = !supported;
 let remembered = false, remembering, connected = false;
+let backgroundDownload,backgroundProgress,resumeWork,resumeTimer;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
-function error(message = '') { $('app-status-error').textContent = message; }
+function error(message = '',source='operation') { $('app-status-error').textContent = message;$('app-status-error').dataset.source=source; }
 function render() {
+  const job=snapshot.download;
+  const active=downloading||Boolean(job?.busy);
+  const requested=Boolean(job?.wanted&&job.state!=='ready');
+  if(job&&(job.wanted||job.state==='ready'))mode=job.mode;
   const progress = $('download-progress');
   const feedback = $(mode === 'update' ? 'update-download-feedback' : 'offline-download-feedback');
   // Move the single progress/cancel group only when its owning action changes.
   // Repeated status refreshes must preserve focus inside the group.
   if (progress.parentElement !== feedback) feedback.append(progress);
+  progress.hidden=!(downloading||requested);
+  if(job&&!downloading)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
+  const notice=$('download-behaviour');
+  notice.textContent=requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?'Downloading in the background. Return here to apply the update.':job?.state==='verifying'?'Checking the downloaded files before the course is ready.':'Completed files are kept. If your browser pauses the download, it resumes when you return.';
+  if(job?.error&&!downloading)error(job.error,'download');
+  else if($('app-status-error').dataset.source==='download')error('');
   const pending = snapshot.pending && snapshot.pending !== running;
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
-  $('version-status').textContent = downloading && mode === 'update' ? 'Downloading update' : ready ? 'Update ready' : version;
+  $('version-status').textContent = active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : version;
   $('app-status-summary').textContent = `${document.querySelector('.build-info a')?.textContent || running.slice(0, 7)} · ${ready ? 'Update ready' : available || pending ? 'Update available' : version === 'Up to date' ? 'Up to date' : 'Check version'}`;
   $('download-update').hidden = !available || Boolean(ready && snapshot.pending === latest.id);
-  $('download-update').disabled = downloading || !supported;
+  $('download-update').disabled = active || !supported;
+  $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Update';
   $('restart-update').hidden = !ready; $('later-update').hidden = !ready;
   $('restart-note').hidden = !ready;
+  $('restart-update').disabled=restarting||active;
   $('check-update').disabled = Boolean(checking);
   $('check-update').textContent = version === 'Couldn’t check for updates' ? 'Retry' : 'Check for updates';
-  let offline = unavailable ? 'Offline access unavailable' : downloading && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
+  let offline = unavailable ? 'Offline access unavailable' : active && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
   $('offline-status').textContent = offline;
   $('offline-status').dataset.state = snapshot.offlineReady ? 'ready' : 'unavailable';
   const release = runningRelease;
   $('offline-size').textContent = release ? `Complete app: ${bytes(release.bytes)}. Includes all required files; browser storage overhead is additional.` : 'The download size is unavailable. Connect to the internet and retry.';
   $('offline-size').hidden = Boolean(ready && !snapshot.offlineReady);
   $('save-offline').hidden = Boolean(snapshot.offlineReady || ready) || !supported;
-  $('save-offline').disabled = downloading || !release;
+  $('save-offline').disabled = active || !release;
   $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
   $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
-  $('remove-offline').disabled = downloading;
+  $('remove-offline').disabled = active;
   const cacheNote = cacheLifetime ? ` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.` : '';
   $('version-detail').textContent = !supported ? 'This browser cannot save or prepare updates here. You can keep using GPU Lab online.' : latest && available ? `Deployed release ${latest.commit?.slice(0, 7) || latest.id.slice(0, 7)}${latest.date ? ' · ' + latest.date : ''}. Download: ${bytes(latest.bytes)}.${cacheNote}` : latest && cacheLifetime ? 'The published release matches this app.'+cacheNote : version === 'Cannot check for updates' ? 'You are offline. Saved files remain usable; the published version cannot be checked.' : version === 'Couldn’t check for updates' ? 'The deployed release could not be verified. Try again when connected.' : '';
 }
@@ -49,7 +62,7 @@ function rpc(type, data = {}, progress) {
     if (!worker) { reject(new Error('Offline access unavailable. Reopen App status to retry.')); return; }
     const channel = new MessageChannel();
     let timer;
-    const reset = () => { clearTimeout(timer); timer = setTimeout(() => { channel.port1.close(); reject(new Error('The operation did not respond. Reopen App status and retry.')); }, type === 'PREPARE' ? 30000 : 15000); };
+    const reset = () => { clearTimeout(timer); timer = setTimeout(() => { channel.port1.close(); reject(new Error('The operation did not respond. Reopen App status and retry.')); }, ['PREPARE','DOWNLOAD_PLAN'].includes(type) ? 30000 : 15000); };
     reset();
     channel.port1.onmessage = ({ data }) => {
       if (data.progress) { reset(); progress?.(data.progress); return; }
@@ -121,7 +134,7 @@ async function connect() {
       await Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => setTimeout(() => reject(new Error('Offline access unavailable. Retry when browser storage is enabled.')), 8000))]);
       worker = registration.active;
     }
-    removed = false; await refresh(); connected = true; await remember();
+    removed = false; await refresh(); connected = true; await remember();resumeDownloads();
   } catch (failure) { unavailable = true; error(failure.message); render(); }
 }
 async function remember() {
@@ -153,32 +166,95 @@ async function remember() {
   }).finally(() => { remembering = null; });
   return remembering;
 }
-async function download(save) {
-  const release = save ? runningRelease : latest;
-  if (!release || downloading) return;
+function showProgress(value) {
+  const stage=value.stage||'verified';
+  $('asset-progress').max=value.total;$('asset-progress').value=value.bytes;
+  $('download-progress-label').textContent=stage==='downloaded'?'Downloaded files':stage==='checking'?'Checking saved files':'Verified download progress';
+  $('progress-text').textContent=`${bytes(value.bytes)} of ${bytes(value.total)} ${stage==='downloaded'?'downloaded; files are checked before the course is ready':'verified'}`;
+}
+async function watchBackground(id) {
+  if(!registration.backgroundFetch)return;
+  const transfer=await registration.backgroundFetch.get(id);
+  if(!transfer)return;
+  if(backgroundDownload?.id===id)return;
+  if(backgroundDownload)backgroundDownload.removeEventListener('progress',backgroundProgress);
+  backgroundDownload=transfer;
+  backgroundProgress=()=>{
+    if(snapshot.download?.id!==id)return;
+    if(transfer.result){refresh();return;}
+    const job=snapshot.download;
+    snapshot.download={...job,state:'background',busy:true,stage:'downloaded',bytes:Math.min(job.total,job.cachedBytes+transfer.downloaded)};
+    render();
+  };
+  transfer.addEventListener('progress',backgroundProgress);backgroundProgress();
+}
+async function resumeDownloads() {
+  if(resumeWork)return resumeWork;
+  if(window!==window.top||!connected||removed||restarting||downloading||!navigator.onLine||document.visibilityState!=='visible')return;
+  resumeWork=(async()=>{
+    await refresh();
+    const job=snapshot.download;
+    if(!job?.wanted)return;
+    if(registration.backgroundFetch)await watchBackground(job.id);
+    if(job.busy){
+      if(job.state==='planning'){
+        clearTimeout(resumeTimer);
+        resumeTimer=setTimeout(resumeDownloads,Math.max(300,30000-(Date.now()-job.started)+300));
+      }
+      return;
+    }
+    if(snapshot.downloadRelease)await download(job.mode==='offline',{release:snapshot.downloadRelease,id:job.id});
+  })().catch(failure=>error(failure.message)).finally(()=>{resumeWork=null;});
+  return resumeWork;
+}
+async function download(save, resume) {
+  const release=resume?.release||(save?runningRelease:latest);
+  if(!release||downloading)return;
   await remembering;
-  if (save && snapshot.offlineReady) return;
-  if (!worker || removed || unavailable) await connect();
-  downloading = true; mode = save ? 'offline' : 'update'; error();
-  $('download-progress').hidden = false; $('asset-progress').value = 0; $('asset-progress').max = release.bytes;
-  $('progress-text').textContent = `0 of ${bytes(release.bytes)} verified`;
-  render();
-  let prepared = false;
+  if(save&&snapshot.offlineReady&&!resume)return;
+  if(!worker||removed||unavailable)await connect();
+  downloading=true;mode=save?'offline':'update';error();render();
+  showProgress({bytes:0,total:release.bytes});
+  let handled=false,downloadId=resume?.id;
+  const request={release,save:true,requestDownload:true,mode,downloadId};
   try {
-    // Both actions prepare a complete offline copy. Keep save=true compatible
-    // with already-installed workers as well as fresh installations.
-    const result = await rpc('PREPARE', { release, save: true }, p => {
-      $('asset-progress').max = p.total; $('asset-progress').value = p.bytes;
-      $('progress-text').textContent = `${bytes(p.bytes)} of ${bytes(p.total)} verified`;
-    });
-    // PREPARE already returns a fully verified status. Do not hold readiness
-    // behind another full-book scan, or let an older STATUS overwrite it.
-    ++refreshGeneration;
-    snapshot = result; unavailable = false;
-    runningRelease ||= snapshot.runningRelease;
-    prepared = true; error();
-  } catch (failure) { error(failure.message); }
-  finally { downloading = false; $('download-progress').hidden = true; if (!prepared) await refresh(); render(); }
+    if(snapshot.downloadVersion===1&&registration.backgroundFetch){
+      const plan=await rpc('DOWNLOAD_PLAN',request,showProgress);
+      if(plan.ready){++refreshGeneration;snapshot=plan.status;unavailable=false;handled=true;return;}
+      downloadId=plan.backgroundId;
+      let native;
+      try {
+        native=await registration.backgroundFetch.get(downloadId);
+        if(!native&&!plan.existing)native=await registration.backgroundFetch.fetch(downloadId,plan.requests,{
+          title:save?'GPU Lab offline download':'GPU Lab update',downloadTotal:plan.downloadTotal,
+          icons:[{src:new URL('assets/icon-192.png',base).href,sizes:'192x192',type:'image/png'}],
+        });
+      } catch(failure) {
+        // Background permission or storage may be unavailable even when the API
+        // exists. Preserve the same request and use the resumable page path.
+        if(failure.name==='AbortError'){await rpc('CANCEL',{id:downloadId});throw failure;}
+      }
+      if(native||plan.existing){
+        if(native){
+          try{await rpc('BACKGROUND_STARTED',{id:downloadId});}catch{/* STATUS recovers a started browser job after a worker restart. */}
+          await refresh();
+          if(snapshot.download?.id!==downloadId||(!snapshot.download.wanted&&snapshot.download.state!=='ready')){await native.abort();handled=true;return;}
+          await watchBackground(downloadId);
+        } else await refresh();
+        handled=true;return;
+      }
+    }
+    const result=await rpc('PREPARE',{...request,downloadId},showProgress);
+    ++refreshGeneration;snapshot=result;unavailable=false;runningRelease||=snapshot.runningRelease;
+    handled=true;error();
+  } catch(failure) {
+    await refresh();
+    if(snapshot.download?.wanted!==false)error(failure.message);
+  } finally {
+    downloading=false;
+    if(!handled)await refresh();
+    render();
+  }
 }
 $('running-version').append('Running ', document.querySelector('.build-info').cloneNode(true), ` · Build ${running.slice(0, 12)}`);
 $('app-status-open').addEventListener('click', () => { dialog.showModal(); check(); if (!worker || removed) connect(); else refresh(); });
@@ -187,7 +263,7 @@ dialog.addEventListener('close', () => $('app-status-open').focus({ preventScrol
 $('check-update').addEventListener('click', () => { check(true); refresh(); });
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));
-$('cancel-download').addEventListener('click', () => rpc('CANCEL').catch(f => error(f.message)));
+$('cancel-download').addEventListener('click', () => {clearTimeout(resumeTimer);rpc('CANCEL',{id:downloading?undefined:snapshot.download?.id}).then(refresh).catch(f=>error(f.message));});
 $('later-update').addEventListener('click', () => dialog.close());
 $('restart-update').addEventListener('click', async () => {
   error(); restarting = true; $('restart-update').disabled = true;
@@ -203,13 +279,15 @@ $('confirm-remove').addEventListener('click', async () => {
 });
 navigator.serviceWorker?.addEventListener('message', ({ data }) => {
   if (data?.type === 'STATUS_CHANGED') refresh();
+  if (data?.type === 'DOWNLOAD_PROGRESS'&&snapshot.download?.id===data.id){snapshot.download={...snapshot.download,bytes:data.progress.bytes,stage:data.progress.stage,state:snapshot.download.state==='background'?'verifying':snapshot.download.state};render();}
+  if (data?.type === 'OPEN_APP_STATUS'){if(!dialog.open)dialog.showModal();refresh();}
   if (data?.type === 'OFFLINE_REMOVED') { snapshot = {}; removed = true; render(); }
 });
-addEventListener('online', () => { lastCheck = 0; check(); refresh(); });
+addEventListener('online', () => { lastCheck = 0; check();resumeDownloads(); });
 addEventListener('offline', () => { checkingAbort?.abort('offline'); latest=null; version = 'Cannot check for updates'; render(); });
-addEventListener('focus', () => { check(); refresh(); });
+addEventListener('focus', () => { check();refresh();resumeDownloads(); });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { check(); refresh(); }
+  if (document.visibilityState === 'visible') { check();refresh();resumeDownloads(); }
   else { checkingAbort?.abort('hidden'); }
 });
 setInterval(() => { if (document.visibilityState === 'visible' && navigator.onLine) check(); }, 60000);
@@ -217,3 +295,5 @@ addEventListener('load', remember, { once: true });
 render(); check(); connect();
 // Running metadata is immutable and small; it is not a course download.
 metadata(new URL(`releases/${running}/release.json`, base), AbortSignal.timeout(8000),{immutable:true}).then(({release:r}) => { if (r.id === running) { runningRelease = r; render(); remember(); } }).catch(() => {});
+
+if(new URLSearchParams(location.search).has('download')){dialog.showModal();}
