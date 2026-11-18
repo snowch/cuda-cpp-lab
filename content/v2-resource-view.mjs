@@ -9,3 +9,12 @@ export function resourceSummary(kind, title, description, id = '') {
     <span class="v2-resource-description">${escape(description)}</span>
     </span><svg class="v2-resource-chevron" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></summary>`;
 }
+
+export function recordingTranscript(scenes) {
+  const groups=[];
+  for(const {title,captions} of scenes){
+    if(groups.at(-1)?.title===title)groups.at(-1).captions.push(...captions);
+    else groups.push({title,captions:[...captions]});
+  }
+  return groups.map(({title,captions})=>`<section><h3>${escape(title)}</h3><p>${escape(captions.join(' '))}</p></section>`).join('');
+}

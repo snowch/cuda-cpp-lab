@@ -2,113 +2,225 @@
   {
     "id": "s01",
     "stage": "question",
-    "title": "Where does 42.0 travel?",
-    "lead": "The GPU computes a value. The CPU prints it.",
+    "title": "Why is a copy needed?",
     "captions": [
-      "The Console shows forty-two point zero.",
-      "But the GPU does not print that line.",
-      "Follow the value from the kernel to device memory, then back to the CPU."
+      "The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s02",
-    "stage": "allocate",
-    "title": "Storage is separate from execution",
-    "lead": "cudaMalloc reserves one float in device memory.",
+    "stage": "question",
+    "title": "Why is a copy needed?",
     "captions": [
-      "On this simplified discrete GPU, the compute chip and device memory are separate.",
-      "The CPU reserves space for one float.",
-      "The pointer output identifies that space; allocating it does not execute hello."
+      "The GPU writes 42.0, but the CPU prints it. What connects those two steps?"
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The GPU writes forty-two point zero, but the CPU prints it. What connects those two steps?"
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s03",
-    "stage": "launch",
-    "title": "The launch requests one thread",
-    "lead": "hello<<<1, 1>>>(output);",
+    "stage": "kernel",
+    "title": "The kernel runs on the GPU",
     "captions": [
-      "The CPU submits a launch: one block containing one thread.",
-      "These numbers describe logical work.",
-      "They do not select a physical processor or reserve the whole GPU."
+      "hello is a kernel: a function that runs on the GPU. Its body writes 42.0 into output[0]."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "Hello is a kernel: a function that runs on the GPU. Its body writes forty-two point zero into output at index zero."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s04",
-    "stage": "execute",
-    "title": "An SM executes the kernel",
-    "lead": "SM means streaming multiprocessor.",
+    "stage": "allocate",
+    "title": "The starter prepares GPU storage",
     "captions": [
-      "The block is assigned to a streaming multiprocessor, or SM, on the compute chip.",
-      "Its execution hardware runs the thread's instructions.",
-      "A thread is an execution of code, not a dedicated piece of hardware."
+      "The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s05",
-    "stage": "store",
-    "title": "The assignment writes device storage",
-    "lead": "output[0] = 42.0f;",
+    "stage": "launch",
+    "title": "The CPU launches hello",
     "captions": [
-      "The assignment stores forty-two point zero at the address for output index zero.",
-      "The value belongs to the GPU allocation.",
-      "It is not yet the CPU variable value.",
-      "Cache details are omitted from this data path."
+      "In main, the CPU launches hello. The two ones request one block containing one thread."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "In main, the CPU launches hello. The two ones request one block containing one thread."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s06",
-    "stage": "copy",
-    "title": "Copy the result into CPU memory",
-    "lead": "cudaMemcpy copies into value before main prints it.",
+    "stage": "sm",
+    "title": "One thread executes on an SM",
     "captions": [
-      "This device-to-host copy waits for the result and places it in the CPU variable value.",
-      "The launch statement by itself did not mean the kernel had already finished."
+      "A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s07",
-    "stage": "print",
-    "title": "The CPU prints its own copy",
-    "lead": "GPU allocation → CPU variable → Console",
+    "stage": "store",
+    "title": "The thread writes GPU memory",
     "captions": [
-      "Now main prints its CPU copy.",
-      "The SM executed the assignment, device storage held the result,",
-      "and the copy made that result available to the CPU.",
-      "These are three different roles."
+      "The thread writes 42.0 into output[0] in GPU memory."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The thread writes forty-two point zero into output at index zero in GPU memory."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s08",
-    "stage": "predict",
-    "title": "Predict a changed value",
-    "lead": "Set output[0] to 13.0f. Keep <<<1, 1>>>.",
+    "stage": "initialise",
+    "title": "The CPU has a separate variable",
     "captions": [
-      "Pause and predict: if the assignment stores thirteen point zero,",
-      "does the launch need more threads?",
-      "Which value will the CPU print after the copy?"
+      "The program also has a CPU variable named value. main initialises it to 0.0."
     ],
-    "hold": 5,
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The program also has a CPU variable named value. Main initialises it to zero point zero."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s09",
-    "stage": "answer",
-    "title": "New data, the same launch",
-    "lead": "One thread stores 13.0; the CPU prints 13.0.",
+    "stage": "predict",
+    "title": "Pause before the copy",
     "captions": [
-      "The launch still requests one thread.",
-      "Only the stored value changes.",
-      "In hello in the CUDA source editor, set the stored value to thirteen point zero f.",
-      "Click Compile and run, and inspect Console.",
-      "Leave the allocation, copy and error checks unchanged."
+      "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s10",
+    "stage": "predict",
+    "title": "Pause before the copy",
+    "captions": [
+      "Pause here. Is the CPU variable value still 0.0, or has the GPU write changed it to 42.0?"
+    ],
+    "speech": [
+      "Pause here. Is the CPU variable value still zero point zero, or has the GPU write changed it to forty-two point zero?"
+    ],
+    "hold": 5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s11",
+    "stage": "before-copy",
+    "title": "The GPU write did not change value",
+    "captions": [
+      "value is still 0.0. The GPU wrote to output[0], a different location in GPU memory."
+    ],
+    "speech": [
+      "Value is still zero point zero. The GPU wrote to output at index zero, a different location in GPU memory."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s12",
+    "stage": "copy",
+    "title": "The copy transfers the result",
+    "captions": [
+      "The cudaMemcpy call copies the GPU result into value in CPU memory."
+    ],
+    "speech": [
+      "The CUDA memory copy call copies the GPU result into value in CPU memory."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s13",
+    "stage": "copied",
+    "title": "The copy completes before printing",
+    "captions": [
+      "For this call, main waits for the copy to complete before continuing. value now holds 42.0."
+    ],
+    "speech": [
+      "For this call, main waits for the copy to complete before continuing. Value now holds forty-two point zero."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s14",
+    "stage": "print",
+    "title": "The CPU prints its copy",
+    "captions": [
+      "The CPU reads value and prints 42.0 in Console. The kernel itself did not print that line."
+    ],
+    "speech": [
+      "The CPU reads value and prints forty-two point zero in Console. The kernel itself did not print that line."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s15",
+    "stage": "summary",
+    "title": "Execution, storage and transfer",
+    "captions": [
+      "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code."
+    ],
+    "speech": [
+      "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s16",
+    "stage": "transfer",
+    "title": "Try tracing the same path",
+    "captions": [
+      "Return to the lesson. Find the assignment inside hello, then the copy and print calls inside main."
+    ],
+    "speech": [
+      "Return to the lesson. [pause 0.6] Find the assignment inside hello, then the copy and print calls inside main."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 48,
+    "captionSettings": "position:50% size:92% align:center"
   }
 ]

@@ -18,7 +18,7 @@ questions, diagnostics and optional materials.
 
 | Lesson or group | Learner action and evidence checked |
 | --- | --- |
-| Write your first GPU value | Run the supplied program, edit the output assignment in `hello` from 42.0f to 7.0f and read Console. The optional recording specifies its independent 13.0f case. |
+| Write your first GPU value | Run the supplied program, edit the output assignment in `hello` from 42.0f to 7.0f and read Console. The optional recording now compares the separate CPU and GPU values before the result copy; see the introductory recording review. |
 | One thread, one element | Change the multiplier from 2.0f to 3.0f and inspect the value and position of the third output. |
 | More threads than elements | Change four threads per block to three. Compare the launch line under Trace CUDA calls with the five output values in Console. |
 | From CPU array to GPU result | Extend the input from five to nine values. Compare the byte counts, launch dimensions and output length. |

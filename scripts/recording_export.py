@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+import textwrap
 from threading import Thread
 
 import numpy as np
@@ -46,6 +47,39 @@ def command(args):
 def stamp(seconds, srt=False):
     ms = round(seconds*1000)
     return f'{ms//3600000:02}:{ms//60000%60:02}:{ms//1000%60:02}{"," if srt else "."}{ms%1000:03}'
+
+
+def display_captions(text, start, end, limit=None):
+    """Short display cues inside a measured speech cue, preserving every word.
+
+    Narration remains intact. Display boundaries are interpolated by text length;
+    they are not claimed to be forced word alignment or additional speech clips.
+    """
+    chunks = textwrap.wrap(text, width=limit, break_long_words=False,
+                           break_on_hyphens=False) if limit else [text]
+    # Avoid flashing a trailing word on its own after a full display line.
+    if limit and len(chunks)>1 and len(chunks[-1])<limit/2:
+        tail=chunks[-2]+' '+chunks[-1]
+        if len(tail)<=limit:
+            chunks[-2:]=[tail]
+        else:
+            previous=chunks[-2].split()
+            while len(chunks[-1])<limit/2 and len(previous)>1:
+                candidate=previous[-1]+' '+chunks[-1]
+                if len(candidate)>limit or len(' '.join(previous[:-1]))<limit/2:
+                    break
+                chunks[-1]=candidate
+                previous.pop()
+            chunks[-2]=' '.join(previous)
+    assert ' '.join(chunks) == text
+    total = sum(len(chunk) for chunk in chunks)
+    cursor = start
+    result = []
+    for i, chunk in enumerate(chunks):
+        boundary = end if i == len(chunks)-1 else cursor+(end-start)*len(chunk)/total
+        result.append({'start':round(cursor,3),'end':round(boundary,3),'text':chunk})
+        cursor = boundary
+    return result
 
 
 def capture(recordings):
@@ -107,7 +141,7 @@ def encode(r):
                 (ROOT/f'content/{r["slug"]}-media.json').write_text(json.dumps(saved['result'], indent=2)+'\n')
             print('Reused verified export:', r['key'], flush=True)
             return r['slug'], saved['result']
-    pieces, captions, srt, cuts, cues = [], ['WEBVTT', ''], [], [], []
+    pieces, captions, srt, cuts, cues, display = [], ['WEBVTT', ''], [], [], [], []
     chapters = [';FFMETADATA1', 'title='+r['scenes'][0]['title'], 'artist=GPU Lab']
     cursor, sr = 0.0, 24000
     for scene in r['scenes']:
@@ -120,8 +154,10 @@ def encode(r):
             assert source_sr == sr and audio.ndim == 1 and np.isfinite(audio).all() and np.max(np.abs(audio)) < 1
             end = cursor + len(audio)/sr
             settings = scene.get('captionSettings', '')
-            captions += [f'{stamp(cursor)} --> {stamp(end)}'+(' '+settings if settings else ''), text, '']
-            srt += [str(len(cues)+1), f'{stamp(cursor, True)} --> {stamp(end, True)}', text, '']
+            for shown in display_captions(text, cursor, end, scene.get('captionMaxChars')):
+                captions += [f'{stamp(shown["start"])} --> {stamp(shown["end"])}'+(' '+settings if settings else ''), shown['text'], '']
+                srt += [str(len(display)+1), f'{stamp(shown["start"], True)} --> {stamp(shown["end"], True)}', shown['text'], '']
+                display.append(shown)
             cues.append({'id': cue_id, 'start': round(cursor, 3), 'end': round(end, 3), 'text': text})
             pieces.extend([audio, np.zeros(round(.22*sr), dtype=np.float32)])
             cursor = end + .22
@@ -185,7 +221,7 @@ def encode(r):
         rows.append(f'| {stamp(cut["start"])} | {stamp(cut["end"])} | {scene["title"]} | '+ ' '.join(scene['captions']).replace('|', '\\|')+' |')
     (out/(r['key']+'-shot-list.md')).write_text('\n'.join(rows)+'\n')
     result = {'durationSeconds': round(float(probe['format']['duration'])), 'bytes': dest.stat().st_size,
-              'scenes': cuts, 'cues': cues, 'speech': speech, 'video': {'width': 3840, 'height': 2160, 'fps': 30},
+              'scenes': cuts, 'cues': cues, 'displayCues': display, 'speech': speech, 'video': {'width': 3840, 'height': 2160, 'fps': 30},
               'encoding': {'preset': os.environ.get('DEMO_FFMPEG_PRESET', 'veryfast'), 'crf': 18,
                            'gopFrames': 120, 'method': 'closed-GOP repetition of native still scenes'},
               'audio': {'codec': 'aac', 'sampleRate': 48000, 'bitrate': 160000, 'loudnessTargetLUFS': -16, 'truePeakTargetDB': -1.5}}

@@ -77,15 +77,18 @@ try:
                 assert abs(video.evaluate('v=>v.duration')-item['durationSeconds'])<1, key
                 metadata = (json.loads((ROOT/'content/v2-media.json').read_text())[slug] if key.startswith('v2-')
                             else json.loads((ROOT/f'content/{slug}-media.json').read_text()))
-                cue = metadata['cues'][-1]
+                cue = metadata.get('displayCues',metadata['cues'])[-1]
                 target = (cue['start']+cue['end'])/2
                 video.evaluate('(v,time)=>{v.currentTime=time;return v.play()}', target)
                 page.wait_for_function('time=>document.querySelector("video").currentTime>time+.1', arg=target)
                 video.evaluate('v=>{v.pause();v.playbackRate=1.25}')
+                # Seeking/playback can advance past a short final display cue
+                # before the pause command reaches the browser.
+                video.evaluate('(v,time)=>{v.currentTime=time}',target)
                 page.wait_for_function('text=>[...document.querySelector("video").textTracks[0].activeCues||[]].some(c=>c.text===text)',arg=cue['text'])
                 assert video.evaluate('v=>v.textTracks[0].mode')=='showing', key
                 if key in ['first-kernel','v2-one-thread-one-element']:
-                    assert video.evaluate('v=>[...v.textTracks[0].activeCues].every(c=>c.line===0)'), key
+                    assert video.evaluate('v=>[...v.textTracks[0].activeCues].every(c=>c.line==="auto"&&c.position===50&&c.size===92)'), key
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), key
                 transcript = page.locator('.sm-transcript > summary')
                 transcript.focus();page.keyboard.press('Enter')

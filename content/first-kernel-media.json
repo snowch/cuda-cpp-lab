@@ -1,242 +1,392 @@
 {
-  "durationSeconds": 128,
-  "bytes": 8257531,
+  "durationSeconds": 136,
+  "bytes": 6520336,
   "scenes": [
     {
       "id": "s01",
       "start": 0.0,
-      "end": 11.441,
-      "title": "Where does 42.0 travel?"
+      "end": 8.467,
+      "title": "Why is a copy needed?"
     },
     {
       "id": "s02",
-      "start": 11.441,
-      "end": 26.509,
-      "title": "Storage is separate from execution"
+      "start": 8.467,
+      "end": 15.739,
+      "title": "Why is a copy needed?"
     },
     {
       "id": "s03",
-      "start": 26.509,
-      "end": 39.295,
-      "title": "The launch requests one thread"
+      "start": 15.739,
+      "end": 25.315,
+      "title": "The kernel runs on the GPU"
     },
     {
       "id": "s04",
-      "start": 39.295,
-      "end": 54.0,
-      "title": "An SM executes the kernel"
+      "start": 25.315,
+      "end": 32.843,
+      "title": "The starter prepares GPU storage"
     },
     {
       "id": "s05",
-      "start": 54.0,
-      "end": 69.437,
-      "title": "The assignment writes device storage"
+      "start": 32.843,
+      "end": 39.688,
+      "title": "The CPU launches hello"
     },
     {
       "id": "s06",
-      "start": 69.437,
-      "end": 81.32,
-      "title": "Copy the result into CPU memory"
+      "start": 39.688,
+      "end": 49.84,
+      "title": "One thread executes on an SM"
     },
     {
       "id": "s07",
-      "start": 81.32,
-      "end": 95.051,
-      "title": "The CPU prints its own copy"
+      "start": 49.84,
+      "end": 56.728,
+      "title": "The thread writes GPU memory"
     },
     {
       "id": "s08",
-      "start": 95.051,
-      "end": 109.951,
-      "title": "Predict a changed value"
+      "start": 56.728,
+      "end": 64.512,
+      "title": "The CPU has a separate variable"
     },
     {
       "id": "s09",
-      "start": 109.951,
-      "end": 127.635,
-      "title": "New data, the same launch"
+      "start": 64.512,
+      "end": 72.104,
+      "title": "Pause before the copy"
+    },
+    {
+      "id": "s10",
+      "start": 72.104,
+      "end": 86.244,
+      "title": "Pause before the copy"
+    },
+    {
+      "id": "s11",
+      "start": 86.244,
+      "end": 95.479,
+      "title": "The GPU write did not change value"
+    },
+    {
+      "id": "s12",
+      "start": 95.479,
+      "end": 102.559,
+      "title": "The copy transfers the result"
+    },
+    {
+      "id": "s13",
+      "start": 102.559,
+      "end": 110.556,
+      "title": "The copy completes before printing"
+    },
+    {
+      "id": "s14",
+      "start": 110.556,
+      "end": 118.959,
+      "title": "The CPU prints its copy"
+    },
+    {
+      "id": "s15",
+      "start": 118.959,
+      "end": 128.385,
+      "title": "Execution, storage and transfer"
+    },
+    {
+      "id": "s16",
+      "start": 128.385,
+      "end": 136.172,
+      "title": "Try tracing the same path"
     }
   ],
   "cues": [
     {
       "id": "s01-c1",
       "start": 0.6,
-      "end": 2.947,
-      "text": "The Console shows forty-two point zero."
-    },
-    {
-      "id": "s01-c2",
-      "start": 3.167,
-      "end": 5.407,
-      "text": "But the GPU does not print that line."
-    },
-    {
-      "id": "s01-c3",
-      "start": 5.627,
-      "end": 10.021,
-      "text": "Follow the value from the kernel to device memory, then back to the CPU."
+      "end": 7.747,
+      "text": "The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console."
     },
     {
       "id": "s02-c1",
-      "start": 12.041,
-      "end": 17.033,
-      "text": "On this simplified discrete GPU, the compute chip and device memory are separate."
-    },
-    {
-      "id": "s02-c2",
-      "start": 17.253,
-      "end": 19.728,
-      "text": "The CPU reserves space for one float."
-    },
-    {
-      "id": "s02-c3",
-      "start": 19.948,
-      "end": 25.089,
-      "text": "The pointer output identifies that space; allocating it does not execute hello."
+      "start": 9.067,
+      "end": 15.019,
+      "text": "The GPU writes 42.0, but the CPU prints it. What connects those two steps?"
     },
     {
       "id": "s03-c1",
-      "start": 27.109,
-      "end": 30.992,
-      "text": "The CPU submits a launch: one block containing one thread."
-    },
-    {
-      "id": "s03-c2",
-      "start": 31.212,
-      "end": 33.473,
-      "text": "These numbers describe logical work."
-    },
-    {
-      "id": "s03-c3",
-      "start": 33.693,
-      "end": 37.875,
-      "text": "They do not select a physical processor or reserve the whole GPU."
+      "start": 16.339,
+      "end": 24.595,
+      "text": "hello is a kernel: a function that runs on the GPU. Its body writes 42.0 into output[0]."
     },
     {
       "id": "s04-c1",
-      "start": 39.895,
-      "end": 44.865,
-      "text": "The block is assigned to a streaming multiprocessor, or SM, on the compute chip."
-    },
-    {
-      "id": "s04-c2",
-      "start": 45.085,
-      "end": 48.285,
-      "text": "Its execution hardware runs the thread's instructions."
-    },
-    {
-      "id": "s04-c3",
-      "start": 48.505,
-      "end": 52.58,
-      "text": "A thread is an execution of code, not a dedicated piece of hardware."
+      "start": 25.915,
+      "end": 32.123,
+      "text": "The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged."
     },
     {
       "id": "s05-c1",
-      "start": 54.6,
-      "end": 59.357,
-      "text": "The assignment stores forty-two point zero at the address for output index zero."
-    },
-    {
-      "id": "s05-c2",
-      "start": 59.577,
-      "end": 62.265,
-      "text": "The value belongs to the GPU allocation."
-    },
-    {
-      "id": "s05-c3",
-      "start": 62.485,
-      "end": 65.152,
-      "text": "It is not yet the CPU variable value."
-    },
-    {
-      "id": "s05-c4",
-      "start": 65.372,
-      "end": 68.017,
-      "text": "Cache details are omitted from this data path."
+      "start": 33.443,
+      "end": 38.968,
+      "text": "In main, the CPU launches hello. The two ones request one block containing one thread."
     },
     {
       "id": "s06-c1",
-      "start": 70.037,
-      "end": 75.755,
-      "text": "This device-to-host copy waits for the result and places it in the CPU variable value."
-    },
-    {
-      "id": "s06-c2",
-      "start": 75.975,
-      "end": 79.9,
-      "text": "The launch statement by itself did not mean the kernel had already finished."
+      "start": 40.288,
+      "end": 49.12,
+      "text": "A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions."
     },
     {
       "id": "s07-c1",
-      "start": 81.92,
-      "end": 84.032,
-      "text": "Now main prints its CPU copy."
-    },
-    {
-      "id": "s07-c2",
-      "start": 84.252,
-      "end": 88.433,
-      "text": "The SM executed the assignment, device storage held the result,"
-    },
-    {
-      "id": "s07-c3",
-      "start": 88.653,
-      "end": 91.725,
-      "text": "and the copy made that result available to the CPU."
-    },
-    {
-      "id": "s07-c4",
-      "start": 91.945,
-      "end": 93.631,
-      "text": "These are three different roles."
+      "start": 50.44,
+      "end": 56.008,
+      "text": "The thread writes 42.0 into output[0] in GPU memory."
     },
     {
       "id": "s08-c1",
-      "start": 95.651,
-      "end": 99.576,
-      "text": "Pause and predict: if the assignment stores thirteen point zero,"
-    },
-    {
-      "id": "s08-c2",
-      "start": 99.796,
-      "end": 101.609,
-      "text": "does the launch need more threads?"
-    },
-    {
-      "id": "s08-c3",
-      "start": 101.829,
-      "end": 104.731,
-      "text": "Which value will the CPU print after the copy?"
+      "start": 57.328,
+      "end": 63.792,
+      "text": "The program also has a CPU variable named value. main initialises it to 0.0."
     },
     {
       "id": "s09-c1",
-      "start": 110.551,
-      "end": 112.428,
-      "text": "The launch still requests one thread."
+      "start": 65.112,
+      "end": 71.384,
+      "text": "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started."
     },
     {
-      "id": "s09-c2",
-      "start": 112.648,
-      "end": 114.589,
-      "text": "Only the stored value changes."
+      "id": "s10-c1",
+      "start": 72.704,
+      "end": 81.024,
+      "text": "Pause here. Is the CPU variable value still 0.0, or has the GPU write changed it to 42.0?"
     },
     {
-      "id": "s09-c3",
-      "start": 114.809,
-      "end": 119.887,
-      "text": "In hello in the CUDA source editor, set the stored value to thirteen point zero f."
+      "id": "s11-c1",
+      "start": 86.844,
+      "end": 94.759,
+      "text": "value is still 0.0. The GPU wrote to output[0], a different location in GPU memory."
     },
     {
-      "id": "s09-c4",
-      "start": 120.107,
-      "end": 122.752,
-      "text": "Click Compile and run, and inspect Console."
+      "id": "s12-c1",
+      "start": 96.079,
+      "end": 101.839,
+      "text": "The cudaMemcpy call copies the GPU result into value in CPU memory."
     },
     {
-      "id": "s09-c5",
-      "start": 122.972,
-      "end": 126.215,
-      "text": "Leave the allocation, copy and error checks unchanged."
+      "id": "s13-c1",
+      "start": 103.159,
+      "end": 109.836,
+      "text": "For this call, main waits for the copy to complete before continuing. value now holds 42.0."
+    },
+    {
+      "id": "s14-c1",
+      "start": 111.156,
+      "end": 118.239,
+      "text": "The CPU reads value and prints 42.0 in Console. The kernel itself did not print that line."
+    },
+    {
+      "id": "s15-c1",
+      "start": 119.559,
+      "end": 127.665,
+      "text": "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code."
+    },
+    {
+      "id": "s16-c1",
+      "start": 128.985,
+      "end": 135.452,
+      "text": "Return to the lesson. Find the assignment inside hello, then the copy and print calls inside main."
+    }
+  ],
+  "displayCues": [
+    {
+      "start": 0.6,
+      "end": 3.626,
+      "text": "The lesson supplies a complete starter program."
+    },
+    {
+      "start": 3.626,
+      "end": 6.008,
+      "text": "This walkthrough explains how its GPU"
+    },
+    {
+      "start": 6.008,
+      "end": 7.747,
+      "text": "result reaches the Console."
+    },
+    {
+      "start": 9.067,
+      "end": 12.98,
+      "text": "The GPU writes 42.0, but the CPU prints it. What"
+    },
+    {
+      "start": 12.98,
+      "end": 15.019,
+      "text": "connects those two steps?"
+    },
+    {
+      "start": 16.339,
+      "end": 20.704,
+      "text": "hello is a kernel: a function that runs on the"
+    },
+    {
+      "start": 20.704,
+      "end": 24.595,
+      "text": "GPU. Its body writes 42.0 into output[0]."
+    },
+    {
+      "start": 25.915,
+      "end": 28.987,
+      "text": "The supplied setup reserves space for that value"
+    },
+    {
+      "start": 28.987,
+      "end": 30.779,
+      "text": "in GPU memory. You can leave"
+    },
+    {
+      "start": 30.779,
+      "end": 32.123,
+      "text": "this setup unchanged."
+    },
+    {
+      "start": 33.443,
+      "end": 36.368,
+      "text": "In main, the CPU launches hello. The two ones"
+    },
+    {
+      "start": 36.368,
+      "end": 38.968,
+      "text": "request one block containing one thread."
+    },
+    {
+      "start": 40.288,
+      "end": 43.69,
+      "text": "A thread is one execution of the kernel. An SM,"
+    },
+    {
+      "start": 43.69,
+      "end": 46.876,
+      "text": "or streaming multiprocessor, is GPU hardware"
+    },
+    {
+      "start": 46.876,
+      "end": 49.12,
+      "text": "that executes its instructions."
+    },
+    {
+      "start": 50.44,
+      "end": 53.388,
+      "text": "The thread writes 42.0 into"
+    },
+    {
+      "start": 53.388,
+      "end": 56.008,
+      "text": "output[0] in GPU memory."
+    },
+    {
+      "start": 57.328,
+      "end": 61.465,
+      "text": "The program also has a CPU variable named value."
+    },
+    {
+      "start": 61.465,
+      "end": 63.792,
+      "text": "main initialises it to 0.0."
+    },
+    {
+      "start": 65.112,
+      "end": 68.349,
+      "text": "Suppose the GPU write and the CPU initialisation"
+    },
+    {
+      "start": 68.349,
+      "end": 71.384,
+      "text": "have both finished. The copy has not started."
+    },
+    {
+      "start": 72.704,
+      "end": 77.242,
+      "text": "Pause here. Is the CPU variable value still 0.0,"
+    },
+    {
+      "start": 77.242,
+      "end": 81.024,
+      "text": "or has the GPU write changed it to 42.0?"
+    },
+    {
+      "start": 86.844,
+      "end": 91.38,
+      "text": "value is still 0.0. The GPU wrote to output[0],"
+    },
+    {
+      "start": 91.38,
+      "end": 94.759,
+      "text": "a different location in GPU memory."
+    },
+    {
+      "start": 96.079,
+      "end": 99.657,
+      "text": "The cudaMemcpy call copies the GPU result"
+    },
+    {
+      "start": 99.657,
+      "end": 101.839,
+      "text": "into value in CPU memory."
+    },
+    {
+      "start": 103.159,
+      "end": 106.235,
+      "text": "For this call, main waits for the copy to"
+    },
+    {
+      "start": 106.235,
+      "end": 108.26,
+      "text": "complete before continuing."
+    },
+    {
+      "start": 108.26,
+      "end": 109.836,
+      "text": "value now holds 42.0."
+    },
+    {
+      "start": 111.156,
+      "end": 114.896,
+      "text": "The CPU reads value and prints 42.0 in Console."
+    },
+    {
+      "start": 114.896,
+      "end": 118.239,
+      "text": "The kernel itself did not print that line."
+    },
+    {
+      "start": 119.559,
+      "end": 123.3,
+      "text": "The SM executes the thread. GPU memory holds its"
+    },
+    {
+      "start": 123.3,
+      "end": 125.405,
+      "text": "result. The copy makes that"
+    },
+    {
+      "start": 125.405,
+      "end": 127.665,
+      "text": "result available to CPU code."
+    },
+    {
+      "start": 128.985,
+      "end": 132.219,
+      "text": "Return to the lesson. Find the assignment inside"
+    },
+    {
+      "start": 132.219,
+      "end": 133.835,
+      "text": "hello, then the copy and"
+    },
+    {
+      "start": 133.835,
+      "end": 135.452,
+      "text": "print calls inside main."
     }
   ],
   "speech": {
@@ -253,36 +403,22 @@
       "provider": "CPUExecutionProvider"
     },
     "durations": {
-      "s01-c1": 2.347,
-      "s01-c2": 2.24,
-      "s01-c3": 4.395,
-      "s02-c1": 4.992,
-      "s02-c2": 2.475,
-      "s02-c3": 5.141,
-      "s03-c1": 3.883,
-      "s03-c2": 2.261,
-      "s03-c3": 4.181,
-      "s04-c1": 4.971,
-      "s04-c2": 3.2,
-      "s04-c3": 4.075,
-      "s05-c1": 4.757,
-      "s05-c2": 2.688,
-      "s05-c3": 2.667,
-      "s05-c4": 2.645,
-      "s06-c1": 5.717,
-      "s06-c2": 3.925,
-      "s07-c1": 2.112,
-      "s07-c2": 4.181,
-      "s07-c3": 3.072,
-      "s07-c4": 1.685,
-      "s08-c1": 3.925,
-      "s08-c2": 1.813,
-      "s08-c3": 2.901,
-      "s09-c1": 1.877,
-      "s09-c2": 1.941,
-      "s09-c3": 5.077,
-      "s09-c4": 2.645,
-      "s09-c5": 3.243
+      "s01-c1": 7.147,
+      "s02-c1": 5.952,
+      "s03-c1": 8.256,
+      "s04-c1": 6.208,
+      "s05-c1": 5.525,
+      "s06-c1": 8.832,
+      "s07-c1": 5.568,
+      "s08-c1": 6.464,
+      "s09-c1": 6.272,
+      "s10-c1": 8.32,
+      "s11-c1": 7.915,
+      "s12-c1": 5.76,
+      "s13-c1": 6.677,
+      "s14-c1": 7.083,
+      "s15-c1": 8.107,
+      "s16-c1": 6.467
     },
     "skill": {
       "repository": "https://github.com/snowch/claude-skills",
