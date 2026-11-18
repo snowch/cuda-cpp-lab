@@ -140,6 +140,9 @@ const preparations = {
   matmul: [
     'dim3 threads(tile, tile) makes a two-dimensional block. threadIdx.x selects a local column and threadIdx.y a local row. multiply combines these with blockIdx.x and blockIdx.y to choose each output’s column and row. Row-major storage places neighbouring columns next to each other in an array; row * width + col selects one matrix element.',
   ],
+  compaction: [
+    'A CUDA stream is an ordered queue of operations. These three launches use the same default stream: scanFlags reads the completed flags from flag, and scatter reads the completed offsets from scanFlags. Lesson 20 explores dependencies between different streams.',
+  ],
   pipelines: [
     'The starter uses cudaMallocHost to allocate pinned CPU memory: memory the operating system keeps in RAM so CUDA can transfer it asynchronously. Pinned memory supports transfer and computation overlap when the GPU and workload allow it; streams alone do not guarantee overlap.',
     'In process<<<1, width, 0, compute>>>, the third argument requests zero extra bytes of dynamic shared memory, and the fourth selects the compute stream. Dynamic shared memory is block-local storage whose size is supplied at launch; this kernel does not use it.',

@@ -17,6 +17,7 @@ approval or a learner study of all recordings.
 | 2 · One thread, one element | The displayed kernel uses CUDA index names and a bounds guard before lesson 3 explains them. | Define block and local indices, block size, and the purpose of the guard beside the starter; retain lesson 3’s deeper launch experiment. |
 | 4 · CPU array to GPU result | The primary edit asks about bytes and input length, but the explicit `sizeof` explanation was in the optional model. Copy argument roles and `CUDA_CHECK` were implicit. | Explain automatic element/byte counts and copy argument order in the essential reading before the editor. |
 | 10 · Matrix reuse | The starter moves from one-dimensional indexing to two-dimensional blocks and flat row-major matrices. | Explain local row/column indices, block coordinates and the flat array offset beside the starter. |
+| 18 · Compaction | The explanation relies on stream ordering before streams are defined in lesson 20. | Define a stream locally and connect the default stream to the flag → scan → scatter dependencies. |
 | 20 · Pipelines | Pinned host allocation and the third/fourth launch arguments appear without a local explanation. | Explain pinned CPU memory, its role in possible overlap, zero dynamic shared-memory bytes and the selected stream using the actual starter launch. |
 
 The later lessons already provide local preparation for warp/lane grouping,
