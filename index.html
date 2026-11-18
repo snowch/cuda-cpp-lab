@@ -19,8 +19,7 @@
   </header>
   <div class="layout">
     <aside class="sidebar" aria-label="Course navigation">
-      <p class="eyebrow">HOW GPUS RUN AI</p>
-      <p class="sidebar-title">Under the hood.</p>
+      <p class="sidebar-title">Earlier GPU Lab edition</p>
       <nav class="course-nav" aria-label="Course navigation">
         <a class="current" aria-current="page" href="#overview">Course overview</a>
         <a href="#meet-gpu">Meet the GPU</a>
@@ -28,18 +27,17 @@
         <a href="./lessons/memory.html">01 Reading a tensor</a>
         <a href="./lessons/scheduling.html">02 Keeping the GPU busy</a><a href="./lessons/divergence.html">03 Taking different paths</a><a href="./lessons/shared-memory.html">04 Sharing work</a><a href="./lessons/matmul.html">05 Reusing data</a><a href="./lessons/tensor-cores.html">06 Using tensor cores</a><a href="./lessons/attention.html">07 Attention fusion</a><a href="./lessons/inference.html">08 Inference performance</a>
       </nav>
-      <div class="sidebar-bottom"><span class="status-label">EIGHT LABS · DRAFT</span><p>Runs in your browser.<br>No GPU required.</p><a href="https://snowch.github.io/digital-design/">Digital Design ↗</a><a href="https://snowch.github.io/assembly-lab/">Assembly Lab ↗</a></div>
+      <div class="sidebar-bottom"><p>Runs in your browser.<br>No GPU required.</p><a href="https://snowch.github.io/digital-design/">Digital Design ↗</a><a href="https://snowch.github.io/assembly-lab/">Assembly Lab ↗</a></div>
     </aside>
     <main id="main">
       <section id="overview" class="intro">
         <p class="eyebrow">GPU ARCHITECTURE FOR AI PRACTITIONERS</p>
         <h1>Follow the data.<br>Understand the GPU.</h1>
-        <p><a href="./">Go to GPU Lab →</a></p>
+        <p>This is the earlier edition. <a href="./">Open the current CUDA course →</a></p>
         <p class="lead">Follow how GPU threads read a tensor’s input values, compute results and store them in memory. See why a calculation may have to wait for data.</p>
         <p>You’ll also practise finding and using the official PyTorch and CUDA references to explain an experiment.</p>
         <p class="prose">Use the <a href="./lessons/meet-gpu.html">GPU map</a> whenever you want to see how concepts fit together. Start with the whole computer, then open components to explore the GPU’s processors, thread groups and memory. Each concept links to its chapter. The GPU map button opens the map across the reading area, with the contents hidden. Close it to return to the same place and experiment.</p>
         <p>Start by doubling five input values. Then copy values between CPU and GPU memory and compare how threads read rows and columns.</p>
-        <div class="intro-meta"><span>Predict → inspect → experiment</span></div>
       </section>
       <section id="audience" class="section-space prose" aria-labelledby="audience-title">
         <h2 id="audience-title">Who this book is for</h2>

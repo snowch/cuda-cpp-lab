@@ -9,6 +9,7 @@ const ptx = document.getElementById('ptx');
 const ptxPanel = document.getElementById('ptx-panel');
 const consoleOutput = document.getElementById('program-output');
 const operations = document.getElementById('program-operations');
+const provenance = document.getElementById('result-provenance');
 const outputCells = () => [...document.querySelectorAll('#values tr')].map(row => row.lastElementChild);
 
 addEventListener('gpu-lab:before-restart', ({detail}) => {
@@ -19,6 +20,7 @@ registerExperiment('v2-cuda-workbench', () => ({
   version: 1, source: editor.value,
   output: outputCells().map(cell => cell.textContent),
   console: consoleOutput.textContent, consoleHidden: consoleOutput.hidden,
+  previous: !provenance.hidden,
   operations: operations.querySelector('pre').textContent, operationsHidden: operations.hidden,
   status: status.textContent, error: status.dataset.error === 'true',
   outcome: status.dataset.outcome ?? '', messagesOpen: messages.open,
@@ -42,6 +44,10 @@ registerExperiment('v2-cuda-workbench', () => ({
   status.textContent = saved.status;
   status.dataset.error = String(Boolean(saved.error));
   status.dataset.outcome = saved.outcome === 'program-exit' ? 'program-exit' : '';
+  editor.dispatchEvent(new CustomEvent('gpu-lab:result-restored', { detail: {
+    hasResult: Boolean(saved.console) || saved.output.some(value => value !== '—'),
+    previous: saved.previous === true,
+  }}));
   diagnostics.textContent = saved.diagnostics;
   diagnostics.hidden = saved.diagnosticsHidden;
   messages.hidden = saved.diagnosticsHidden;

@@ -129,7 +129,7 @@ ${lesson.slug==='scheduling'?'<link rel="stylesheet" href="../src/scheduling-rel
 <script type="module" src="../src/${lesson.engine === 'ai' ? 'ai-lesson' : 'lesson'}.mjs"></script></head>
 <body class="book-chapter" data-lesson="${lesson.slug}"><a class="skip" href="#main">Skip to lesson</a>
 <header class="topbar"><a class="brand" href="../index.html"><span class="brand-icon" aria-hidden="true">▦</span> GPU Lab <span class="brand-note">/ interactive book</span></a><div class="top-actions"><a href="https://github.com/snowch/gpu-lab">Source ↗</a><button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<div class="layout"><aside class="sidebar"><p class="eyebrow">HOW GPUS RUN AI</p><p class="sidebar-title">Under the hood.</p>
+<div class="layout"><aside class="sidebar"><p class="sidebar-title">Earlier GPU Lab edition</p>
 <nav class="lesson-nav" aria-label="Course lessons"><a href="../index.html">Course overview</a><a href="../index.html#meet-gpu">Meet the GPU</a><a href="hello.html">Start here: Hello, GPU</a><a href="kernel.html">Repair a kernel</a><a href="memory.html">01 Reading a tensor</a>${lessons.map(l => `<a href="${l.slug}.html" ${l.slug === lesson.slug ? 'class="current" aria-current="page"' : ''}>${l.number} ${l.title}</a>`).join('')}<a href="../index.html#curriculum">Course roadmap</a></nav>
 <div class="sidebar-bottom"><span class="status-label">INTERACTIVE DRAFT</span><p>Computed models.<br>No GPU required.</p></div></aside>
 <main id="main"><section class="intro"><p class="eyebrow">${lesson.slug==='shared-memory'?'OPTIONAL LAB':'LAB '+lesson.number} / GPU ARCHITECTURE</p><h1>${lesson.title}</h1><p class="lead">${lesson.subtitle}</p><p class="prerequisite"><strong>Before you start:</strong> ${lesson.prerequisite}</p></section>
@@ -151,7 +151,7 @@ ${lesson.namedChoices ? `<form id="prediction" class="prediction"><fieldset clas
 <div id="trace" class="trace" aria-label="Computed instruction trace"></div><p id="explanation" class="explanation"></p></div>
 <details class="model-note"><summary>Model assumptions and limits</summary><p>${lesson.limits}</p><a href="${lesson.source}">${lesson.sourceLabel} ↗</a></details></div></section>
 <section class="two-col section-space"><div><p class="eyebrow">CONNECT TO CUDA</p><h2>The programming connection</h2>${lesson.codeNote}</div><div class="code-panel"><div class="code-title">${lesson.slug==='shared-memory'?'CUDA C++ · function from shared-memory.cu':'Illustrative CUDA · not executed in this page'}</div><pre><code>${escape(lesson.code)}</code></pre></div></section>
-<section class="challenge section-space"><p class="eyebrow">TRY IT YOURSELF</p><h2>Change one thing. Explain the result.</h2><ol>${lesson.exercises.map(x=>`<li>${x}</li>`).join('')}</ol><details><summary>Compare your explanation</summary>${lesson.takeaway}</details></section>
+<section class="challenge section-space"><h2>Change one thing. Explain the result.</h2><ol>${lesson.exercises.map(x=>`<li>${x}</li>`).join('')}</ol><details><summary>Compare your explanation</summary>${lesson.takeaway}</details></section>
 ${renderChapterReferences(lesson.slug)}
 <nav class="lesson-pagination" aria-label="Lesson sequence"><a href="${previous}">← Previous lesson</a>${renderLessonForward(lesson.slug,`<a href="${next}">${index + 1 < lessons.length ? 'Next lesson →' : 'Return to roadmap →'}</a>`)}</nav>
 <footer><span>Copyright © 2026 Christopher Snow.</span><a href="https://github.com/snowch/gpu-lab">Contribute or report a problem ↗</a></footer></main></div></body></html>`;

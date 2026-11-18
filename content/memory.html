@@ -22,14 +22,13 @@
   </header>
   <div class="layout">
     <aside class="sidebar" aria-label="Course navigation">
-      <p class="eyebrow">HOW GPUS RUN AI</p>
-      <p class="sidebar-title">Under the hood.</p>
+      <p class="sidebar-title">Earlier GPU Lab edition</p>
       <nav class="lesson-nav" aria-label="Course lessons">
         <a href="../index.html">Course overview</a><a href="../index.html#meet-gpu">Meet the GPU</a><a href="hello.html">Start here: Hello, GPU</a><a href="kernel.html">Repair a kernel</a>
         <a class="current" aria-current="page" href="memory.html"><span>01</span> Reading a tensor <span class="dot" aria-hidden="true"></span></a>
         <a href="scheduling.html">02 Keeping the GPU busy</a><a href="divergence.html">03 Taking different paths</a><a href="shared-memory.html">04 Sharing work</a><a href="matmul.html">05 Reusing data</a><a href="tensor-cores.html">06 Using tensor cores</a><a href="attention.html">07 Attention fusion</a><a href="inference.html">08 Inference performance</a>
       </nav>
-      <div class="sidebar-bottom"><span class="status-label">EIGHT LABS · DRAFT</span><p>Runs in your browser.<br>No GPU required.</p><a href="https://snowch.github.io/digital-design/">Digital Design ↗</a><a href="https://snowch.github.io/assembly-lab/">Assembly Lab ↗</a></div>
+      <div class="sidebar-bottom"><p>Runs in your browser.<br>No GPU required.</p><a href="https://snowch.github.io/digital-design/">Digital Design ↗</a><a href="https://snowch.github.io/assembly-lab/">Assembly Lab ↗</a></div>
     </aside>
     <main id="main">
       <section class="intro">
@@ -161,7 +160,7 @@
         <div class="code-panel"><div class="code-title"><span>gather.cu · illustrative source</span><button id="copy" type="button">Copy</button></div><pre><code id="kernel"></code></pre><div class="code-footer"><span id="copy-status" role="status">The browser models addresses; it does not compile CUDA.</span><a href="../examples/gather.cu" download>Download runnable example ↓</a></div></div>
       </section>
       <section id="challenge" class="challenge section-space">
-        <p class="eyebrow">TRY IT YOURSELF</p><h2>Make a prediction you can explain.</h2>
+        <h2>Make a prediction you can explain.</h2>
         <ol><li>Choose <strong>Tensor column</strong>. Think of a row-major tensor with eight features per row. The warp reads the same feature from successive rows. Inspect the sector count from the worked example.</li><li>Switch to <strong>Contiguous</strong>. Now it reads neighbouring features. Compare requested bytes and sector coverage. Which changed?</li><li>Choose <strong>Shift by one</strong>. Predict its sector count before checking. Explain what happens at the two ends of the address range.</li><li>Set <strong>8 active lanes</strong>, stride 1, and offset 0. Predict what changes if you move the offset to 1.</li></ol>
         <details><summary>Explain the result in your own words, then compare</summary><p>Each sector holds eight FP32 values. Neighbouring lanes can use different values in the same sector. With a stride of eight elements, each lane reaches a different sector. Shifting a consecutive range by one element can make it cross an extra sector boundary.</p><p>In an AI workload, changing how threads map onto tensor dimensions can change this access pattern. A transpose or a different tensor layout may help one operation and add costs elsewhere. Count the work across the whole operation before choosing a layout.</p></details>
       </section>
