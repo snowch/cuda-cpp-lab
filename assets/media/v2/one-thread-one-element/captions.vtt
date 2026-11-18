@@ -102,26 +102,26 @@ These are different from the twenty-eight unused warp positions,
 00:02:11.743 --> 00:02:13.300 line:0 position:50% size:95%
 which contain no threads.
 
-00:02:15.320 --> 00:02:19.011 line:0 position:50% size:95%
-Pause and predict: with a multiplier of zero point five,
+00:02:15.320 --> 00:02:20.163 line:0 position:50% size:95%
+Pause and predict: keep the launch, but use a multiplier of four point zero.
 
-00:02:19.231 --> 00:02:21.215 line:0 position:50% size:95%
-what will output index two contain?
+00:02:20.383 --> 00:02:24.820 line:0 position:50% size:95%
+What will output index two contain, and which hardware does the multiplication?
 
-00:02:21.435 --> 00:02:26.021 line:0 position:50% size:95%
-Do the block count, thread count or selected array indices need to change?
+00:02:25.040 --> 00:02:30.032 line:0 position:50% size:95%
+Will changing the multiplier move the input and output arrays into the SM?
 
-00:02:31.841 --> 00:02:35.681 line:0 position:50% size:95%
-Three point zero times zero point five is one point five.
+00:02:35.852 --> 00:02:39.777 line:0 position:50% size:95%
+Three point zero times four point zero is twelve point zero.
 
-00:02:35.901 --> 00:02:38.205 line:0 position:50% size:95%
-The indices and launch stay unchanged.
+00:02:39.997 --> 00:02:43.261 line:0 position:50% size:95%
+The SM's execution units perform the arithmetic.
 
-00:02:38.425 --> 00:02:40.815 line:0 position:50% size:95%
-In runKernel in the CUDA source editor,
+00:02:43.481 --> 00:02:48.409 line:0 position:50% size:95%
+The arrays stay in device memory; the thread uses working values on the SM.
 
-00:02:41.035 --> 00:02:45.067 line:0 position:50% size:95%
-set the multiplier to zero point five f, click Compile and run,
+00:02:48.629 --> 00:02:53.621 line:0 position:50% size:95%
+In runKernel in the CUDA source editor, set the multiplier to four point zero f.
 
-00:02:45.287 --> 00:02:48.444 line:0 position:50% size:95%
-and inspect the third value in Console's Output array.
+00:02:53.841 --> 00:02:58.556 line:0 position:50% size:95%
+Click Compile and run, and inspect the third value in Console's Output array.

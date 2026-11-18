@@ -1,7 +1,7 @@
 {
   "one-thread-one-element": {
-    "durationSeconds": 170,
-    "bytes": 13333698,
+    "durationSeconds": 180,
+    "bytes": 14188949,
     "scenes": [
       {
         "id": "s01",
@@ -60,14 +60,14 @@
       {
         "id": "s10",
         "start": 134.72,
-        "end": 151.241,
+        "end": 155.252,
         "title": "Predict a different multiplier"
       },
       {
         "id": "s11",
-        "start": 151.241,
-        "end": 169.864,
-        "title": "The calculation changes; the mapping stays"
+        "start": 155.252,
+        "end": 179.976,
+        "title": "Separate the calculation from array storage"
       }
     ],
     "cues": [
@@ -278,50 +278,50 @@
       {
         "id": "s10-c1",
         "start": 135.32,
-        "end": 139.011,
-        "text": "Pause and predict: with a multiplier of zero point five,"
+        "end": 140.163,
+        "text": "Pause and predict: keep the launch, but use a multiplier of four point zero."
       },
       {
         "id": "s10-c2",
-        "start": 139.231,
-        "end": 141.215,
-        "text": "what will output index two contain?"
+        "start": 140.383,
+        "end": 144.82,
+        "text": "What will output index two contain, and which hardware does the multiplication?"
       },
       {
         "id": "s10-c3",
-        "start": 141.435,
-        "end": 146.021,
-        "text": "Do the block count, thread count or selected array indices need to change?"
+        "start": 145.04,
+        "end": 150.032,
+        "text": "Will changing the multiplier move the input and output arrays into the SM?"
       },
       {
         "id": "s11-c1",
-        "start": 151.841,
-        "end": 155.681,
-        "text": "Three point zero times zero point five is one point five."
+        "start": 155.852,
+        "end": 159.777,
+        "text": "Three point zero times four point zero is twelve point zero."
       },
       {
         "id": "s11-c2",
-        "start": 155.901,
-        "end": 158.205,
-        "text": "The indices and launch stay unchanged."
+        "start": 159.997,
+        "end": 163.261,
+        "text": "The SM's execution units perform the arithmetic."
       },
       {
         "id": "s11-c3",
-        "start": 158.425,
-        "end": 160.815,
-        "text": "In runKernel in the CUDA source editor,"
+        "start": 163.481,
+        "end": 168.409,
+        "text": "The arrays stay in device memory; the thread uses working values on the SM."
       },
       {
         "id": "s11-c4",
-        "start": 161.035,
-        "end": 165.067,
-        "text": "set the multiplier to zero point five f, click Compile and run,"
+        "start": 168.629,
+        "end": 173.621,
+        "text": "In runKernel in the CUDA source editor, set the multiplier to four point zero f."
       },
       {
         "id": "s11-c5",
-        "start": 165.287,
-        "end": 168.444,
-        "text": "and inspect the third value in Console's Output array."
+        "start": 173.841,
+        "end": 178.556,
+        "text": "Click Compile and run, and inspect the third value in Console's Output array."
       }
     ],
     "speech": {
@@ -372,14 +372,14 @@
         "s09-c3": 2.837,
         "s09-c4": 3.2,
         "s09-c5": 1.557,
-        "s10-c1": 3.691,
-        "s10-c2": 1.984,
-        "s10-c3": 4.587,
-        "s11-c1": 3.84,
-        "s11-c2": 2.304,
-        "s11-c3": 2.389,
-        "s11-c4": 4.032,
-        "s11-c5": 3.157
+        "s10-c1": 4.843,
+        "s10-c2": 4.437,
+        "s10-c3": 4.992,
+        "s11-c1": 3.925,
+        "s11-c2": 3.264,
+        "s11-c3": 4.928,
+        "s11-c4": 4.992,
+        "s11-c5": 4.715
       },
       "skill": {
         "repository": "https://github.com/snowch/claude-skills",

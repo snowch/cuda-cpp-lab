@@ -7,7 +7,7 @@ import first from '../content/first-kernel-scenes.json' with {type:'json'};
 import second from '../content/one-thread-one-element-scenes.json' with {type:'json'};
 export const introScenes = {'first-kernel':first,'one-thread-one-element':second};
 export const introExample = simulateIntro(4,2,true,4);
-export const introPrediction = simulateIntro(4,.5,true,4);
+export const introPrediction = simulateIntro(4,4,true,4);
 const program=starterFor('one-thread-one-element');
 if(!program.includes('const int threadsPerBlock = 4;') || !program.includes('1.0f, 2.0f, 3.0f, 4.0f, 5.0f') || !program.includes('output[i] = input[i] * 2.0f;')) throw Error('Review recording against changed starter');
 const text=(x,y,v,c='body')=>`<text x="${x}" y="${y}" class="${c}">${escape(String(v))}</text>`;
@@ -16,7 +16,7 @@ const arrow=(path,label,x,y)=>`<path d="${path}" class="arrow" marker-end="url(#
 const fmt=n=>n.toFixed(1);
 
 export function architectureFrame(slug,stage){
- const two=slug==='one-thread-one-element',selected=['index','load','multiply','store'].includes(stage);
+ const two=slug==='one-thread-one-element',selected=['index','load','multiply','store','answer'].includes(stage);
  if(!starterFor('first-kernel').includes('output[0] = 42.0f;'))throw Error('Review changed starter');
  const value=['copy','print'].includes(stage)?'42.0':stage==='answer'?'13.0':'?';
  let s=`<svg viewBox="0 0 724 476" role="img" aria-label="CPU and system RAM beside GPU device; compute chip contains the SM, separate from device memory." xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0 L7 3.5 L0 7" fill="#146653"/></marker></defs>`;
@@ -37,9 +37,9 @@ export function architectureFrame(slug,stage){
     for(let lane=0;lane<32;lane++)s+=rect(x+lane*5.8,218,4.3,15,lane<4?'occupied':'unoccupied');
     s+=text(x,260,'4 threads in a warp','small')+text(x,285,'28 positions unoccupied','small');}
   }else{
-   s+=rect(252,230,188,65,stage==='load'?'selected':'panel')+text(264,254,'Registers','heading')+text(264,282,stage==='load'?'thread 2: 3.0':stage==='multiply'?'3.0 → 6.0':stage==='store'?'thread 2: 6.0':'Thread working values','small');
-   s+=rect(468,230,194,65,stage==='multiply'?'selected':'panel')+text(480,254,'Execution units','heading')+text(480,282,stage==='multiply'?'3.0 × 2.0 = 6.0':'Shared hardware','small');
-   if(stage==='multiply')s+=arrow('M440 246 H466','',0,0)+arrow('M468 279 H442','',0,0);
+   s+=rect(252,230,188,65,stage==='load'?'selected':'panel')+text(264,254,'Registers','heading')+text(264,282,stage==='answer'?`3.0 → ${fmt(introPrediction.output[2])}`:stage==='load'?'thread 2: 3.0':stage==='multiply'?'3.0 → 6.0':stage==='store'?'thread 2: 6.0':'Thread working values','small');
+   s+=rect(468,230,194,65,['multiply','answer'].includes(stage)?'selected':'panel')+text(480,254,'Execution units','heading')+text(480,282,stage==='answer'?`3.0 × ${fmt(introPrediction.factor)} = ${fmt(introPrediction.output[2])}`:stage==='multiply'?'3.0 × 2.0 = 6.0':'Shared hardware','small');
+   if(['multiply','answer'].includes(stage))s+=arrow('M440 246 H466','',0,0)+arrow('M468 279 H442','',0,0);
   }
  }else{
   s+=rect(252,154,410,55,'logical')+text(269,179,['question','allocate'].includes(stage)?'No launch submitted yet':'Logical block · one thread','heading')+text(269,201,'Instructions from hello','small');
@@ -76,7 +76,7 @@ function source(slug,stage){
  if(['groups','placement','warps'].includes(stage))return `<p class="code-label">CUDA C++ · launch in main()</p><pre>const int threadsPerBlock = 4;\nconst int blocks =\n  (n + threadsPerBlock - 1)\n  / threadsPerBlock;\n\nrunKernel&lt;&lt;&lt;blocks,\n  threadsPerBlock&gt;&gt;&gt;(\n  d_x, d_y, n);</pre><p class="code-note">n = ${introExample.input.length} elements; ${introExample.blocks} blocks of ${introExample.size} threads. The two arrays already exist in device memory.</p>`;
  const highlights={index:'int i',load:'output[i]',multiply:'output[i]',store:'output[i]',guard:'if (i < n)',predict:'output[i]',answer:'output[i]'};
  let code=program.match(/^__global__[^]*?^}/m)[0].replace('    const float* input, float* output, int n','  const float* input,\n  float* output, int n').replace('    int i = blockIdx.x * blockDim.x + threadIdx.x;','  int i = blockIdx.x * blockDim.x\n        + threadIdx.x;').replace('        output','    output');
- if(['predict','answer'].includes(stage))code=code.replace('2.0f','0.5f');
+ if(['predict','answer'].includes(stage))code=code.replace('2.0f','4.0f');
  return `<p class="code-label">CUDA C++ · runKernel</p><pre>${code.split('\n').map(l=>`<span class="${highlights[stage]&&l.includes(highlights[stage])?'code-focus':''}">${escape(l)}</span>`).join('\n')}</pre><p class="code-note">${stage==='predict'?'Predict before continuing. Pause playback for more time.':stage==='guard'?'The three skipped threads still exist. They perform no guarded array access.':stage==='warps'?'Warp positions are logical grouping, not physical cores.':'Selected element: input[2] → output[2].'}</p>`;
 }
 

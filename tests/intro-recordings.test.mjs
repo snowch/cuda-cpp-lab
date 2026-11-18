@@ -7,15 +7,15 @@ import { renderV2Video } from '../content/v2-lesson-video.mjs';
 
 test('intro recordings use the starter mapping, distinguish skipped threads and leave predictions unrevealed',()=>{
  assert.deepEqual(introExample.output,[2,4,6,8,10]);
- assert.deepEqual(introPrediction.output,[.5,1,1.5,2,2.5]);
+ assert.deepEqual(introPrediction.output,[4,8,12,16,20]);
  assert.deepEqual(introExample.threads.filter(t=>t.skipped).map(t=>t.i),[5,6,7]);
  const guard=architectureFrame('one-thread-one-element','guard');
  assert.equal((guard.match(/class="skipped"/g)||[]).length,3);
  assert.equal((guard.match(/class="occupied"/g)||[]).length,8);
  assert.equal((guard.match(/class="unoccupied"/g)||[]).length,56);
  const prompt=architectureFrame('one-thread-one-element','predict');
- assert.doesNotMatch(prompt,/>1\.5</);
- assert.match(architectureFrame('one-thread-one-element','answer'),/>1\.5</);
+ assert.doesNotMatch(prompt,/>12\.0</);
+ assert.match(architectureFrame('one-thread-one-element','answer'),/>12\.0</);
  for(const [slug,scenes] of Object.entries(introScenes)){
   const question=scenes.findIndex(s=>s.stage==='predict');
   assert.ok(question>0&&scenes[question+1].stage==='answer');

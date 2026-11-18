@@ -118,11 +118,11 @@
     "id": "s10",
     "stage": "predict",
     "title": "Predict a different multiplier",
-    "lead": "Set the multiplier to 0.5f. Keep the inputs and launch.",
+    "lead": "Set the multiplier to 4.0f. Keep the inputs and launch.",
     "captions": [
-      "Pause and predict: with a multiplier of zero point five,",
-      "what will output index two contain?",
-      "Do the block count, thread count or selected array indices need to change?"
+      "Pause and predict: keep the launch, but use a multiplier of four point zero.",
+      "What will output index two contain, and which hardware does the multiplication?",
+      "Will changing the multiplier move the input and output arrays into the SM?"
     ],
     "hold": 5,
     "captionSettings": "line:0 position:50% size:95%"
@@ -130,14 +130,14 @@
   {
     "id": "s11",
     "stage": "answer",
-    "title": "The calculation changes; the mapping stays",
-    "lead": "output[2] becomes 1.5. The launch still has eight threads.",
+    "title": "Separate the calculation from array storage",
+    "lead": "output[2] becomes 12.0. The arrays remain in device memory.",
     "captions": [
-      "Three point zero times zero point five is one point five.",
-      "The indices and launch stay unchanged.",
-      "In runKernel in the CUDA source editor,",
-      "set the multiplier to zero point five f, click Compile and run,",
-      "and inspect the third value in Console's Output array."
+      "Three point zero times four point zero is twelve point zero.",
+      "The SM's execution units perform the arithmetic.",
+      "The arrays stay in device memory; the thread uses working values on the SM.",
+      "In runKernel in the CUDA source editor, set the multiplier to four point zero f.",
+      "Click Compile and run, and inspect the third value in Console's Output array."
     ],
     "captionSettings": "line:0 position:50% size:95%"
   }

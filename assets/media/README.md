@@ -15,6 +15,11 @@ hardware walkthroughs; their scripts and figures connect source, working values
 and physical resources. The remaining recordings retain their original scripts.
 Speech forms clarify pronunciation separately from canonical captions.
 
+Before writing a walkthrough, read the parent lesson's application question as
+well as its example. Choose a different case or question and show a relationship
+the logical diagram alone does not explain. Inspect caption placement on a phone
+before the final export; captions must leave the relevant source and data visible.
+
 ## Rebuild
 
 Clone `snowch/claude-skills` separately and check out the pinned commit. Its

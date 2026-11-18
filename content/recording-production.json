@@ -12,7 +12,7 @@
   },
   "asrModel": "small.en",
   "asrCueCount": 661,
-  "rawFlagCount": 172,
+  "rawFlagCount": 170,
   "recordings": [
     {
       "key": "attention",
@@ -435,19 +435,19 @@
     {
       "key": "v2-one-thread-one-element",
       "video": "assets/media/v2/one-thread-one-element/recap.mp4",
-      "sha256": "ff30b1f5434600a8de60aa7e7e9b64d15f2f153e7a2b15a511239964d7c3de90",
+      "sha256": "749bdeab5191b237fda520a0a01a1a77c1dabf8cbc368fd5c0c45d02a10dbaea",
       "previousSha256": "39f8a9da55abdabdbba02e55955a8a6c6228852bc07c0b46257911b29d5a0c7a",
-      "captionSha256": "60bb392222c8543dc85c7e5dcabe6675d95d0f13509333aecbff0c62269e33cb",
+      "captionSha256": "4f6992402ef9a0c5e22163687fa708a36ebc03d547d8c25b0d6c08e00daa7ae9",
       "posterSha256": "07f95accbba305ae54ab5c92ab3e29fafdcafab04a0021a228bd079794ebff86",
-      "bytes": 13333698,
-      "durationSeconds": 170,
+      "bytes": 14188949,
+      "durationSeconds": 180,
       "cueCount": 42,
       "sceneCount": 11,
       "fullDecode": true,
       "width": 3840,
       "height": 2160,
       "fps": 30,
-      "measuredLUFS": -16.55,
+      "measuredLUFS": -16.57,
       "measuredTruePeakDB": -1.38,
       "minSceneSSIM": 0.995698
     },

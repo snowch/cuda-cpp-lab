@@ -4,7 +4,9 @@ Copyright © 2026 Christopher Snow.
 
 The audience can read basic programs and array indexing, but needs no prior CUDA
 or architecture knowledge. The gap is connecting a correct Console result to
-execution hardware and storage, rather than hearing the lesson text again.
+execution hardware and storage, rather than hearing the lesson text again. The second video uses a different
+multiplier from the page’s 0.5 exercise and asks where the arithmetic and arrays
+belong, rather than repeating the page’s index question.
 
 The first recording asks where a GPU-written value travels before the CPU prints
 it. The second follows input index 2 through thread working state, arithmetic and
@@ -14,7 +16,7 @@ physical resources use solid boundaries. Caches, exact register allocation,
 placement policy and timing remain outside the illustration.
 
 Each scene changes a meaningful relationship or state alongside the source.
-Predictions use a new stored value (13.0f) and multiplier (0.5f), with a five-second
+Predictions use a new stored value (13.0f) and multiplier (4.0f), with a five-second
 hold before the comparison and precise instructions for trying the edit. The
 second recording distinguishes three launched threads that skip array operations
 from 28 unoccupied positions in each block's warp. Values and participation are
@@ -39,5 +41,10 @@ the caption placement does not depend on those controls hiding.
 Production uses the same pinned [record-demo skill](https://github.com/snowch/claude-skills/blob/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo/SKILL.md)
 and voice as the rest of the course. Automated speech checks and author visual
 review are distinct from human listening approval or learner testing.
+
+The passing ASR result for the second recording's s10-c3 writes “Will changing”
+as “While changing”. Its original phoneme line starts `/wɪl/`, and the canonical
+caption retains the question mark. This was reviewed alongside the raw flags;
+a passing similarity score is not proof that every transcribed word is correct.
 
 Functional and reading-order verification results are recorded on the merge PR.
