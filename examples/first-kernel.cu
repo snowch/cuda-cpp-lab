@@ -7,22 +7,29 @@ __global__ void hello(float* output) {
     output[0] = 42.0f;
 }
 
-void check(cudaError_t result) {
-    if (result != cudaSuccess) {
-        std::fprintf(stderr, "%s\n", cudaGetErrorString(result));
-        std::exit(EXIT_FAILURE);
-    }
-}
-
 int main() {
     float* output = nullptr;
-    check(cudaMalloc(&output, sizeof(float)));
+    cudaError_t result = cudaMalloc(&output, sizeof(float));
+    if (result != cudaSuccess) {
+        std::fprintf(stderr, "%s\n", cudaGetErrorString(result));
+        return EXIT_FAILURE;
+    }
 
     hello<<<1, 1>>>(output);
-    check(cudaGetLastError());
+    result = cudaGetLastError();
+    if (result != cudaSuccess) {
+        std::fprintf(stderr, "%s\n", cudaGetErrorString(result));
+        cudaFree(output);
+        return EXIT_FAILURE;
+    }
 
     float value = 0.0f;
-    check(cudaMemcpy(&value, output, sizeof(value), cudaMemcpyDeviceToHost));
+    result = cudaMemcpy(&value, output, sizeof(value), cudaMemcpyDeviceToHost);
+    if (result != cudaSuccess) {
+        std::fprintf(stderr, "%s\n", cudaGetErrorString(result));
+        cudaFree(output);
+        return EXIT_FAILURE;
+    }
     std::printf("%.1f\n", value);
-    check(cudaFree(output));
+    cudaFree(output);
 }

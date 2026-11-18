@@ -1,5 +1,5 @@
 # Copyright © 2026 Christopher Snow.
-"""First-kernel edit guidance follows the source without changing the program."""
+"""Lesson edit guidance follows source without changing the program."""
 import base64
 from playwright.sync_api import expect
 
@@ -14,10 +14,11 @@ def assert_source_ink(editor, fragment, colour):
         const context=canvas.getContext('2d');context.drawImage(image,0,0);
         const style=getComputedStyle(e),h=parseFloat(style.lineHeight);
         const line=e.value.slice(0,e.value.indexOf(fragment)).split('\\n').length-1;
-        const top=parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop)+line*h-e.scrollTop;
+        const scale=image.width/e.getBoundingClientRect().width;
+        const top=(parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop)+line*h-e.scrollTop)*scale;
         let count=0;
         const pixels=context.getImageData(0,0,image.width,image.height).data;
-        for(let y=Math.max(0,Math.floor(top));y<Math.min(image.height,Math.ceil(top+h));y++){
+        for(let y=Math.max(0,Math.floor(top));y<Math.min(image.height,Math.ceil(top+h*scale));y++){
             for(let x=2;x<image.width-2;x++){
                 const at=(y*image.width+x)*4,r=pixels[at],g=pixels[at+1],b=pixels[at+2];
                 if(colour==='gold' ? r>220&&g>180&&b<190 : b>220&&g>160&&r<180)count++;
@@ -55,8 +56,8 @@ def check_v2_editor_focus(browser, url, root):
                         px('kernel-focus-bottom') > px('source-focus-bottom') &&
                         Math.abs(px('launch-focus-top') - lineTop(e.value.indexOf('hello<<<'))) < 1 &&
                         Math.abs(px('launch-focus-bottom') - px('launch-focus-top') - h) < 1 &&
-                        lineTop(e.value.indexOf('void check')) > px('kernel-focus-bottom') &&
-                        lineTop(e.value.indexOf('check(cudaMalloc')) < px('launch-focus-top');
+                        !e.value.includes('void check(') &&
+                        lineTop(e.value.indexOf('cudaError_t result = cudaMalloc')) < px('launch-focus-top');
                 }'''), 'Highlight the complete three-line kernel and launch, keeping setup code neutral.'
                 target_visible = '''e => {
                     const top = parseFloat(e.style.getPropertyValue('--source-focus-top'));
@@ -66,9 +67,11 @@ def check_v2_editor_focus(browser, url, root):
                 assert editor.evaluate(target_visible), (width, theme, 'initial target')
                 assert editor.evaluate('''e => {
                     const s=getComputedStyle(e);
-                    return s.backgroundClip === 'text' && s.color === 'rgba(0, 0, 0, 0)' &&
-                        s.backgroundImage.includes('rgb(143, 203, 255)') &&
-                        s.backgroundImage.includes('rgb(255, 224, 154)') &&
+                    const ink=e.parentElement.querySelector('.source-ink');
+                    return s.backgroundImage === 'none' && s.color === 'rgba(0, 0, 0, 0)' &&
+                        ink.getAttribute('aria-hidden') === 'true' &&
+                        getComputedStyle(ink.querySelector('.source-lesson-ink')).color === 'rgb(143, 203, 255)' &&
+                        getComputedStyle(ink.querySelector('.source-target-ink')).color === 'rgb(255, 224, 154)' &&
                         s.caretColor === 'rgb(237, 248, 241)' &&
                         getComputedStyle(e.parentElement).backgroundColor === 'rgb(15, 33, 29)';
                 }'''), 'Colour the code glyphs on one uniform background, with a visible native caret.'
@@ -176,7 +179,7 @@ def check_v2_editor_focus(browser, url, root):
                 }''')
                 assert not errors, errors
                 page.goto(url + 'v2/one-thread-one-element.html')
-                expect(page.frame_locator('[data-kernel-workbench]').locator('.source-focus')).to_have_count(0)
+                expect(page.frame_locator('[data-kernel-workbench]').locator('.source-focus')).to_have_count(1)
     with browser.new_context(viewport={'width':390,'height':1000}, forced_colors='active') as context:
         page=context.new_page()
         page.goto(url+'v2/cuda-source-workbench.html?embed=hello')
@@ -186,7 +189,7 @@ def check_v2_editor_focus(browser, url, root):
             const style=getComputedStyle(e);
             return style.backgroundImage==='none' && style.color!=='rgba(0, 0, 0, 0)' &&
                 style.caretColor!=='rgba(0, 0, 0, 0)';
-        }'''), 'High-contrast mode must retain readable source and caret without the coloured gradient.'
+        }'''), 'High-contrast mode must retain readable source and caret with the paint layer hidden.'
         page.get_by_role('button',name='Show target line').press('Enter')
         expect(editor).to_be_focused()
         editor.screenshot(path=str(root/'test-results/v2-editor-forced-colours.png'))
