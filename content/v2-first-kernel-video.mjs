@@ -7,10 +7,10 @@ import { escape } from '../src/continuation-ui.mjs';
 export function renderFirstKernelVideo(inline) {
   const media = '../assets/media/first-kernel/';
   return `<details class="more-settings sm-recording v2-resource" id="v2-first-video">
-    ${resourceSummary('recap', 'Watch the kernel launch', `${metadata.durationSeconds} sec · Video, captions and transcript`)}
+    ${resourceSummary('recap', 'Follow the value through the GPU and back', `${metadata.durationSeconds} sec · Hardware walkthrough, captions and transcript`)}
     <div class="v2-resource-body">
     ${inline ? `<video data-recording="v2-first-kernel" controls playsinline preload="none" width="1920" height="1080"
-      poster="${media}poster.jpg" aria-label="What is a CUDA kernel?">
+      poster="${media}poster.jpg" aria-label="From kernel launch to SM execution, device storage and CPU readback">
       <source src="${media}first-kernel.mp4" type="video/mp4">
       <track kind="captions" src="${media}captions.vtt" srclang="en" label="English" default>
       Read the transcript below.

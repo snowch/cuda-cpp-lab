@@ -11,7 +11,7 @@
     "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
   },
   "asrModel": "small.en",
-  "asrCueCount": 612,
+  "asrCueCount": 609,
   "rawFlagCount": 152,
   "recordings": [
     {
@@ -93,21 +93,21 @@
     {
       "key": "first-kernel",
       "video": "assets/media/first-kernel/first-kernel.mp4",
-      "sha256": "ca9f7157593f9421689639669412886d50758b6dadc834858edfbe346a3ad863",
-      "previousSha256": "0b865b3604e3a22790010f4cc84316ae76a4f074ac46ed8ea4ad65fe5d8a0341",
-      "captionSha256": "e9cf5529002207c4b0c9df3240ea59b86b329bf4daae22f0b2db14dc984fcc2c",
-      "posterSha256": "8a7564ac1796c7d6632884e3751f8d212212fcdfb6d739fff864cf8b881b4254",
-      "bytes": 2831030,
-      "durationSeconds": 55,
-      "cueCount": 12,
-      "sceneCount": 4,
+      "sha256": "bcc9394ddeccb21f5fd1334a1cfdf37e403754bfebdf513db8f1af1f1a622215",
+      "previousSha256": "ca9f7157593f9421689639669412886d50758b6dadc834858edfbe346a3ad863",
+      "captionSha256": "8029aeee9cdb89ddb316562b77e696f1d9456adeeeafa1822dc971796c0524fe",
+      "posterSha256": "da922ccd348911e425c3c2391b567bc87fcec4fc895df4d71f0301805801e727",
+      "bytes": 8529412,
+      "durationSeconds": 130,
+      "cueCount": 9,
+      "sceneCount": 9,
       "fullDecode": true,
       "width": 3840,
       "height": 2160,
       "fps": 30,
-      "measuredLUFS": -16.65,
-      "measuredTruePeakDB": -1.39,
-      "minSceneSSIM": 0.997967
+      "measuredLUFS": -16.57,
+      "measuredTruePeakDB": -1.33,
+      "minSceneSSIM": 0.996503
     },
     {
       "key": "hello",
@@ -435,21 +435,21 @@
     {
       "key": "v2-one-thread-one-element",
       "video": "assets/media/v2/one-thread-one-element/recap.mp4",
-      "sha256": "39f8a9da55abdabdbba02e55955a8a6c6228852bc07c0b46257911b29d5a0c7a",
-      "previousSha256": "708782ff4738d9a979dabcb3ae0987182b1f210a781763fb2c7b73d1e438f6c2",
-      "captionSha256": "f522b7b8908b33f3237cbf94013f87ba4b22e64d1f3fce56c55f7ff5d3c92eb4",
-      "posterSha256": "b060373100367fdbba82fb17037211bae2b584ad62dd9743d3b47d5b871bd927",
-      "bytes": 2195555,
-      "durationSeconds": 42,
+      "sha256": "daa4d73088b4a1c8fac43a69df76ec41826360daa2ff2e0ec479d28182ae0df4",
+      "previousSha256": "39f8a9da55abdabdbba02e55955a8a6c6228852bc07c0b46257911b29d5a0c7a",
+      "captionSha256": "64209fad65362851fe5bf4b9f86917d1eacea3171453c8459caa161b86f059d5",
+      "posterSha256": "07f95accbba305ae54ab5c92ab3e29fafdcafab04a0021a228bd079794ebff86",
+      "bytes": 14057776,
+      "durationSeconds": 179,
       "cueCount": 11,
-      "sceneCount": 3,
+      "sceneCount": 11,
       "fullDecode": true,
       "width": 3840,
       "height": 2160,
       "fps": 30,
-      "measuredLUFS": -16.63,
-      "measuredTruePeakDB": -1.47,
-      "minSceneSSIM": 0.997564
+      "measuredLUFS": -16.48,
+      "measuredTruePeakDB": -1.42,
+      "minSceneSSIM": 0.995698
     },
     {
       "key": "v2-more-threads-than-elements",

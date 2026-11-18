@@ -587,6 +587,18 @@ through FP16 and back without changing its FP32 arrays. Neither example is prese
 as a production parallel attention or tensor-core implementation. The recaps explain
 these same scopes and are not performance measurements.
 
+## First two architecture recordings
+
+The first two recordings now trace source operations on one original architecture
+view. Lesson 2 derives its five values, two four-thread blocks, skipped indices
+and changed-multiplier outputs from `simulateIntro(4, factor, true, 4)`, checked
+against the editable starter. Both blocks are shown on one SM only as an example;
+each has a separate partially filled warp. Occupied positions whose threads skip
+array operations remain distinct from unoccupied positions. Register working
+values and data arrows are conceptual dependencies, not captured instructions,
+register allocation, cache transactions or timing. See
+[the recording review](intro-recording-review.md).
+
 ## V2 practical models
 
 `src/v2-practical-model.mjs` defines exact integer prefix/ownership models and the

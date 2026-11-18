@@ -1,34 +1,34 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:05.187
-runKernel uses i to select the same position in input and output.
+00:00:00.600 --> 00:00:10.371
+The starter doubles five input values. Follow the third value through one GPU thread, and distinguish that logical thread from the hardware that executes it.
 
-00:00:05.407 --> 00:00:10.164
-The caller passes n as an element count and supplies separate GPU arrays.
+00:00:12.391 --> 00:00:24.785
+The starter chooses four threads per block. Five elements require two blocks, so eight threads are launched. A block groups threads; it is not an SM, and a thread is not a dedicated arithmetic unit.
 
-00:00:10.384 --> 00:00:14.160
-Every launched thread runs this body; the index chooses its data.
+00:00:26.805 --> 00:00:42.165
+Each block runs on one streaming multiprocessor. This illustration places both blocks on the same SM. They could instead be assigned to different SMs; the launch does not choose their placement or promise simultaneous execution.
 
-00:00:16.180 --> 00:00:17.887
-Read input[i].
+00:00:44.185 --> 00:00:59.183
+For instruction execution, an SM groups threads from one block into warps of thirty-two positions. Each block here occupies four positions in its own warp. The other positions contain no launched threads; another block cannot fill them.
 
-00:00:18.107 --> 00:00:20.453
-Choose an element using the thread index.
+00:01:01.203 --> 00:01:14.216
+Follow local thread two in block zero. Its index is zero times four plus two. It selects input index two and output index two. The index chooses data, not a physical arithmetic unit.
 
-00:00:20.673 --> 00:00:21.761
-Multiply.
+00:01:16.236 --> 00:01:32.385
+The selected thread requests the value at input index two: three point zero. On the SM, registers hold thread working values for instructions. This drawing shows the dependency, not an exact register allocation or cache transaction.
 
-00:00:21.981 --> 00:00:24.136
-Apply the multiplier in runKernel.
+00:01:34.405 --> 00:01:49.787
+The multiply uses that thread's value and produces six point zero. Threads retain their own working values while sharing the SM's execution hardware. Separate thread values do not require a separate permanent processor for every thread.
 
-00:00:24.356 --> 00:00:26.127
-Write output[i].
+00:01:51.807 --> 00:02:04.671
+The store sends the result to output index two in device storage. Other valid threads use their own indices. The matching positions come from the index expression, not the order in which threads happen to finish.
 
-00:00:26.347 --> 00:00:28.459
-Keep the same destination index.
+00:02:06.691 --> 00:02:20.088
+Block one's first thread handles the fifth element. Its other three threads exist, but the bounds check skips their array reads and writes. These are different from the twenty-eight unused warp positions, which contain no threads.
 
-00:00:30.479 --> 00:00:33.593
-The SM executes the threads in the assigned block.
+00:02:22.108 --> 00:02:33.137
+Pause and predict: with a multiplier of zero point five, what will output index two contain? Do the block count, thread count or selected array indices need to change?
 
-00:00:33.813 --> 00:00:40.149
-Threads are logical executions with their own values; they do not each own a physical arithmetic unit.
+00:02:38.957 --> 00:02:57.368
+Three point zero times zero point five is one point five. The indices and launch stay unchanged. In runKernel in the CUDA source editor, replace two point zero f with zero point five f, click Compile and run, and inspect the third value in Console's Output array.

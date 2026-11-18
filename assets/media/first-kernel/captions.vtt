@@ -1,37 +1,28 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:04.632
-A CUDA kernel is a function that GPU threads execute.
+00:00:00.600 --> 00:00:10.307
+The Console shows forty-two point zero. But the GPU does not print that line. Follow the value from the kernel to device memory, then back to the CPU.
 
-00:00:04.852 --> 00:00:07.583
-In this file, global marks hello as a kernel.
+00:00:12.327 --> 00:00:25.852
+On this simplified discrete GPU, the compute chip and device memory are separate. The CPU reserves space for one float. The pointer output identifies that space; allocating it does not execute hello.
 
-00:00:07.803 --> 00:00:11.493
-The thread writes forty-two point zero at output index zero.
+00:00:27.872 --> 00:00:38.880
+The CPU submits a launch: one block containing one thread. These numbers describe logical work. They do not select a physical processor or reserve the whole GPU.
 
-00:00:13.513 --> 00:00:18.100
-On the CPU, main reserves space in GPU memory for one float.
+00:00:40.900 --> 00:00:54.340
+The block is assigned to a streaming multiprocessor, or SM, on the compute chip. Its execution hardware runs the thread's instructions. A thread is an execution of code, not a dedicated piece of hardware.
 
-00:00:18.320 --> 00:00:23.077
-The first one requests one block. The second one requests one thread in that block.
+00:00:56.360 --> 00:01:10.504
+The assignment stores forty-two point zero at the address for output index zero. The value belongs to the GPU allocation. It is not yet the CPU variable value. Cache details are omitted from this data path.
 
-00:00:23.297 --> 00:00:26.753
-The argument output gives the kernel the address of the float.
+00:01:12.524 --> 00:01:22.487
+This device-to-host copy waits for the result and places it in the CPU variable value. The launch statement by itself did not mean the kernel had already finished.
 
-00:00:28.773 --> 00:00:34.107
-A streaming multiprocessor, or S M, executes instructions for the GPU thread.
+00:01:24.507 --> 00:01:37.072
+Now main prints its CPU copy. The SM executed the assignment, device storage held the result, and the copy made that result available to the CPU. These are three different roles.
 
-00:00:34.327 --> 00:00:37.953
-The kernel stores forty-two point zero in GPU memory.
+00:01:39.092 --> 00:01:48.457
+Pause and predict: if the assignment stores thirteen point zero, does the launch need more threads? Which value will the CPU print after the copy?
 
-00:00:38.173 --> 00:00:42.120
-The CPU copies the value back, and main prints it in the console.
-
-00:00:44.140 --> 00:00:47.788
-Change the value in the assignment, then compile and run again.
-
-00:00:48.008 --> 00:00:50.739
-The launch still asks for one block and one thread.
-
-00:00:50.959 --> 00:00:53.604
-Which value will main print this time?
+00:01:54.277 --> 00:02:08.933
+The launch still requests one thread. Only the stored value changes. In the CUDA source editor, make that edit inside hello, click Compile and run, and inspect Console. Leave the allocation, copy and error checks unchanged.

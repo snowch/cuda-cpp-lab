@@ -58,7 +58,7 @@ def spoken(text):
         'words[lane * stride]': 'words at lane times stride', 'flags[t]': 'flags at index t',
         'ready[s]': 'ready at slot s', 'used[s]': 'used at slot s',
         'FP32': 'F P thirty two', 'FP16': 'F P sixteen', 'BF16': 'B F sixteen',
-        'SM': 'S M', 'runKernel': 'run kernel', 'onlineAttention': 'online attention',
+        'SMs': 'streaming multiprocessors', 'SM': 'S M', 'runKernel': 'run kernel', 'onlineAttention': 'online attention',
         'keysPerTile': 'keys per tile', 'warpsPerBlock': 'warps per block',
         'threadsPerBlock': 'threads per block', 'startingValue': 'starting value',
         'narrowInputs': 'narrow inputs', 'blockCounts': 'block counts',
@@ -82,15 +82,20 @@ def spoken(text):
     return text.replace('↔', 'to').replace('×', 'times').replace('→', 'then')
 
 
-def prepare(workers):
+def prepare(workers, only=None):
     WORK.mkdir(parents=True, exist_ok=True)
     before = WORK / 'before.json'
     if not before.exists():
         write(before, {str(p.relative_to(ROOT)): digest(p) for p in (ROOT/'assets/media').rglob('*.mp4')})
+        if only:
+            write(WORK/'previous-production.json', read(ROOT/'content/recording-production.json'))
+            write(WORK/'previous-screen.json', read(ROOT/'docs/recording-speech-screen.json'))
     subprocess.run(['node', 'scripts/render-v2-recordings.mjs'], cwd=ROOT, check=True)
     recordings = []
     for source in sorted((ROOT/'content').glob('*-scenes.json')):
         slug = source.name.removesuffix('-scenes.json')
+        if only and slug not in only:
+            continue
         target = ROOT/f'assets/media/{slug}/{slug}.mp4'
         if not target.exists():
             continue
@@ -110,18 +115,24 @@ def prepare(workers):
                            'scenes': source_scenes, 'cues': cues, 'video': str(target.relative_to(ROOT))})
     for item in read(ROOT/'test-results/v2-recordings/inputs.json'):
         slug = item['slug']
+        if only and 'v2-'+slug not in only:
+            continue
         folder = ROOT/f'test-results/v2-recordings/{slug}'
         folder.mkdir(parents=True, exist_ok=True)
         scenes = []
         for i, scene in enumerate(item['scenes'], 1):
             (folder/f'{i-1}.html').write_text(scene['html'])
-            scenes.append({'id': f's{i:02}', 'title': scene['title'], 'captions': sentences(scene['text'])})
+            scenes.append({'id': f's{i:02}', 'title': scene['title'], 'captions': scene.get('captions', sentences(scene['text'])),
+                           **({'hold':scene['hold']} if 'hold' in scene else {})})
         cues = [{'id': f'{s["id"]}-c{i+1}', 'step': s['title'], 'text': text, 'say': spoken(text)}
                 for s in scenes for i, text in enumerate(s['captions'])]
         write(folder/'scenes.json', cues)
         recordings.append({'key': 'v2-'+slug, 'slug': slug, 'kind': 'v2', 'work': str(folder),
                            'scenes': scenes, 'cues': cues, 'video': f'assets/media/v2/{slug}/recap.mp4'})
-    assert {r['video'] for r in recordings} == set(read(before)), 'Every existing recording must be covered'
+    if only:
+        assert {r['key'] for r in recordings} == set(only), 'Unknown recording key'
+    else:
+        assert {r['video'] for r in recordings} == set(read(before)), 'Every existing recording must be covered'
     groups = [[] for _ in range(workers)]
     costs = [0] * workers
     for recording in sorted(recordings, key=lambda r: -sum(len(c['text']) for c in r['cues'])):
@@ -132,7 +143,7 @@ def prepare(workers):
             costs[group] += len(cue['text'])
     for i, cues in enumerate(groups):
         write(WORK/f'worker-{i}/scenes.json', cues)
-    write(WORK/'plan.json', {'recordings': recordings, 'workers': workers})
+    write(WORK/'plan.json', {'recordings': recordings, 'workers': workers, 'partial':bool(only)})
     print(f'Prepared {len(recordings)} recordings, {sum(len(r["cues"]) for r in recordings)} cues', flush=True)
 
 
@@ -273,12 +284,13 @@ def main():
     parser.add_argument('--skill-dir', type=Path, required=True)
     parser.add_argument('--stage', choices=['prepare', 'narrate', 'resume', 'refine', 'phonemes', 'screen', 'build'], required=True)
     parser.add_argument('--workers', type=int, default=2)
+    parser.add_argument('--only', nargs='+', help='Prepare a targeted rebuild; retain verified evidence for unchanged media')
     args = parser.parse_args()
     skill = args.skill_dir.resolve()
     revision = subprocess.check_output(['git', '-C', str(skill), 'rev-parse', 'HEAD'], text=True).strip()
     assert revision == SKILL_COMMIT, 'Use the same pinned revision as Common Ground'
     if args.stage == 'prepare':
-        prepare(args.workers)
+        prepare(args.workers, args.only)
         return
     plan = read(WORK/'plan.json')
     if args.stage == 'resume':

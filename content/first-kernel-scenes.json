@@ -1,50 +1,84 @@
 [
   {
     "id": "s01",
-    "stage": "definition",
-    "title": "What is a CUDA kernel?",
-    "lead": "GPU threads execute the instructions in hello.",
-    "note": "The assignment writes one float to GPU memory.",
+    "stage": "question",
+    "title": "Where does 42.0 travel?",
+    "lead": "The GPU computes a value. The CPU prints it.",
     "captions": [
-      "A CUDA kernel is a function that GPU threads execute.",
-      "In this file, global marks hello as a kernel.",
-      "The thread writes forty-two point zero at output index zero."
+      "The Console shows forty-two point zero. But the GPU does not print that line. Follow the value from the kernel to device memory, then back to the CPU."
     ]
   },
   {
     "id": "s02",
-    "stage": "launch",
-    "title": "Launch one thread",
-    "lead": "The CPU launches hello from main.",
-    "note": "The two numbers describe how many threads to start.",
+    "stage": "allocate",
+    "title": "Storage is separate from execution",
+    "lead": "cudaMalloc reserves one float in device memory.",
     "captions": [
-      "On the CPU, main reserves space in GPU memory for one float.",
-      "The first one requests one block. The second one requests one thread in that block.",
-      "The argument output gives the kernel the address of the float."
+      "On this simplified discrete GPU, the compute chip and device memory are separate. The CPU reserves space for one float. The pointer output identifies that space; allocating it does not execute hello."
     ]
   },
   {
     "id": "s03",
-    "stage": "store",
-    "title": "Where does the value go?",
-    "lead": "One GPU thread runs the kernel and stores the result.",
-    "note": "An SM is the part of the GPU that executes thread instructions.",
+    "stage": "launch",
+    "title": "The launch requests one thread",
+    "lead": "hello<<<1, 1>>>(output);",
     "captions": [
-      "A streaming multiprocessor, or S M, executes instructions for the GPU thread.",
-      "The kernel stores forty-two point zero in GPU memory.",
-      "The CPU copies the value back, and main prints it in the console."
+      "The CPU submits a launch: one block containing one thread. These numbers describe logical work. They do not select a physical processor or reserve the whole GPU."
     ]
   },
   {
     "id": "s04",
-    "stage": "edit",
-    "title": "Change the stored value",
-    "lead": "Which line determines what the console prints?",
-    "note": "Try a new value in the editor.",
+    "stage": "execute",
+    "title": "An SM executes the kernel",
+    "lead": "SM means streaming multiprocessor.",
     "captions": [
-      "Change the value in the assignment, then compile and run again.",
-      "The launch still asks for one block and one thread.",
-      "Which value will main print this time?"
+      "The block is assigned to a streaming multiprocessor, or SM, on the compute chip. Its execution hardware runs the thread's instructions. A thread is an execution of code, not a dedicated piece of hardware."
+    ]
+  },
+  {
+    "id": "s05",
+    "stage": "store",
+    "title": "The assignment writes device storage",
+    "lead": "output[0] = 42.0f;",
+    "captions": [
+      "The assignment stores forty-two point zero at the address for output index zero. The value belongs to the GPU allocation. It is not yet the CPU variable value. Cache details are omitted from this data path."
+    ]
+  },
+  {
+    "id": "s06",
+    "stage": "copy",
+    "title": "Copy the result into CPU memory",
+    "lead": "cudaMemcpy copies into value before main prints it.",
+    "captions": [
+      "This device-to-host copy waits for the result and places it in the CPU variable value. The launch statement by itself did not mean the kernel had already finished."
+    ]
+  },
+  {
+    "id": "s07",
+    "stage": "print",
+    "title": "The CPU prints its own copy",
+    "lead": "GPU allocation → CPU variable → Console",
+    "captions": [
+      "Now main prints its CPU copy. The SM executed the assignment, device storage held the result, and the copy made that result available to the CPU. These are three different roles."
+    ]
+  },
+  {
+    "id": "s08",
+    "stage": "predict",
+    "title": "Predict a changed value",
+    "lead": "Replace 42.0f with 13.0f. Keep <<<1, 1>>>.",
+    "captions": [
+      "Pause and predict: if the assignment stores thirteen point zero, does the launch need more threads? Which value will the CPU print after the copy?"
+    ],
+    "hold": 5
+  },
+  {
+    "id": "s09",
+    "stage": "answer",
+    "title": "New data, the same launch",
+    "lead": "One thread stores 13.0; the CPU prints 13.0.",
+    "captions": [
+      "The launch still requests one thread. Only the stored value changes. In the CUDA source editor, make that edit inside hello, click Compile and run, and inspect Console. Leave the allocation, copy and error checks unchanged."
     ]
   }
 ]

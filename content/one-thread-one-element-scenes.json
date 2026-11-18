@@ -1,0 +1,102 @@
+[
+  {
+    "id": "s01",
+    "stage": "question",
+    "title": "Five values do not need five dedicated cores",
+    "lead": "Follow input[2] from device memory to output[2].",
+    "captions": [
+      "The starter doubles five input values. Follow the third value through one GPU thread, and distinguish that logical thread from the hardware that executes it."
+    ]
+  },
+  {
+    "id": "s02",
+    "stage": "groups",
+    "title": "The launch describes groups of threads",
+    "lead": "Two blocks × four threads = eight launched threads.",
+    "captions": [
+      "The starter chooses four threads per block. Five elements require two blocks, so eight threads are launched. A block groups threads; it is not an SM, and a thread is not a dedicated arithmetic unit."
+    ]
+  },
+  {
+    "id": "s03",
+    "stage": "placement",
+    "title": "A block is assigned to one SM",
+    "lead": "Both blocks are shown on one SM as an example.",
+    "captions": [
+      "Each block runs on one streaming multiprocessor. This illustration places both blocks on the same SM. They could instead be assigned to different SMs; the launch does not choose their placement or promise simultaneous execution."
+    ]
+  },
+  {
+    "id": "s04",
+    "stage": "warps",
+    "title": "A warp groups threads within a block",
+    "lead": "Each four-thread block uses four of 32 warp positions.",
+    "captions": [
+      "For instruction execution, an SM groups threads from one block into warps of thirty-two positions. Each block here occupies four positions in its own warp. The other positions contain no launched threads; another block cannot fill them."
+    ]
+  },
+  {
+    "id": "s05",
+    "stage": "index",
+    "title": "The index selects a memory element",
+    "lead": "Block 0, thread 2: i = 0 × 4 + 2 = 2.",
+    "captions": [
+      "Follow local thread two in block zero. Its index is zero times four plus two. It selects input index two and output index two. The index chooses data, not a physical arithmetic unit."
+    ]
+  },
+  {
+    "id": "s06",
+    "stage": "load",
+    "title": "Read into the thread's working state",
+    "lead": "input[2] supplies 3.0 to the calculation on the SM.",
+    "captions": [
+      "The selected thread requests the value at input index two: three point zero. On the SM, registers hold thread working values for instructions. This drawing shows the dependency, not an exact register allocation or cache transaction."
+    ]
+  },
+  {
+    "id": "s07",
+    "stage": "multiply",
+    "title": "Execution units perform the arithmetic",
+    "lead": "3.0 × 2.0 = 6.0",
+    "captions": [
+      "The multiply uses that thread's value and produces six point zero. Threads retain their own working values while sharing the SM's execution hardware. Separate thread values do not require a separate permanent processor for every thread."
+    ]
+  },
+  {
+    "id": "s08",
+    "stage": "store",
+    "title": "Store into the matching output element",
+    "lead": "The selected thread writes 6.0 to output[2].",
+    "captions": [
+      "The store sends the result to output index two in device storage. Other valid threads use their own indices. The matching positions come from the index expression, not the order in which threads happen to finish."
+    ]
+  },
+  {
+    "id": "s09",
+    "stage": "guard",
+    "title": "Launched threads can skip array operations",
+    "lead": "Indices 5, 6 and 7 fail i < n when n is 5.",
+    "captions": [
+      "Block one's first thread handles the fifth element. Its other three threads exist, but the bounds check skips their array reads and writes. These are different from the twenty-eight unused warp positions, which contain no threads."
+    ]
+  },
+  {
+    "id": "s10",
+    "stage": "predict",
+    "title": "Predict a different multiplier",
+    "lead": "Change 2.0f to 0.5f. Keep the inputs and launch.",
+    "captions": [
+      "Pause and predict: with a multiplier of zero point five, what will output index two contain? Do the block count, thread count or selected array indices need to change?"
+    ],
+    "hold": 5
+  },
+  {
+    "id": "s11",
+    "stage": "answer",
+    "title": "The calculation changes; the mapping stays",
+    "lead": "output[2] becomes 1.5. The launch still has eight threads.",
+    "captions": [
+      "Three point zero times zero point five is one point five. The indices and launch stay unchanged. In runKernel in the CUDA source editor, replace two point zero f with zero point five f, click Compile and run, and inspect the third value in Console's Output array."
+    ]
+  }
+]

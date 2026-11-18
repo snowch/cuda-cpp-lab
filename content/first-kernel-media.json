@@ -1,104 +1,116 @@
 {
-  "durationSeconds": 55,
-  "bytes": 2831030,
+  "durationSeconds": 130,
+  "bytes": 8529412,
   "scenes": [
     {
       "id": "s01",
       "start": 0.0,
-      "end": 12.913,
-      "title": "What is a CUDA kernel?"
+      "end": 11.727,
+      "title": "Where does 42.0 travel?"
     },
     {
       "id": "s02",
-      "start": 12.913,
-      "end": 28.173,
-      "title": "Launch one thread"
+      "start": 11.727,
+      "end": 27.272,
+      "title": "Storage is separate from execution"
     },
     {
       "id": "s03",
-      "start": 28.173,
-      "end": 43.54,
-      "title": "Where does the value go?"
+      "start": 27.272,
+      "end": 40.3,
+      "title": "The launch requests one thread"
     },
     {
       "id": "s04",
-      "start": 43.54,
-      "end": 55.024,
-      "title": "Change the stored value"
+      "start": 40.3,
+      "end": 55.76,
+      "title": "An SM executes the kernel"
+    },
+    {
+      "id": "s05",
+      "start": 55.76,
+      "end": 71.924,
+      "title": "The assignment writes device storage"
+    },
+    {
+      "id": "s06",
+      "start": 71.924,
+      "end": 83.907,
+      "title": "Copy the result into CPU memory"
+    },
+    {
+      "id": "s07",
+      "start": 83.907,
+      "end": 98.492,
+      "title": "The CPU prints its own copy"
+    },
+    {
+      "id": "s08",
+      "start": 98.492,
+      "end": 113.677,
+      "title": "Predict a changed value"
+    },
+    {
+      "id": "s09",
+      "start": 113.677,
+      "end": 130.353,
+      "title": "New data, the same launch"
     }
   ],
   "cues": [
     {
       "id": "s01-c1",
       "start": 0.6,
-      "end": 4.632,
-      "text": "A CUDA kernel is a function that GPU threads execute."
-    },
-    {
-      "id": "s01-c2",
-      "start": 4.852,
-      "end": 7.583,
-      "text": "In this file, global marks hello as a kernel."
-    },
-    {
-      "id": "s01-c3",
-      "start": 7.803,
-      "end": 11.493,
-      "text": "The thread writes forty-two point zero at output index zero."
+      "end": 10.307,
+      "text": "The Console shows forty-two point zero. But the GPU does not print that line. Follow the value from the kernel to device memory, then back to the CPU."
     },
     {
       "id": "s02-c1",
-      "start": 13.513,
-      "end": 18.1,
-      "text": "On the CPU, main reserves space in GPU memory for one float."
-    },
-    {
-      "id": "s02-c2",
-      "start": 18.32,
-      "end": 23.077,
-      "text": "The first one requests one block. The second one requests one thread in that block."
-    },
-    {
-      "id": "s02-c3",
-      "start": 23.297,
-      "end": 26.753,
-      "text": "The argument output gives the kernel the address of the float."
+      "start": 12.327,
+      "end": 25.852,
+      "text": "On this simplified discrete GPU, the compute chip and device memory are separate. The CPU reserves space for one float. The pointer output identifies that space; allocating it does not execute hello."
     },
     {
       "id": "s03-c1",
-      "start": 28.773,
-      "end": 34.107,
-      "text": "A streaming multiprocessor, or S M, executes instructions for the GPU thread."
-    },
-    {
-      "id": "s03-c2",
-      "start": 34.327,
-      "end": 37.953,
-      "text": "The kernel stores forty-two point zero in GPU memory."
-    },
-    {
-      "id": "s03-c3",
-      "start": 38.173,
-      "end": 42.12,
-      "text": "The CPU copies the value back, and main prints it in the console."
+      "start": 27.872,
+      "end": 38.88,
+      "text": "The CPU submits a launch: one block containing one thread. These numbers describe logical work. They do not select a physical processor or reserve the whole GPU."
     },
     {
       "id": "s04-c1",
-      "start": 44.14,
-      "end": 47.788,
-      "text": "Change the value in the assignment, then compile and run again."
+      "start": 40.9,
+      "end": 54.34,
+      "text": "The block is assigned to a streaming multiprocessor, or SM, on the compute chip. Its execution hardware runs the thread's instructions. A thread is an execution of code, not a dedicated piece of hardware."
     },
     {
-      "id": "s04-c2",
-      "start": 48.008,
-      "end": 50.739,
-      "text": "The launch still asks for one block and one thread."
+      "id": "s05-c1",
+      "start": 56.36,
+      "end": 70.504,
+      "text": "The assignment stores forty-two point zero at the address for output index zero. The value belongs to the GPU allocation. It is not yet the CPU variable value. Cache details are omitted from this data path."
     },
     {
-      "id": "s04-c3",
-      "start": 50.959,
-      "end": 53.604,
-      "text": "Which value will main print this time?"
+      "id": "s06-c1",
+      "start": 72.524,
+      "end": 82.487,
+      "text": "This device-to-host copy waits for the result and places it in the CPU variable value. The launch statement by itself did not mean the kernel had already finished."
+    },
+    {
+      "id": "s07-c1",
+      "start": 84.507,
+      "end": 97.072,
+      "text": "Now main prints its CPU copy. The SM executed the assignment, device storage held the result, and the copy made that result available to the CPU. These are three different roles."
+    },
+    {
+      "id": "s08-c1",
+      "start": 99.092,
+      "end": 108.457,
+      "text": "Pause and predict: if the assignment stores thirteen point zero, does the launch need more threads? Which value will the CPU print after the copy?"
+    },
+    {
+      "id": "s09-c1",
+      "start": 114.277,
+      "end": 128.933,
+      "text": "The launch still requests one thread. Only the stored value changes. In the CUDA source editor, make that edit inside hello, click Compile and run, and inspect Console. Leave the allocation, copy and error checks unchanged."
     }
   ],
   "speech": {
@@ -115,18 +127,15 @@
       "provider": "CPUExecutionProvider"
     },
     "durations": {
-      "s01-c1": 4.032,
-      "s01-c2": 2.731,
-      "s01-c3": 3.691,
-      "s02-c1": 4.587,
-      "s02-c2": 4.757,
-      "s02-c3": 3.456,
-      "s03-c1": 5.333,
-      "s03-c2": 3.627,
-      "s03-c3": 3.947,
-      "s04-c1": 3.648,
-      "s04-c2": 2.731,
-      "s04-c3": 2.645
+      "s01-c1": 9.707,
+      "s02-c1": 13.525,
+      "s03-c1": 11.008,
+      "s04-c1": 13.44,
+      "s05-c1": 14.144,
+      "s06-c1": 9.963,
+      "s07-c1": 12.565,
+      "s08-c1": 9.365,
+      "s09-c1": 14.656
     },
     "skill": {
       "repository": "https://github.com/snowch/claude-skills",
