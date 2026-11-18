@@ -18,7 +18,7 @@ test('intro walkthroughs retain the starter mapping and reveal comparisons after
   const pause=scenes.findIndex(s=>s.hold>=5);
   assert.ok(pause>0);
   assert.equal(scenes[pause+1].stage,slug==='first-kernel'?'before-copy':'answer');
-  for(const s of scenes){assert.equal(s.captionMaxChars,80);assert.equal(s.captionSettings,'position:50% size:92% align:center');}
+  for(const s of scenes){assert.equal(s.captionMaxChars,48);assert.equal(s.captionSettings,'position:50% size:92% align:center');}
   const html=introDeck(slug);
   assert.match(html,/class="caption-safe"/);
   assert.doesNotMatch(html,/class="caption">/,'Captions use the native player, not a second baked copy');
@@ -37,10 +37,10 @@ test('published display captions are short, preserve the complete script and mat
   assert.deepEqual(data.cues.map(c=>c.text),source);
   const vtt=readFileSync(new URL('../assets/media/'+path+'/captions.vtt',import.meta.url),'utf8');
   const shown=vtt.split('\n').filter(l=>l&&l!=='WEBVTT'&&!l.includes(' --> '));
-  assert.ok(shown.every(t=>t.length<=80));
+  assert.ok(shown.every(t=>t.length<=48));
   assert.equal(shown.join(' '),source.join(' '));
   assert.equal(data.displayCues.map(c=>c.text).join(' '),source.join(' '));
-  assert.ok(data.displayCues.every(c=>c.end>c.start));
+  assert.ok(data.displayCues.every(c=>c.end-c.start>=1),'Avoid flashing an orphaned word as a separate caption');
  }
  const html=renderV2Video('one-thread-one-element',true);
  assert.match(html,/Follow one element through an SM/);

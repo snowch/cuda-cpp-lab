@@ -62,11 +62,29 @@ to the parent lesson's logical flow. Consecutive transcript sections with the
 same heading are merged.
 
 Native captions are toggleable. Display chunks preserve the complete canonical
-script and contain at most 80 characters. Their boundaries are interpolated
+script and contain at most 48 characters. Their boundaries are interpolated
 inside each measured speech cue; this is not forced word alignment. The player
 uses automatic bottom positioning so its controls can move captions; it no
 longer places them on the header. Inspect actual encoded playback with captions
 and controls at phone, tablet and desktop sizes in both themes.
+
+The phone review caught captions overlapping scalar values when controls were
+open. The final layout raises the graphics and uses shorter display chunks;
+it also balances the last chunk to avoid flashing a trailing word alone.
+Source checks cover all 28 shots. Encoded copy, prediction and multiplication
+shots were inspected with native captions and controls at 390, 820 and 1440
+pixels, with light and dark page surroundings, plus fullscreen playback.
+
+The built reading-order review covers the preceding lesson question, optional
+recording and following References section for both lessons at those three
+widths in both themes. Essential preparation remains in the lesson; the
+recording and transcript are optional. Keyboard disclosure controls work and
+consecutive transcript headings no longer repeat.
+
+The original examples and recording edits were followed through the actual
+CUDA editor: L1 prints 42.0 then 7.0; L2 prints [2, 4, 6, 8, 10] then
+[4, 8, 12, 16, 20] with multiplier 4.0f. These are browser simulator checks,
+not results from a physical GPU or evidence of learning effectiveness.
 
 Production uses the pinned [Common Ground record-demo skill](https://github.com/snowch/claude-skills/blob/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo/SKILL.md),
 Kokoro v1.0 ONNX CPU, af_heart, speed 1.0. Functional verification, independent

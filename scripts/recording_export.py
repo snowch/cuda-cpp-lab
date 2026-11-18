@@ -57,6 +57,20 @@ def display_captions(text, start, end, limit=None):
     """
     chunks = textwrap.wrap(text, width=limit, break_long_words=False,
                            break_on_hyphens=False) if limit else [text]
+    # Avoid flashing a trailing word on its own after a full display line.
+    if limit and len(chunks)>1 and len(chunks[-1])<limit/2:
+        tail=chunks[-2]+' '+chunks[-1]
+        if len(tail)<=limit:
+            chunks[-2:]=[tail]
+        else:
+            previous=chunks[-2].split()
+            while len(chunks[-1])<limit/2 and len(previous)>1:
+                candidate=previous[-1]+' '+chunks[-1]
+                if len(candidate)>limit or len(' '.join(previous[:-1]))<limit/2:
+                    break
+                chunks[-1]=candidate
+                previous.pop()
+            chunks[-2]=' '.join(previous)
     assert ' '.join(chunks) == text
     total = sum(len(chunk) for chunk in chunks)
     cursor = start

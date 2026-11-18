@@ -10,7 +10,7 @@
       "The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -24,7 +24,7 @@
       "The GPU writes forty-two point zero, but the CPU prints it. What connects those two steps?"
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -38,7 +38,7 @@
       "Hello is a kernel: a function that runs on the GPU. Its body writes forty-two point zero into output at index zero."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -52,7 +52,7 @@
       "The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -66,7 +66,7 @@
       "In main, the CPU launches hello. The two ones request one block containing one thread."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -80,7 +80,7 @@
       "A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -94,7 +94,7 @@
       "The thread writes forty-two point zero into output at index zero in GPU memory."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -108,7 +108,7 @@
       "The program also has a CPU variable named value. Main initialises it to zero point zero."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -122,7 +122,7 @@
       "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -136,7 +136,7 @@
       "Pause here. Is the CPU variable value still zero point zero, or has the GPU write changed it to forty-two point zero?"
     ],
     "hold": 5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -150,7 +150,7 @@
       "Value is still zero point zero. The GPU wrote to output at index zero, a different location in GPU memory."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -164,7 +164,7 @@
       "The CUDA memory copy call copies the GPU result into value in CPU memory."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -178,7 +178,7 @@
       "For this call, main waits for the copy to complete before continuing. Value now holds forty-two point zero."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -192,7 +192,7 @@
       "The CPU reads value and prints forty-two point zero in Console. The kernel itself did not print that line."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -206,7 +206,7 @@
       "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -220,7 +220,7 @@
       "Return to the lesson. [pause 0.6] Find the assignment inside hello, then the copy and print calls inside main."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   }
 ]

@@ -82,6 +82,9 @@ try:
                 video.evaluate('(v,time)=>{v.currentTime=time;return v.play()}', target)
                 page.wait_for_function('time=>document.querySelector("video").currentTime>time+.1', arg=target)
                 video.evaluate('v=>{v.pause();v.playbackRate=1.25}')
+                # Seeking/playback can advance past a short final display cue
+                # before the pause command reaches the browser.
+                video.evaluate('(v,time)=>{v.currentTime=time}',target)
                 page.wait_for_function('text=>[...document.querySelector("video").textTracks[0].activeCues||[]].some(c=>c.text===text)',arg=cue['text'])
                 assert video.evaluate('v=>v.textTracks[0].mode')=='showing', key
                 if key in ['first-kernel','v2-one-thread-one-element']:

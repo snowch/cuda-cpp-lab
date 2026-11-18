@@ -12,7 +12,7 @@
       "Follow input at index two to output at index two. How does the thread choose that position?"
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -28,23 +28,23 @@
       "Leave that setup unchanged for this experiment."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s03",
     "stage": "index",
-    "title": "Find the selected thread’s index",
+    "title": "Find the selected thread\u2019s index",
     "captions": [
-      "We follow block zero’s local thread two.",
+      "We follow block zero\u2019s local thread two.",
       "Zero times four, plus two, gives array index two."
     ],
     "speech": [
-      "We follow block zero’s local thread two.",
+      "We follow block zero\u2019s local thread two.",
       "Zero times four, plus two, gives array index two."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -58,7 +58,7 @@
       "The same index selects input at index two and output at index two."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -67,14 +67,14 @@
     "title": "The SM executes the thread",
     "captions": [
       "An SM, or streaming multiprocessor, is execution hardware on the GPU chip.",
-      "It runs the selected thread’s instructions."
+      "It runs the selected thread\u2019s instructions."
     ],
     "speech": [
       "An SM, or streaming multiprocessor, is execution hardware on the GPU chip.",
-      "It runs the selected thread’s instructions."
+      "It runs the selected thread\u2019s instructions."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -90,7 +90,7 @@
       "That value becomes working state for its instructions on the SM."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -98,15 +98,15 @@
     "stage": "multiply",
     "title": "Shared hardware performs the multiply",
     "captions": [
-      "The SM’s arithmetic hardware multiplies 3.0 by 2.0, producing 6.0.",
+      "The SM\u2019s arithmetic hardware multiplies 3.0 by 2.0, producing 6.0.",
       "Threads keep their own working values while sharing this hardware."
     ],
     "speech": [
-      "The SM’s arithmetic hardware multiplies three point zero by two point zero, producing six point zero.",
+      "The SM\u2019s arithmetic hardware multiplies three point zero by two point zero, producing six point zero.",
       "Threads keep their own working values while sharing this hardware."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -122,7 +122,7 @@
       "Its index fixes the destination even if other threads finish first."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -136,7 +136,7 @@
       "main copies the GPU results into CPU memory and prints Output."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -156,7 +156,7 @@
       "Click Compile and run. Return to this recording to compare your result."
     ],
     "hold": 5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -172,7 +172,7 @@
       "The same index chooses the destination; the SM still performs the multiply."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   },
   {
@@ -188,7 +188,7 @@
       "Lesson three explores the launch size."
     ],
     "hold": 0.5,
-    "captionMaxChars": 80,
+    "captionMaxChars": 48,
     "captionSettings": "position:50% size:92% align:center"
   }
 ]
