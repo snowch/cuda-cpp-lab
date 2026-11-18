@@ -1,0 +1,139 @@
+[
+  {
+    "id": "s01",
+    "slide": 1,
+    "step": "Why is a copy needed?",
+    "stage": "question",
+    "text": "The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console.",
+    "hold": 0.5
+  },
+  {
+    "id": "s02",
+    "slide": 2,
+    "step": "Why is a copy needed?",
+    "stage": "question",
+    "text": "The GPU writes 42.0, but the CPU prints it. What connects those two steps?",
+    "say": "The GPU writes forty-two point zero, but the CPU prints it. What connects those two steps?",
+    "hold": 0.5
+  },
+  {
+    "id": "s03",
+    "slide": 3,
+    "step": "The kernel runs on the GPU",
+    "stage": "kernel",
+    "text": "hello is a kernel: a function that runs on the GPU. Its body writes 42.0 into output[0].",
+    "say": "Hello is a kernel: a function that runs on the GPU. Its body writes forty-two point zero into output at index zero.",
+    "hold": 0.5
+  },
+  {
+    "id": "s04",
+    "slide": 4,
+    "step": "The starter prepares GPU storage",
+    "stage": "allocate",
+    "text": "The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged.",
+    "hold": 0.5
+  },
+  {
+    "id": "s05",
+    "slide": 5,
+    "step": "The CPU launches hello",
+    "stage": "launch",
+    "text": "In main, the CPU launches hello. The two ones request one block containing one thread.",
+    "hold": 0.5
+  },
+  {
+    "id": "s06",
+    "slide": 6,
+    "step": "One thread executes on an SM",
+    "stage": "sm",
+    "text": "A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions.",
+    "hold": 0.5
+  },
+  {
+    "id": "s07",
+    "slide": 7,
+    "step": "The thread writes GPU memory",
+    "stage": "store",
+    "text": "The thread writes 42.0 into output[0] in GPU memory.",
+    "say": "The thread writes forty-two point zero into output at index zero in GPU memory.",
+    "hold": 0.5
+  },
+  {
+    "id": "s08",
+    "slide": 8,
+    "step": "The CPU has a separate variable",
+    "stage": "initialise",
+    "text": "The program also has a CPU variable named value. main initialises it to 0.0.",
+    "say": "The program also has a CPU variable named value. Main initialises it to zero point zero.",
+    "hold": 0.5
+  },
+  {
+    "id": "s09",
+    "slide": 9,
+    "step": "Pause before the copy",
+    "stage": "predict",
+    "text": "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started.",
+    "hold": 0.5
+  },
+  {
+    "id": "s10",
+    "slide": 10,
+    "step": "Pause before the copy",
+    "stage": "predict",
+    "text": "Pause here. Is the CPU variable value still 0.0, or has the GPU write changed it to 42.0?",
+    "say": "Pause here. Is the CPU variable value still zero point zero, or has the GPU write changed it to forty-two point zero?",
+    "hold": 5
+  },
+  {
+    "id": "s11",
+    "slide": 11,
+    "step": "The GPU write did not change value",
+    "stage": "before-copy",
+    "text": "value is still 0.0. The GPU wrote to output[0], a different location in GPU memory.",
+    "say": "Value is still zero point zero. The GPU wrote to output at index zero, a different location in GPU memory.",
+    "hold": 0.5
+  },
+  {
+    "id": "s12",
+    "slide": 12,
+    "step": "The copy transfers the result",
+    "stage": "copy",
+    "text": "The cudaMemcpy call copies the GPU result into value in CPU memory.",
+    "say": "The CUDA memory copy call copies the GPU result into value in CPU memory.",
+    "hold": 0.5
+  },
+  {
+    "id": "s13",
+    "slide": 13,
+    "step": "The copy completes before printing",
+    "stage": "copied",
+    "text": "For this call, main waits for the copy to complete before continuing. value now holds 42.0.",
+    "say": "For this call, main waits for the copy to complete before continuing. Value now holds forty-two point zero.",
+    "hold": 0.5
+  },
+  {
+    "id": "s14",
+    "slide": 14,
+    "step": "The CPU prints its copy",
+    "stage": "print",
+    "text": "The CPU reads value and prints 42.0 in Console. The kernel itself did not print that line.",
+    "say": "The CPU reads value and prints forty-two point zero in Console. The kernel itself did not print that line.",
+    "hold": 0.5
+  },
+  {
+    "id": "s15",
+    "slide": 15,
+    "step": "Execution, storage and transfer",
+    "stage": "summary",
+    "text": "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code.",
+    "hold": 0.5
+  },
+  {
+    "id": "s16",
+    "slide": 16,
+    "step": "Try tracing the same path",
+    "stage": "transfer",
+    "text": "Back in the lesson, trace those three roles in your edited run: which code writes the result, copies it, and prints it?",
+    "hold": 0.5
+  }
+]
