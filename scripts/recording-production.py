@@ -294,7 +294,9 @@ def main():
         return
     if args.stage == 'build':
         from recording_export import export
+        from recording_catalog import refresh_duration_catalog
         export(plan['recordings'])
+        refresh_duration_catalog()
         return
     with ThreadPoolExecutor(max_workers=plan['workers']) as pool:
         list(pool.map(lambda i: original_script(skill, args.stage, i), range(plan['workers'])))

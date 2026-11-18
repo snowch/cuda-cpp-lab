@@ -10,6 +10,7 @@ import argparse
 import json
 from pathlib import Path
 from recording_export import export
+from recording_catalog import refresh_duration_catalog
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('chapter', nargs='?', default='reduction')
@@ -20,3 +21,5 @@ plan = json.loads((root/'test-results/record-demo-all/plan.json').read_text())
 recordings = [r for r in plan['recordings'] if r['kind'] == 'deck' and r['slug'] == args.chapter]
 assert len(recordings) == 1, 'Unknown recording'
 export(recordings, slides_only=args.slides_only)
+if not args.slides_only:
+    refresh_duration_catalog()

@@ -97,7 +97,7 @@ try:
                 }''')
                 page.reload()
                 video.scroll_into_view_if_needed()
-                page.wait_for_function('time=>{const v=document.querySelector("video");return !v.seeking&&v.readyState>=2&&Math.abs(v.currentTime-time)<.15}', arg=position)
+                page.wait_for_function('time=>{const v=document.querySelector("video");return !v.seeking&&v.readyState>=3&&Math.abs(v.currentTime-time)<.15}', arg=position)
                 page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
                 assert video.evaluate('v=>v.paused&&v.playbackRate===1.25'), key
                 expect(page.locator('.sm-transcript')).to_have_attribute('open', '')

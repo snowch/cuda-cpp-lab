@@ -11,7 +11,7 @@ export const recordingDurations={
   "divergence": 235,
   "reduction": 266,
   "matmul": 265,
-  "tensor-cores": 255,
+  "tensor-cores": 257,
   "attention": 243,
   "inference": 289,
   "putting-it-together": 190,
