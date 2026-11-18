@@ -17,8 +17,8 @@ Speech forms now explicitly pronounce comparisons, CUDA helper names and plural
 identifiers. They are recorded separately from the unchanged captions in
 [the speech review](recording-speech-screen.json). The original Whisper `small.en`
 checker screened every cue. All 152 raw flags are retained with explicit reviews;
-number formatting, acronym spelling, British/US spelling and short-cue pacing
-account for the retained flags. Corrected speech was generated and screened again.
+retained flags include number formatting, acronym/word spelling and pacing
+differences. Corrected speech was generated and screened again.
 
 ## Functional verification
 
