@@ -9,16 +9,16 @@ The baseline computes sixteen outputs separately. Its teaching algorithm explici
 00:00:24.131 --> 00:00:34.243
 A tile width of two shares loaded inputs across several outputs and reduces the count to sixty-four input loads. A width of four reduces it to thirty-two.
 
-00:00:34.463 --> 00:00:45.449
+00:00:34.463 --> 00:00:45.471
 Every choice produces the same complete output matrix in this model. These are explicit algorithm loads with cache reuse excluded; they are not measured physical memory traffic.
 
-00:00:47.469 --> 00:00:58.477
+00:00:47.491 --> 00:00:58.499
 With the chapter’s synthetic resource budgets, tile width two uses thirty-two shared-memory bytes and two hundred and fifty-six registers per block. Four blocks fit those budgets.
 
-00:00:58.697 --> 00:01:11.860
+00:00:58.719 --> 00:01:11.881
 Tile width four uses one hundred and twenty-eight shared-memory bytes and one thousand and twenty-four registers per block. Only one block fits. This capacity bound is not a schedule or a timing measurement.
 
-00:01:13.880 --> 00:01:24.355
+00:01:13.901 --> 00:01:24.355
 A useful recommendation states both the benefit and the cost. A larger tile reduces explicit input loads while using more registers and shared memory per block.
 
 00:01:24.575 --> 00:01:35.711

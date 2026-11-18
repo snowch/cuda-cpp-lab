@@ -356,9 +356,10 @@ map, not copied from the user's reference figures or presented as a specific chi
 floor plan. It separates logical thread/block/warp grouping from physical SM
 resources, hardware L1/L2 caches from the application KV cache, and addressed
 sectors from physical device-memory traffic. Its sources are the same CUDA SIMT,
-multithreading, memory and WMMA rules above. New V2 recordings use original source
-excerpts and diagrams with synthetic Flite narration. Rebuilds and review limits
-are recorded in `assets/media/v2/README.md`.
+multithreading, memory and WMMA rules above. The recordings retain original source
+excerpts and diagrams. All 42 existing recordings now use Common Ground's pinned
+record-demo workflow: Kokoro v1.0 ONNX CPU, `af_heart`, speed 1.0. Rebuilds,
+provenance and review limits are recorded in `assets/media/README.md`.
 
 ## V2 practical workflow
 

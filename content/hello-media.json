@@ -1,10 +1,10 @@
 {
   "durationSeconds": 172,
-  "bytes": 8025621,
+  "bytes": 10404527,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 20.992,
       "title": "One input, one doubled result."
     },
@@ -23,31 +23,31 @@
     {
       "id": "s04",
       "start": 64.747,
-      "end": 85.909,
+      "end": 85.888,
       "title": "The CPU supplies the launch and count."
     },
     {
       "id": "s05",
-      "start": 85.909,
-      "end": 108.459,
+      "start": 85.888,
+      "end": 108.437,
       "title": "A bounds check protects the arrays."
     },
     {
       "id": "s06",
-      "start": 108.459,
-      "end": 130.307,
+      "start": 108.437,
+      "end": 130.285,
       "title": "Pause: cover nine inputs."
     },
     {
       "id": "s07",
-      "start": 130.307,
-      "end": 150.381,
+      "start": 130.285,
+      "end": 150.36,
       "title": "Three blocks cover all nine inputs."
     },
     {
       "id": "s08",
-      "start": 150.381,
-      "end": 172.056,
+      "start": 150.36,
+      "end": 172.035,
       "title": "Trace values, indices and coverage."
     }
   ],
@@ -91,61 +91,61 @@
     {
       "id": "s04-c1",
       "start": 65.347,
-      "end": 74.179,
+      "end": 74.157,
       "text": "The CPU requests two blocks of four threads and passes an input count of five. The eight launched threads have indices zero through seven."
     },
     {
       "id": "s04-c2",
-      "start": 74.399,
-      "end": 84.489,
+      "start": 74.377,
+      "end": 84.468,
       "text": "The count is an ordinary kernel argument supplied by the CPU program. Changing the number of blocks does not change that count or allocate longer arrays."
     },
     {
       "id": "s05-c1",
-      "start": 86.509,
-      "end": 95.512,
+      "start": 86.488,
+      "end": 95.491,
       "text": "The correct check permits only indices smaller than five: zero through four. Threads five, six and seven skip both the read and the write."
     },
     {
       "id": "s05-c2",
-      "start": 95.732,
-      "end": 107.039,
+      "start": 95.711,
+      "end": 107.017,
       "text": "A check allowing index five would access positions that do not exist. The guard trusts the supplied count; the CPU must also provide enough input and output storage."
     },
     {
       "id": "s06-c1",
-      "start": 109.059,
-      "end": 116.504,
+      "start": 109.037,
+      "end": 116.483,
       "text": "Now there are nine inputs, with indices zero through eight. Keep four threads per block. Would two blocks cover every input?"
     },
     {
       "id": "s06-c2",
-      "start": 116.724,
-      "end": 125.087,
+      "start": 116.703,
+      "end": 125.065,
       "text": "Predict the smallest block count that covers all nine values. Which launched indices must then skip the arrays? Pause before comparing."
     },
     {
       "id": "s07-c1",
-      "start": 130.907,
-      "end": 139.355,
+      "start": 130.885,
+      "end": 139.333,
       "text": "Two blocks create only eight threads, leaving input index eight without a thread. Three blocks create twelve threads, covering all nine inputs."
     },
     {
       "id": "s07-c2",
-      "start": 139.575,
-      "end": 148.961,
+      "start": 139.553,
+      "end": 148.94,
       "text": "With the count set to nine, indices nine, ten and eleven skip the arrays. A bounds check can prevent an access, but it cannot create a missing thread."
     },
     {
       "id": "s08-c1",
-      "start": 150.981,
-      "end": 160.069,
+      "start": 150.96,
+      "end": 160.048,
       "text": "Keep three questions separate: which input does this thread select, how many threads did the CPU launch, and which indices may safely access the arrays?"
     },
     {
       "id": "s08-c2",
-      "start": 160.289,
-      "end": 170.636,
+      "start": 160.268,
+      "end": 170.615,
       "text": "Return to Chapter One and compare four with eight threads per block. Explain why the grouping changes while each valid input still produces the same doubled result."
     }
   ],
@@ -169,7 +169,7 @@
       "s02-c2": 9.899,
       "s03-c1": 9.045,
       "s03-c2": 9.92,
-      "s04-c1": 8.832,
+      "s04-c1": 8.811,
       "s04-c2": 10.091,
       "s05-c1": 9.003,
       "s05-c2": 11.307,
@@ -179,6 +179,29 @@
       "s07-c2": 9.387,
       "s08-c1": 9.088,
       "s08-c2": 10.347
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

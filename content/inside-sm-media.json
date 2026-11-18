@@ -1,4 +1,403 @@
 {
-  "durationSeconds": 209,
-  "bytes": 9153285
+  "durationSeconds": 208,
+  "bytes": 14228710,
+  "scenes": [
+    {
+      "id": "s01",
+      "start": 0.0,
+      "end": 27.391,
+      "title": "Where does the multiplication happen?"
+    },
+    {
+      "id": "s02",
+      "start": 27.391,
+      "end": 60.235,
+      "title": "Load the input."
+    },
+    {
+      "id": "s03",
+      "start": 60.235,
+      "end": 91.308,
+      "title": "Multiply the register value."
+    },
+    {
+      "id": "s04",
+      "start": 91.308,
+      "end": 112.292,
+      "title": "Write the result back."
+    },
+    {
+      "id": "s05",
+      "start": 112.292,
+      "end": 137.144,
+      "title": "Another thread. Separate values."
+    },
+    {
+      "id": "s06",
+      "start": 137.144,
+      "end": 167.656,
+      "title": "The hardware is shared."
+    },
+    {
+      "id": "s07",
+      "start": 167.656,
+      "end": 183.633,
+      "title": "Pause and explain."
+    },
+    {
+      "id": "s08",
+      "start": 183.633,
+      "end": 208.165,
+      "title": "Registers first. Memory after the store."
+    }
+  ],
+  "cues": [
+    {
+      "id": "s01-c1",
+      "start": 0.6,
+      "end": 4.12,
+      "text": "In Chapter One, the GPU doubles five input values."
+    },
+    {
+      "id": "s01-c2",
+      "start": 4.34,
+      "end": 8.18,
+      "text": "Let\u2019s follow one of them: one point zero becomes two point zero."
+    },
+    {
+      "id": "s01-c3",
+      "start": 8.4,
+      "end": 15.504,
+      "text": "The GPU program supplies instructions: individual operations such as a load, a multiply, or a store."
+    },
+    {
+      "id": "s01-c4",
+      "start": 15.724,
+      "end": 21.42,
+      "text": "A streaming multiprocessor, or S M, provides the hardware that performs those instructions."
+    },
+    {
+      "id": "s01-c5",
+      "start": 21.64,
+      "end": 25.971,
+      "text": "The input and output arrays are in GPU memory, outside the S M."
+    },
+    {
+      "id": "s02-c1",
+      "start": 27.991,
+      "end": 31.809,
+      "text": "Thread Zero\u2019s load requests the value at input index zero."
+    },
+    {
+      "id": "s02-c2",
+      "start": 32.029,
+      "end": 35.101,
+      "text": "Load and store units handle memory instructions."
+    },
+    {
+      "id": "s02-c3",
+      "start": 35.321,
+      "end": 42.148,
+      "text": "A load brings a value from memory into a register: a small, fast storage location inside the S M."
+    },
+    {
+      "id": "s02-c4",
+      "start": 42.368,
+      "end": 46.592,
+      "text": "Registers hold the working values that arithmetic instructions use."
+    },
+    {
+      "id": "s02-c5",
+      "start": 46.812,
+      "end": 52.999,
+      "text": "The request can take time; this diagram jumps ahead to when one point zero arrives in a register."
+    },
+    {
+      "id": "s02-c6",
+      "start": 53.219,
+      "end": 56.099,
+      "text": "The input array still holds its original value."
+    },
+    {
+      "id": "s02-c7",
+      "start": 56.319,
+      "end": 58.815,
+      "text": "Nothing has been written to the output array yet."
+    },
+    {
+      "id": "s03-c1",
+      "start": 60.835,
+      "end": 65.379,
+      "text": "The multiply instruction uses the loaded value and the multiplier two."
+    },
+    {
+      "id": "s03-c2",
+      "start": 65.599,
+      "end": 70.356,
+      "text": "Floating point arithmetic units perform calculations on floating point values."
+    },
+    {
+      "id": "s03-c3",
+      "start": 70.576,
+      "end": 74.715,
+      "text": "Here, they produce two point zero and return the result to a register."
+    },
+    {
+      "id": "s03-c4",
+      "start": 74.935,
+      "end": 79.393,
+      "text": "Our values use thirty two bit floating point, often called F P thirty two."
+    },
+    {
+      "id": "s03-c5",
+      "start": 79.613,
+      "end": 84.84,
+      "text": "These arithmetic units are shared by threads, rather than permanently owned by Thread Zero."
+    },
+    {
+      "id": "s03-c6",
+      "start": 85.06,
+      "end": 88.452,
+      "text": "The multiply has not written the result to the output array."
+    },
+    {
+      "id": "s03-c7",
+      "start": 88.672,
+      "end": 89.888,
+      "text": "That needs a store."
+    },
+    {
+      "id": "s04-c1",
+      "start": 91.908,
+      "end": 93.892,
+      "text": "The store is a separate instruction."
+    },
+    {
+      "id": "s04-c2",
+      "start": 94.112,
+      "end": 102.261,
+      "text": "Load and store units write two point zero from the thread\u2019s result register into output index zero in GPU memory."
+    },
+    {
+      "id": "s04-c3",
+      "start": 102.481,
+      "end": 104.7,
+      "text": "The result is now in the output array."
+    },
+    {
+      "id": "s04-c4",
+      "start": 104.92,
+      "end": 110.872,
+      "text": "We have followed the whole value path: memory to register, arithmetic, then register to memory."
+    },
+    {
+      "id": "s05-c1",
+      "start": 112.892,
+      "end": 116.284,
+      "text": "Now inspect Thread One, whose input is two point zero."
+    },
+    {
+      "id": "s05-c2",
+      "start": 116.504,
+      "end": 119.085,
+      "text": "Its load supplies its own working register."
+    },
+    {
+      "id": "s05-c3",
+      "start": 119.305,
+      "end": 121.609,
+      "text": "Thread Zero\u2019s values remain separate."
+    },
+    {
+      "id": "s05-c4",
+      "start": 121.829,
+      "end": 126.971,
+      "text": "We are changing which values we inspect, not choosing the GPU\u2019s execution order."
+    },
+    {
+      "id": "s05-c5",
+      "start": 127.191,
+      "end": 135.724,
+      "text": "A GPU can execute instructions for groups of threads together; this picture isolates two threads to make their values easy to follow."
+    },
+    {
+      "id": "s06-c1",
+      "start": 137.744,
+      "end": 143.76,
+      "text": "Thread One\u2019s multiply uses the same depicted floating point hardware, producing four point zero."
+    },
+    {
+      "id": "s06-c2",
+      "start": 143.98,
+      "end": 146.881,
+      "text": "Its store writes that result to output index one."
+    },
+    {
+      "id": "s06-c3",
+      "start": 147.101,
+      "end": 151.112,
+      "text": "Each thread has its own working values, while execution units are shared."
+    },
+    {
+      "id": "s06-c4",
+      "start": 151.332,
+      "end": 156.495,
+      "text": "The input and result columns identify values, not fixed physical registers."
+    },
+    {
+      "id": "s06-c5",
+      "start": 156.715,
+      "end": 160.512,
+      "text": "A register can be reused after a value is no longer needed."
+    },
+    {
+      "id": "s06-c6",
+      "start": 160.732,
+      "end": 166.236,
+      "text": "The boxes show hardware roles, not unit counts or exactly when instructions execute."
+    },
+    {
+      "id": "s07-c1",
+      "start": 168.256,
+      "end": 169.557,
+      "text": "Try one more case."
+    },
+    {
+      "id": "s07-c2",
+      "start": 169.777,
+      "end": 173.489,
+      "text": "A third thread loads three point zero and multiplies it by two."
+    },
+    {
+      "id": "s07-c3",
+      "start": 173.709,
+      "end": 175.587,
+      "text": "Its store instruction has not run."
+    },
+    {
+      "id": "s07-c4",
+      "start": 175.807,
+      "end": 180.308,
+      "text": "Where is the result at this point: in a working register, or in the output array?"
+    },
+    {
+      "id": "s07-c5",
+      "start": 180.528,
+      "end": 182.213,
+      "text": "Pause here and explain why."
+    },
+    {
+      "id": "s08-c1",
+      "start": 184.233,
+      "end": 187.647,
+      "text": "The result, six point zero, is in a working register."
+    },
+    {
+      "id": "s08-c2",
+      "start": 187.867,
+      "end": 190.384,
+      "text": "The store is what writes it to the output array."
+    },
+    {
+      "id": "s08-c3",
+      "start": 190.604,
+      "end": 197.196,
+      "text": "That is the distinction to take back to Chapter One: threads describe executions with separate working values."
+    },
+    {
+      "id": "s08-c4",
+      "start": 197.416,
+      "end": 201.533,
+      "text": "The S M provides shared hardware for loads, arithmetic and stores."
+    },
+    {
+      "id": "s08-c5",
+      "start": 201.753,
+      "end": 206.745,
+      "text": "This is a conceptual explanation, not a trace of the kernel PyTorch selected."
+    }
+  ],
+  "speech": {
+    "voice": "af_heart",
+    "speed": 1.0,
+    "engine": {
+      "backend": "onnx",
+      "model": "Kokoro-82M v1.0",
+      "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+      "sha256": {
+        "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+        "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+      },
+      "provider": "CPUExecutionProvider"
+    },
+    "durations": {
+      "s01-c1": 3.52,
+      "s01-c2": 3.84,
+      "s01-c3": 7.104,
+      "s01-c4": 5.696,
+      "s01-c5": 4.331,
+      "s02-c1": 3.819,
+      "s02-c2": 3.072,
+      "s02-c3": 6.827,
+      "s02-c4": 4.224,
+      "s02-c5": 6.187,
+      "s02-c6": 2.88,
+      "s02-c7": 2.496,
+      "s03-c1": 4.544,
+      "s03-c2": 4.757,
+      "s03-c3": 4.139,
+      "s03-c4": 4.459,
+      "s03-c5": 5.227,
+      "s03-c6": 3.392,
+      "s03-c7": 1.216,
+      "s04-c1": 1.984,
+      "s04-c2": 8.149,
+      "s04-c3": 2.219,
+      "s04-c4": 5.952,
+      "s05-c1": 3.392,
+      "s05-c2": 2.581,
+      "s05-c3": 2.304,
+      "s05-c4": 5.141,
+      "s05-c5": 8.533,
+      "s06-c1": 6.016,
+      "s06-c2": 2.901,
+      "s06-c3": 4.011,
+      "s06-c4": 5.163,
+      "s06-c5": 3.797,
+      "s06-c6": 5.504,
+      "s07-c1": 1.301,
+      "s07-c2": 3.712,
+      "s07-c3": 1.877,
+      "s07-c4": 4.501,
+      "s07-c5": 1.685,
+      "s08-c1": 3.413,
+      "s08-c2": 2.517,
+      "s08-c3": 6.592,
+      "s08-c4": 4.117,
+      "s08-c5": 4.992
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
+  }
 }

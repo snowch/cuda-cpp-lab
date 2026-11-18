@@ -1,40 +1,40 @@
 {
   "durationSeconds": 265,
-  "bytes": 12761874,
+  "bytes": 16807314,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
-      "end": 24.988,
+      "start": 0.0,
+      "end": 24.967,
       "title": "One row meets one column."
     },
     {
       "id": "s02",
-      "start": 24.988,
-      "end": 47.544,
+      "start": 24.967,
+      "end": 47.523,
       "title": "Add four products."
     },
     {
       "id": "s03",
-      "start": 47.544,
-      "end": 74.068,
+      "start": 47.523,
+      "end": 74.047,
       "title": "Load two small input tiles."
     },
     {
       "id": "s04",
-      "start": 74.068,
-      "end": 96.944,
+      "start": 74.047,
+      "end": 96.923,
       "title": "Reuse an A value across columns."
     },
     {
       "id": "s05",
-      "start": 96.944,
-      "end": 121.292,
+      "start": 96.923,
+      "end": 121.271,
       "title": "Reuse a B value across rows."
     },
     {
       "id": "s06",
-      "start": 121.292,
+      "start": 121.271,
       "end": 149.48,
       "title": "Keep the sums. Replace the inputs."
     },
@@ -67,108 +67,108 @@
     {
       "id": "s01-c1",
       "start": 0.6,
-      "end": 8.728,
+      "end": 8.707,
       "text": "Matrix multiplication combines inputs with weights in a neural network. Start with the four by four matrices from Chapter Ten."
     },
     {
       "id": "s01-c2",
-      "start": 8.948,
-      "end": 17.076,
+      "start": 8.927,
+      "end": 17.055,
       "text": "One output combines a row from matrix A with a column from matrix B. The K index selects the matching pair of inputs."
     },
     {
       "id": "s01-c3",
-      "start": 17.296,
-      "end": 23.568,
+      "start": 17.275,
+      "end": 23.547,
       "text": "This is our teaching algorithm. PyTorch selects its own implementation for the matrix operation."
     },
     {
       "id": "s02-c1",
-      "start": 25.588,
-      "end": 33.481,
+      "start": 25.567,
+      "end": 33.46,
       "text": "For row zero and column zero, multiply each matching pair, then add the four products. The output is one point zero."
     },
     {
       "id": "s02-c2",
-      "start": 33.701,
-      "end": 40.165,
+      "start": 33.68,
+      "end": 40.144,
       "text": "Our first algorithm gives each output its own thread. Each thread loads both inputs for every product."
     },
     {
       "id": "s02-c3",
-      "start": 40.385,
-      "end": 46.124,
+      "start": 40.364,
+      "end": 46.103,
       "text": "Neighbouring outputs need some of the same inputs. Could a block load those inputs once and share them?"
     },
     {
       "id": "s03-c1",
-      "start": 48.144,
-      "end": 56.059,
+      "start": 48.123,
+      "end": 56.037,
       "text": "A tile is a small rectangular part of a matrix. Choose a two by two output tile, with one output per thread in our block."
     },
     {
       "id": "s03-c2",
-      "start": 56.279,
-      "end": 65.623,
+      "start": 56.257,
+      "end": 65.601,
       "text": "Load both input tiles into shared memory: four values from matrix A, and four from matrix B. These cover K positions zero and one."
     },
     {
       "id": "s03-c3",
-      "start": 65.843,
-      "end": 72.648,
+      "start": 65.821,
+      "end": 72.627,
       "text": "This group of K positions is one phase. The four threads use the input tiles to build four partial sums."
     },
     {
       "id": "s04-c1",
-      "start": 74.668,
-      "end": 80.065,
+      "start": 74.647,
+      "end": 80.044,
       "text": "Follow the highlighted value from matrix A: minus two, at row zero and K zero."
     },
     {
       "id": "s04-c2",
-      "start": 80.285,
-      "end": 87.581,
+      "start": 80.264,
+      "end": 87.56,
       "text": "It combines with two different values from matrix B, contributing to output columns zero and one in the same row."
     },
     {
       "id": "s04-c3",
-      "start": 87.801,
-      "end": 95.524,
+      "start": 87.78,
+      "end": 95.503,
       "text": "The block keeps the input in shared memory so both threads can use it. Our count includes both products, even when one is zero."
     },
     {
       "id": "s05-c1",
-      "start": 97.544,
-      "end": 101.981,
+      "start": 97.523,
+      "end": 101.96,
       "text": "Now follow minus one from matrix B, at K zero and column zero."
     },
     {
       "id": "s05-c2",
-      "start": 102.201,
-      "end": 109.177,
+      "start": 102.18,
+      "end": 109.156,
       "text": "It combines with different values from matrix A, contributing to output rows zero and one in the same column."
     },
     {
       "id": "s05-c3",
-      "start": 109.397,
-      "end": 119.872,
+      "start": 109.376,
+      "end": 119.851,
       "text": "Each loaded value serves two outputs in this phase. The two input tiles contain eight values; separate output threads would load sixteen inputs for those same products."
     },
     {
       "id": "s06-c1",
-      "start": 121.892,
-      "end": 130.127,
+      "start": 121.871,
+      "end": 130.105,
       "text": "We have included only the first two K positions. Each thread retains its own partial output sum while the block moves to the next phase."
     },
     {
       "id": "s06-c2",
-      "start": 130.347,
-      "end": 141.141,
+      "start": 130.325,
+      "end": 141.12,
       "text": "The shared input tiles can be replaced only after every thread using them has finished. A real shared-memory implementation needs ordering between these uses and writes."
     },
     {
       "id": "s06-c3",
-      "start": 141.361,
+      "start": 141.34,
       "end": 148.06,
       "text": "The new input tiles must also be ready before threads read them, applying the barrier reasoning from Chapter Nine."
     },
@@ -259,7 +259,7 @@
       "provider": "CPUExecutionProvider"
     },
     "durations": {
-      "s01-c1": 8.128,
+      "s01-c1": 8.107,
       "s01-c2": 8.128,
       "s01-c3": 6.272,
       "s02-c1": 7.893,
@@ -276,7 +276,7 @@
       "s05-c3": 10.475,
       "s06-c1": 8.235,
       "s06-c2": 10.795,
-      "s06-c3": 6.699,
+      "s06-c3": 6.72,
       "s07-c1": 6.699,
       "s07-c2": 8.491,
       "s07-c3": 9.621,
@@ -289,6 +289,29 @@
       "s10-c1": 9.323,
       "s10-c2": 8.256,
       "s10-c3": 9.621
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

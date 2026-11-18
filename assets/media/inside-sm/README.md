@@ -5,7 +5,7 @@ Copyright © 2026 Christopher Snow.
 The approved recording replaces the beginner value inspector in `inside-sm.html`.
 The separate warp/readiness walkthrough remains interactive in Chapter 7.
 
-- `inside-sm.mp4`: 3840 × 2160, 30 fps, H.264/AAC; 209 seconds. Includes English
+- `inside-sm.mp4`: 3840 × 2160, 30 fps, H.264/AAC. Measured duration is in the media JSON. Includes English
   subtitles and scene chapters. The browser also uses `captions.vtt` for native captions.
 - `slides.pdf`: the approved eight-slide deck, also available as a download.
 - `poster.jpg`: the opening slide, reduced to 1920 × 1080.
@@ -21,9 +21,9 @@ for Linux. Whisper small checked every scene against the script; differences wer
 number formatting and ordinary spellings of spoken acronyms/names. This is synthetic
 narration, not an external speaker recording.
 
-To revise: update the scene source, revise the corresponding slides and narration
-with that workflow, render the deck at 3840 × 2160, then encode H.264/yuv420p at 30 fps
-and AAC 160 kbps/48 kHz. Keep narration and slides synchronised; regenerate English
+To revise, follow the shared [recording production workflow](../README.md).
+The approved vector PDF supplies native 4K frames; narration uses the pinned
+Common Ground voice settings and original record-demo scripts. Keep narration and slides synchronised; regenerate English
 WebVTT captions, the PDF and opening JPEG together. Check pronunciation, captions,
 all slide frames and the full video decode before replacing these approved files.
 IBM Plex fonts are used; their licences are in `assets/fonts`.

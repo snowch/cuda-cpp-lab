@@ -1,10 +1,10 @@
 {
   "durationSeconds": 192,
-  "bytes": 9435823,
+  "bytes": 12517828,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 28.267,
       "title": "Separate calculation from storage."
     },
@@ -35,19 +35,19 @@
     {
       "id": "s06",
       "start": 117.547,
-      "end": 139.029,
+      "end": 138.987,
       "title": "Keep related calculations together."
     },
     {
       "id": "s07",
-      "start": 139.029,
-      "end": 166.253,
+      "start": 138.987,
+      "end": 166.211,
       "title": "Pause: copy eight results."
     },
     {
       "id": "s08",
-      "start": 166.253,
-      "end": 191.747,
+      "start": 166.211,
+      "end": 191.704,
       "title": "A copy preserves the values."
     }
   ],
@@ -115,37 +115,37 @@
     {
       "id": "s06-c1",
       "start": 118.147,
-      "end": 127.597,
+      "end": 127.576,
       "text": "If another calculation needs the GPU result, it can read it there. A CPU copy is needed when a CPU-side consumer needs the values."
     },
     {
       "id": "s06-c2",
-      "start": 127.817,
-      "end": 137.609,
+      "start": 127.796,
+      "end": 137.567,
       "text": "Choosing where to keep values can avoid unnecessary round trips. Whether that improves an application's speed depends on its actual operations and measurements."
     },
     {
       "id": "s07-c1",
-      "start": 139.629,
-      "end": 149.4,
+      "start": 139.587,
+      "end": 149.357,
       "text": "Try eight values instead, each still using four bytes. The GPU has multiplied them by three. Now request a CPU copy of y GPU."
     },
     {
       "id": "s07-c2",
-      "start": 149.62,
-      "end": 161.033,
+      "start": 149.577,
+      "end": 160.991,
       "text": "Which values appear in the CPU result, and how many bytes of tensor data cross back? Does this copy change the original CPU input? Pause and explain the storage locations."
     },
     {
       "id": "s08-c1",
-      "start": 166.853,
-      "end": 178.053,
+      "start": 166.811,
+      "end": 178.011,
       "text": "The CPU result contains three, six, nine, twelve, fifteen, eighteen, twenty-one and twenty-four. Eight values at four bytes each means thirty-two bytes copied back."
     },
     {
       "id": "s08-c2",
-      "start": 178.273,
-      "end": 190.327,
+      "start": 178.231,
+      "end": 190.284,
       "text": "The original CPU input is unchanged. Return to Chapter Two and trace which operation creates each destination tensor, separating copies from calculation and from timing claims."
     }
   ],
@@ -173,12 +173,35 @@
       "s04-c2": 10.731,
       "s05-c1": 10.069,
       "s05-c2": 8.256,
-      "s06-c1": 9.451,
-      "s06-c2": 9.792,
+      "s06-c1": 9.429,
+      "s06-c2": 9.771,
       "s07-c1": 9.771,
       "s07-c2": 11.413,
       "s08-c1": 11.2,
       "s08-c2": 12.053
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

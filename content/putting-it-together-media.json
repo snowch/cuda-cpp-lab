@@ -1,28 +1,28 @@
 {
   "durationSeconds": 190,
-  "bytes": 8973135,
+  "bytes": 11360540,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 23.531,
       "title": "Hold the matrix operation fixed."
     },
     {
       "id": "s02",
       "start": 23.531,
-      "end": 46.869,
+      "end": 46.891,
       "title": "Share input tiles without changing the result."
     },
     {
       "id": "s03",
-      "start": 46.869,
-      "end": 73.28,
+      "start": 46.891,
+      "end": 73.301,
       "title": "Larger tiles also consume block resources."
     },
     {
       "id": "s04",
-      "start": 73.28,
+      "start": 73.301,
       "end": 97.131,
       "title": "Write a hypothesis and its uncertainty."
     },
@@ -73,24 +73,24 @@
     {
       "id": "s02-c2",
       "start": 34.463,
-      "end": 45.449,
+      "end": 45.471,
       "text": "Every choice produces the same complete output matrix in this model. These are explicit algorithm loads with cache reuse excluded; they are not measured physical memory traffic."
     },
     {
       "id": "s03-c1",
-      "start": 47.469,
-      "end": 58.477,
+      "start": 47.491,
+      "end": 58.499,
       "text": "With the chapter\u2019s synthetic resource budgets, tile width two uses thirty-two shared-memory bytes and two hundred and fifty-six registers per block. Four blocks fit those budgets."
     },
     {
       "id": "s03-c2",
-      "start": 58.697,
-      "end": 71.86,
+      "start": 58.719,
+      "end": 71.881,
       "text": "Tile width four uses one hundred and twenty-eight shared-memory bytes and one thousand and twenty-four registers per block. Only one block fits. This capacity bound is not a schedule or a timing measurement."
     },
     {
       "id": "s04-c1",
-      "start": 73.88,
+      "start": 73.901,
       "end": 84.355,
       "text": "A useful recommendation states both the benefit and the cost. A larger tile reduces explicit input loads while using more registers and shared memory per block."
     },
@@ -166,10 +166,10 @@
       "s01-c1": 11.499,
       "s01-c2": 9.792,
       "s02-c1": 10.112,
-      "s02-c2": 10.987,
+      "s02-c2": 11.008,
       "s03-c1": 11.008,
       "s03-c2": 13.163,
-      "s04-c1": 10.475,
+      "s04-c1": 10.453,
       "s04-c2": 11.136,
       "s05-c1": 9.323,
       "s05-c2": 9.28,
@@ -179,6 +179,29 @@
       "s07-c2": 11.797,
       "s08-c1": 9.024,
       "s08-c2": 10.411
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

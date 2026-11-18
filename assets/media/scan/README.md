@@ -20,18 +20,10 @@ provenance are in `content/scan-media.json`. Manual native playback, transcript,
 downloads, parent experiment restoration and paused player restoration use the
 shared book components.
 
-Rebuild with the pinned [record-demo workflow](https://github.com/snowch/claude-skills/tree/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo)
-at `/tmp/gpu-authoring-skills`, using Kokoro v1.0 ONNX CPU, `af_heart`, speed 1.0:
+## Rebuild
 
-```sh
-node scripts/render-scan-recording.mjs
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/tts.py test-results/scan-recording af_heart 1.0
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/phonemes.py test-results/scan-recording --all
-uv run /tmp/gpu-authoring-skills/plugins/demo-video/skills/record-demo/scripts/asr.py test-results/scan-recording small
-uv run scripts/build-recording.py scan
-```
-
-Review every slide, encoded scene, phoneme line and independent Whisper report.
-Automated speech screening is not human listening approval. Finish synthesis
-before export so cues, speech and video share the same final source. Normal site
-builds use committed media and never download or synthesise speech models.
+Follow the shared [recording production workflow](../README.md) with the pinned
+record-demo skill, Kokoro v1.0 ONNX CPU, `af_heart` and speed 1.0. It prepares
+the source cues, checks phonemes and speech, and exports native 4K video, captions,
+posters and measured metadata together. Existing speech-specific overrides in the
+renderer are retained. Ordinary course builds use the committed media.

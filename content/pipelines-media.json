@@ -1,10 +1,10 @@
 {
   "durationSeconds": 234,
-  "bytes": 10819996,
+  "bytes": 13748935,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 40.64,
       "title": "A slot has two handoffs."
     },
@@ -139,6 +139,29 @@
       "s05-c2": 12.907,
       "s06-c1": 19.115,
       "s06-c2": 21.824
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

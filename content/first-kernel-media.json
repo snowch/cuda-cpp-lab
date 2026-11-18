@@ -1,29 +1,29 @@
 {
-  "durationSeconds": 57,
-  "bytes": 841274,
+  "durationSeconds": 55,
+  "bytes": 2831030,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
-      "end": 13.4,
+      "start": 0.0,
+      "end": 12.913,
       "title": "What is a CUDA kernel?"
     },
     {
       "id": "s02",
-      "start": 13.4,
-      "end": 28.57,
+      "start": 12.913,
+      "end": 28.173,
       "title": "Launch one thread"
     },
     {
       "id": "s03",
-      "start": 28.57,
-      "end": 44.925,
+      "start": 28.173,
+      "end": 43.54,
       "title": "Where does the value go?"
     },
     {
       "id": "s04",
-      "start": 44.925,
-      "end": 56.54,
+      "start": 43.54,
+      "end": 55.024,
       "title": "Change the stored value"
     }
   ],
@@ -31,78 +31,125 @@
     {
       "id": "s01-c1",
       "start": 0.6,
-      "end": 4.34,
+      "end": 4.632,
       "text": "A CUDA kernel is a function that GPU threads execute."
     },
     {
       "id": "s01-c2",
-      "start": 4.56,
-      "end": 7.82,
+      "start": 4.852,
+      "end": 7.583,
       "text": "In this file, global marks hello as a kernel."
     },
     {
       "id": "s01-c3",
-      "start": 8.04,
-      "end": 11.98,
+      "start": 7.803,
+      "end": 11.493,
       "text": "The thread writes forty-two point zero at output index zero."
     },
     {
       "id": "s02-c1",
-      "start": 14.0,
-      "end": 18.46,
+      "start": 13.513,
+      "end": 18.1,
       "text": "On the CPU, main reserves space in GPU memory for one float."
     },
     {
       "id": "s02-c2",
-      "start": 18.68,
-      "end": 23.51,
+      "start": 18.32,
+      "end": 23.077,
       "text": "The first one requests one block. The second one requests one thread in that block."
     },
     {
       "id": "s02-c3",
-      "start": 23.73,
-      "end": 27.15,
+      "start": 23.297,
+      "end": 26.753,
       "text": "The argument output gives the kernel the address of the float."
     },
     {
       "id": "s03-c1",
-      "start": 29.17,
-      "end": 35.1,
+      "start": 28.773,
+      "end": 34.107,
       "text": "A streaming multiprocessor, or S M, executes instructions for the GPU thread."
     },
     {
       "id": "s03-c2",
-      "start": 35.32,
-      "end": 39.185,
+      "start": 34.327,
+      "end": 37.953,
       "text": "The kernel stores forty-two point zero in GPU memory."
     },
     {
       "id": "s03-c3",
-      "start": 39.405,
-      "end": 43.505,
+      "start": 38.173,
+      "end": 42.12,
       "text": "The CPU copies the value back, and main prints it in the console."
     },
     {
       "id": "s04-c1",
-      "start": 45.525,
-      "end": 49.38,
+      "start": 44.14,
+      "end": 47.788,
       "text": "Change the value in the assignment, then compile and run again."
     },
     {
       "id": "s04-c2",
-      "start": 49.6,
-      "end": 52.47,
+      "start": 48.008,
+      "end": 50.739,
       "text": "The launch still asks for one block and one thread."
     },
     {
       "id": "s04-c3",
-      "start": 52.69,
-      "end": 55.12,
+      "start": 50.959,
+      "end": 53.604,
       "text": "Which value will main print this time?"
     }
   ],
   "speech": {
-    "engine": "Flite",
-    "voice": "slt"
+    "voice": "af_heart",
+    "speed": 1.0,
+    "engine": {
+      "backend": "onnx",
+      "model": "Kokoro-82M v1.0",
+      "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+      "sha256": {
+        "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+        "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+      },
+      "provider": "CPUExecutionProvider"
+    },
+    "durations": {
+      "s01-c1": 4.032,
+      "s01-c2": 2.731,
+      "s01-c3": 3.691,
+      "s02-c1": 4.587,
+      "s02-c2": 4.757,
+      "s02-c3": 3.456,
+      "s03-c1": 5.333,
+      "s03-c2": 3.627,
+      "s03-c3": 3.947,
+      "s04-c1": 3.648,
+      "s04-c2": 2.731,
+      "s04-c3": 2.645
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

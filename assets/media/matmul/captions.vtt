@@ -1,57 +1,57 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:08.728
+00:00:00.600 --> 00:00:08.707
 Matrix multiplication combines inputs with weights in a neural network. Start with the four by four matrices from Chapter Ten.
 
-00:00:08.948 --> 00:00:17.076
+00:00:08.927 --> 00:00:17.055
 One output combines a row from matrix A with a column from matrix B. The K index selects the matching pair of inputs.
 
-00:00:17.296 --> 00:00:23.568
+00:00:17.275 --> 00:00:23.547
 This is our teaching algorithm. PyTorch selects its own implementation for the matrix operation.
 
-00:00:25.588 --> 00:00:33.481
+00:00:25.567 --> 00:00:33.460
 For row zero and column zero, multiply each matching pair, then add the four products. The output is one point zero.
 
-00:00:33.701 --> 00:00:40.165
+00:00:33.680 --> 00:00:40.144
 Our first algorithm gives each output its own thread. Each thread loads both inputs for every product.
 
-00:00:40.385 --> 00:00:46.124
+00:00:40.364 --> 00:00:46.103
 Neighbouring outputs need some of the same inputs. Could a block load those inputs once and share them?
 
-00:00:48.144 --> 00:00:56.059
+00:00:48.123 --> 00:00:56.037
 A tile is a small rectangular part of a matrix. Choose a two by two output tile, with one output per thread in our block.
 
-00:00:56.279 --> 00:01:05.623
+00:00:56.257 --> 00:01:05.601
 Load both input tiles into shared memory: four values from matrix A, and four from matrix B. These cover K positions zero and one.
 
-00:01:05.843 --> 00:01:12.648
+00:01:05.821 --> 00:01:12.627
 This group of K positions is one phase. The four threads use the input tiles to build four partial sums.
 
-00:01:14.668 --> 00:01:20.065
+00:01:14.647 --> 00:01:20.044
 Follow the highlighted value from matrix A: minus two, at row zero and K zero.
 
-00:01:20.285 --> 00:01:27.581
+00:01:20.264 --> 00:01:27.560
 It combines with two different values from matrix B, contributing to output columns zero and one in the same row.
 
-00:01:27.801 --> 00:01:35.524
+00:01:27.780 --> 00:01:35.503
 The block keeps the input in shared memory so both threads can use it. Our count includes both products, even when one is zero.
 
-00:01:37.544 --> 00:01:41.981
+00:01:37.523 --> 00:01:41.960
 Now follow minus one from matrix B, at K zero and column zero.
 
-00:01:42.201 --> 00:01:49.177
+00:01:42.180 --> 00:01:49.156
 It combines with different values from matrix A, contributing to output rows zero and one in the same column.
 
-00:01:49.397 --> 00:01:59.872
+00:01:49.376 --> 00:01:59.851
 Each loaded value serves two outputs in this phase. The two input tiles contain eight values; separate output threads would load sixteen inputs for those same products.
 
-00:02:01.892 --> 00:02:10.127
+00:02:01.871 --> 00:02:10.105
 We have included only the first two K positions. Each thread retains its own partial output sum while the block moves to the next phase.
 
-00:02:10.347 --> 00:02:21.141
+00:02:10.325 --> 00:02:21.120
 The shared input tiles can be replaced only after every thread using them has finished. A real shared-memory implementation needs ordering between these uses and writes.
 
-00:02:21.361 --> 00:02:28.060
+00:02:21.340 --> 00:02:28.060
 The new input tiles must also be ready before threads read them, applying the barrier reasoning from Chapter Nine.
 
 00:02:30.080 --> 00:02:36.779

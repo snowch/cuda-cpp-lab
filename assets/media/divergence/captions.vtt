@@ -36,14 +36,14 @@ Keep five inputs and change only their signs to alternating. Lanes zero, two and
 00:02:35.188 --> 00:02:52.404
 Positions five through thirty-one remain unused for both operations. White cells identify participating inputs on another path; dashed cells identify positions with no input. Inspect the masks to explain low participation instead of guessing its cause.
 
-00:02:54.424 --> 00:03:04.557
+00:02:54.424 --> 00:03:04.536
 Apply the mask rule to a new case. Lanes zero through fifteen have positive two, lane sixteen has negative two, and the remaining positions have no input.
 
-00:03:04.777 --> 00:03:16.831
+00:03:04.756 --> 00:03:16.809
 The positive expression doubles its input; the negative expression negates, doubles, then adds one. Predict which operations appear and the lane mask for each. Pause before revealing the trace.
 
-00:03:22.651 --> 00:03:37.072
+00:03:22.629 --> 00:03:37.051
 The positive multiply uses lanes zero through fifteen. All three negative operations use lane sixteen. There are four issued arithmetic operations, and positions seventeen through thirty-one are unused throughout.
 
-00:03:37.292 --> 00:03:54.060
+00:03:37.271 --> 00:03:54.039
 The positive results are four and the negative result is five. Return to Chapter Eight and separate other-path lanes from unused positions. These explicit arithmetic masks do not establish compiler lowering, hardware path order or elapsed GPU time.

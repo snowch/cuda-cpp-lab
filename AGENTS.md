@@ -33,4 +33,7 @@ Read `docs/plan.md`, `docs/model.md` and `docs/sources.md` before extending the 
 - Use relative asset paths; the production site is hosted beneath `/gpu-lab/`.
 - Run `npm run check` and `python tests/browser.py` for simulator or interface changes.
 - Validate new CUDA examples on a named toolkit/GPU when available; record untested status otherwise.
+- Regenerate recordings with Common Ground's pinned `record-demo` workflow:
+  Kokoro v1.0 ONNX CPU, `af_heart`, speed 1.0. Follow `assets/media/README.md`;
+  do not substitute Flite or another voice when authoring tools are unavailable.
 - Main is the authorised branch for the initial implementation; never force-push over remote work.

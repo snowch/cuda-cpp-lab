@@ -1,10 +1,10 @@
 {
   "durationSeconds": 266,
-  "bytes": 12235784,
+  "bytes": 15254425,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 22.684,
       "title": "Four inputs. One sum."
     },
@@ -23,18 +23,18 @@
     {
       "id": "s04",
       "start": 69.289,
-      "end": 92.123,
+      "end": 92.101,
       "title": "Wait before reading a partner."
     },
     {
       "id": "s05",
-      "start": 92.123,
-      "end": 114.081,
+      "start": 92.101,
+      "end": 114.06,
       "title": "Combine partners two words apart."
     },
     {
       "id": "s06",
-      "start": 114.081,
+      "start": 114.06,
       "end": 137.427,
       "title": "Wait again before the next stage."
     },
@@ -127,42 +127,42 @@
     {
       "id": "s04-c1",
       "start": 69.889,
-      "end": 75.884,
+      "end": 75.863,
       "text": "A block barrier provides that ordering. All four threads must reach it before any continues beyond it."
     },
     {
       "id": "s04-c2",
-      "start": 76.104,
-      "end": 83.101,
+      "start": 76.083,
+      "end": 83.08,
       "text": "The barrier also orders shared-memory accesses. Preceding writes become visible to the block's threads after the barrier."
     },
     {
       "id": "s04-c3",
-      "start": 83.321,
-      "end": 90.703,
+      "start": 83.3,
+      "end": 90.681,
       "text": "This does not wait for other blocks. It orders cooperation within this block, including the writes needed by our first additions."
     },
     {
       "id": "s05-c1",
-      "start": 92.723,
-      "end": 100.808,
+      "start": 92.701,
+      "end": 100.787,
       "text": "For four inputs, the first partner distance is two. Thread zero adds shared word two to its own word: one plus three makes four."
     },
     {
       "id": "s05-c2",
-      "start": 101.028,
-      "end": 104.633,
+      "start": 101.007,
+      "end": 104.612,
       "text": "Thread one adds shared word three: two plus four makes six."
     },
     {
       "id": "s05-c3",
-      "start": 104.853,
-      "end": 112.661,
+      "start": 104.832,
+      "end": 112.64,
       "text": "The partial sums are written into words zero and one. Their input-index labels show that the two pairs have no input in common."
     },
     {
       "id": "s06-c1",
-      "start": 114.681,
+      "start": 114.66,
       "end": 122.105,
       "text": "The next addition needs the new partial sum from thread one. We therefore need another block barrier after the partial-sum writes."
     },
@@ -292,13 +292,13 @@
       "s03-c1": 7.125,
       "s03-c2": 7.637,
       "s03-c3": 5.376,
-      "s04-c1": 5.995,
+      "s04-c1": 5.973,
       "s04-c2": 6.997,
       "s04-c3": 7.381,
       "s05-c1": 8.085,
       "s05-c2": 3.605,
       "s05-c3": 7.808,
-      "s06-c1": 7.424,
+      "s06-c1": 7.445,
       "s06-c2": 5.717,
       "s06-c3": 7.744,
       "s07-c1": 6.763,
@@ -316,6 +316,29 @@
       "s11-c1": 5.525,
       "s11-c2": 8.683,
       "s11-c3": 11.456
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }

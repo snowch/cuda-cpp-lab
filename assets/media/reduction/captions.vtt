@@ -27,25 +27,25 @@ We display those writes in an inspection order. A real program cannot rely on th
 00:01:02.493 --> 00:01:07.869
 Before a thread reads its partner's value, the program must establish that the write comes first.
 
-00:01:09.889 --> 00:01:15.884
+00:01:09.889 --> 00:01:15.863
 A block barrier provides that ordering. All four threads must reach it before any continues beyond it.
 
-00:01:16.104 --> 00:01:23.101
+00:01:16.083 --> 00:01:23.080
 The barrier also orders shared-memory accesses. Preceding writes become visible to the block's threads after the barrier.
 
-00:01:23.321 --> 00:01:30.703
+00:01:23.300 --> 00:01:30.681
 This does not wait for other blocks. It orders cooperation within this block, including the writes needed by our first additions.
 
-00:01:32.723 --> 00:01:40.808
+00:01:32.701 --> 00:01:40.787
 For four inputs, the first partner distance is two. Thread zero adds shared word two to its own word: one plus three makes four.
 
-00:01:41.028 --> 00:01:44.633
+00:01:41.007 --> 00:01:44.612
 Thread one adds shared word three: two plus four makes six.
 
-00:01:44.853 --> 00:01:52.661
+00:01:44.832 --> 00:01:52.640
 The partial sums are written into words zero and one. Their input-index labels show that the two pairs have no input in common.
 
-00:01:54.681 --> 00:02:02.105
+00:01:54.660 --> 00:02:02.105
 The next addition needs the new partial sum from thread one. We therefore need another block barrier after the partial-sum writes.
 
 00:02:02.325 --> 00:02:08.043

@@ -1,0 +1,442 @@
+{
+  "model": "small.en",
+  "purpose": "Investigate two ambiguous raw flags; original production reports remain unchanged",
+  "settings": {
+    "beam_size": 5,
+    "condition_on_previous_text": false,
+    "word_timestamps": true
+  },
+  "scenes": [
+    {
+      "id": "inference__s07-c1",
+      "duration": 13.888,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 2.24,
+          "text": " Keep the four independent decode sequences.",
+          "words": [
+            {
+              "start": 0.0,
+              "end": 0.2,
+              "text": " Keep"
+            },
+            {
+              "start": 0.2,
+              "end": 0.4,
+              "text": " the"
+            },
+            {
+              "start": 0.4,
+              "end": 0.72,
+              "text": " four"
+            },
+            {
+              "start": 0.72,
+              "end": 1.26,
+              "text": " independent"
+            },
+            {
+              "start": 1.26,
+              "end": 1.62,
+              "text": " decode"
+            },
+            {
+              "start": 1.62,
+              "end": 2.24,
+              "text": " sequences."
+            }
+          ]
+        },
+        {
+          "start": 3.0,
+          "end": 7.1,
+          "text": " Change only their previous cache length from 512 to 2,000",
+          "words": [
+            {
+              "start": 3.0,
+              "end": 3.18,
+              "text": " Change"
+            },
+            {
+              "start": 3.18,
+              "end": 3.52,
+              "text": " only"
+            },
+            {
+              "start": 3.52,
+              "end": 3.76,
+              "text": " their"
+            },
+            {
+              "start": 3.76,
+              "end": 4.16,
+              "text": " previous"
+            },
+            {
+              "start": 4.16,
+              "end": 4.52,
+              "text": " cache"
+            },
+            {
+              "start": 4.52,
+              "end": 4.84,
+              "text": " length"
+            },
+            {
+              "start": 4.84,
+              "end": 5.06,
+              "text": " from"
+            },
+            {
+              "start": 5.06,
+              "end": 5.68,
+              "text": " 512"
+            },
+            {
+              "start": 5.68,
+              "end": 6.38,
+              "text": " to"
+            },
+            {
+              "start": 6.38,
+              "end": 6.64,
+              "text": " 2"
+            },
+            {
+              "start": 6.64,
+              "end": 7.1,
+              "text": ",000"
+            }
+          ]
+        },
+        {
+          "start": 7.1,
+          "end": 8.9,
+          "text": " and 48 tokens each.",
+          "words": [
+            {
+              "start": 7.1,
+              "end": 7.56,
+              "text": " and"
+            },
+            {
+              "start": 7.56,
+              "end": 8.08,
+              "text": " 48"
+            },
+            {
+              "start": 8.08,
+              "end": 8.52,
+              "text": " tokens"
+            },
+            {
+              "start": 8.52,
+              "end": 8.9,
+              "text": " each."
+            }
+          ]
+        },
+        {
+          "start": 9.62,
+          "end": 12.92,
+          "text": " Keep the same layers, widths, value size, parameters,",
+          "words": [
+            {
+              "start": 9.62,
+              "end": 9.78,
+              "text": " Keep"
+            },
+            {
+              "start": 9.78,
+              "end": 9.94,
+              "text": " the"
+            },
+            {
+              "start": 9.94,
+              "end": 10.14,
+              "text": " same"
+            },
+            {
+              "start": 10.14,
+              "end": 10.52,
+              "text": " layers,"
+            },
+            {
+              "start": 10.96,
+              "end": 11.42,
+              "text": " widths,"
+            },
+            {
+              "start": 11.62,
+              "end": 11.86,
+              "text": " value"
+            },
+            {
+              "start": 11.86,
+              "end": 12.22,
+              "text": " size,"
+            },
+            {
+              "start": 12.66,
+              "end": 12.92,
+              "text": " parameters,"
+            }
+          ]
+        },
+        {
+          "start": 13.32,
+          "end": 13.6,
+          "text": " and rates.",
+          "words": [
+            {
+              "start": 13.32,
+              "end": 13.36,
+              "text": " and"
+            },
+            {
+              "start": 13.36,
+              "end": 13.6,
+              "text": " rates."
+            }
+          ]
+        },
+        {
+          "start": 13.6,
+          "end": 13.86,
+          "text": " Thanks for watching!",
+          "words": [
+            {
+              "start": 13.6,
+              "end": 13.84,
+              "text": " Thanks"
+            },
+            {
+              "start": 13.84,
+              "end": 13.86,
+              "text": " for"
+            },
+            {
+              "start": 13.86,
+              "end": 13.86,
+              "text": " watching!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "inference__s05-c1",
+      "duration": 16.490666666666666,
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 6.38,
+          "text": " Assume 1000 dB per second and 100 trillion floating point operations per second.",
+          "words": [
+            {
+              "start": 0.0,
+              "end": 0.38,
+              "text": " Assume"
+            },
+            {
+              "start": 0.38,
+              "end": 1.2,
+              "text": " 1000"
+            },
+            {
+              "start": 1.2,
+              "end": 1.62,
+              "text": " dB"
+            },
+            {
+              "start": 1.62,
+              "end": 2.46,
+              "text": " per"
+            },
+            {
+              "start": 2.46,
+              "end": 2.84,
+              "text": " second"
+            },
+            {
+              "start": 2.84,
+              "end": 3.32,
+              "text": " and"
+            },
+            {
+              "start": 3.32,
+              "end": 3.86,
+              "text": " 100"
+            },
+            {
+              "start": 3.86,
+              "end": 4.36,
+              "text": " trillion"
+            },
+            {
+              "start": 4.36,
+              "end": 4.72,
+              "text": " floating"
+            },
+            {
+              "start": 4.72,
+              "end": 5.06,
+              "text": " point"
+            },
+            {
+              "start": 5.06,
+              "end": 5.64,
+              "text": " operations"
+            },
+            {
+              "start": 5.64,
+              "end": 6.0,
+              "text": " per"
+            },
+            {
+              "start": 6.0,
+              "end": 6.38,
+              "text": " second."
+            }
+          ]
+        },
+        {
+          "start": 6.96,
+          "end": 10.94,
+          "text": " A floating point operation is one arithmetic operation in this count.",
+          "words": [
+            {
+              "start": 6.96,
+              "end": 7.14,
+              "text": " A"
+            },
+            {
+              "start": 7.14,
+              "end": 7.44,
+              "text": " floating"
+            },
+            {
+              "start": 7.44,
+              "end": 7.76,
+              "text": " point"
+            },
+            {
+              "start": 7.76,
+              "end": 8.34,
+              "text": " operation"
+            },
+            {
+              "start": 8.34,
+              "end": 8.7,
+              "text": " is"
+            },
+            {
+              "start": 8.7,
+              "end": 9.02,
+              "text": " one"
+            },
+            {
+              "start": 9.02,
+              "end": 9.5,
+              "text": " arithmetic"
+            },
+            {
+              "start": 9.5,
+              "end": 10.26,
+              "text": " operation"
+            },
+            {
+              "start": 10.26,
+              "end": 10.52,
+              "text": " in"
+            },
+            {
+              "start": 10.52,
+              "end": 10.7,
+              "text": " this"
+            },
+            {
+              "start": 10.7,
+              "end": 10.94,
+              "text": " count."
+            }
+          ]
+        },
+        {
+          "start": 11.96,
+          "end": 16.26,
+          "text": " Divide the selected bytes by bandwidth and the operation count by compute rate.",
+          "words": [
+            {
+              "start": 11.96,
+              "end": 12.02,
+              "text": " Divide"
+            },
+            {
+              "start": 12.02,
+              "end": 12.22,
+              "text": " the"
+            },
+            {
+              "start": 12.22,
+              "end": 12.58,
+              "text": " selected"
+            },
+            {
+              "start": 12.58,
+              "end": 12.92,
+              "text": " bytes"
+            },
+            {
+              "start": 12.92,
+              "end": 13.18,
+              "text": " by"
+            },
+            {
+              "start": 13.18,
+              "end": 13.64,
+              "text": " bandwidth"
+            },
+            {
+              "start": 13.64,
+              "end": 14.16,
+              "text": " and"
+            },
+            {
+              "start": 14.16,
+              "end": 14.28,
+              "text": " the"
+            },
+            {
+              "start": 14.28,
+              "end": 14.82,
+              "text": " operation"
+            },
+            {
+              "start": 14.82,
+              "end": 15.2,
+              "text": " count"
+            },
+            {
+              "start": 15.2,
+              "end": 15.66,
+              "text": " by"
+            },
+            {
+              "start": 15.66,
+              "end": 16.0,
+              "text": " compute"
+            },
+            {
+              "start": 16.0,
+              "end": 16.26,
+              "text": " rate."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limits": "Supplemental automated recognition, not human listening approval."
+}

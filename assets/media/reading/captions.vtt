@@ -39,11 +39,11 @@ Keep the multiplier fixed and explain which coordinates changed. A different sel
 00:02:08.280 --> 00:02:17.112
 Try x, colon, three, then multiply by two. Before checking, identify which dimension is fixed and which dimension the colon includes.
 
-00:02:17.332 --> 00:02:26.036
+00:02:17.332 --> 00:02:26.015
 Trace the five input cells, then predict their five outputs. Does index three mean the fourth row or the fourth column here? Pause and explain.
 
-00:02:31.856 --> 00:02:42.587
+00:02:31.835 --> 00:02:42.565
 Index three fixes the fourth column because counting starts at zero. The colon includes every row. The diagram follows those five inputs into their doubled results.
 
-00:02:42.807 --> 00:02:52.577
+00:02:42.785 --> 00:02:52.556
 The original tensor is unchanged. Return to Chapter Four, change only a row or column index, and explain the selected inputs before pressing Run.

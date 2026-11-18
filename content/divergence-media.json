@@ -1,10 +1,10 @@
 {
   "durationSeconds": 235,
-  "bytes": 11893118,
+  "bytes": 15736986,
   "scenes": [
     {
       "id": "s01",
-      "start": 0,
+      "start": 0.0,
       "end": 29.589,
       "title": "A mask names participating lanes."
     },
@@ -41,13 +41,13 @@
     {
       "id": "s07",
       "start": 173.824,
-      "end": 202.051,
+      "end": 202.029,
       "title": "Pause: one negative input after sixteen positives."
     },
     {
       "id": "s08",
-      "start": 202.051,
-      "end": 235.48,
+      "start": 202.029,
+      "end": 235.459,
       "title": "One negative lane keeps its whole path."
     }
   ],
@@ -127,25 +127,25 @@
     {
       "id": "s07-c1",
       "start": 174.424,
-      "end": 184.557,
+      "end": 184.536,
       "text": "Apply the mask rule to a new case. Lanes zero through fifteen have positive two, lane sixteen has negative two, and the remaining positions have no input."
     },
     {
       "id": "s07-c2",
-      "start": 184.777,
-      "end": 196.831,
+      "start": 184.756,
+      "end": 196.809,
       "text": "The positive expression doubles its input; the negative expression negates, doubles, then adds one. Predict which operations appear and the lane mask for each. Pause before revealing the trace."
     },
     {
       "id": "s08-c1",
-      "start": 202.651,
-      "end": 217.072,
+      "start": 202.629,
+      "end": 217.051,
       "text": "The positive multiply uses lanes zero through fifteen. All three negative operations use lane sixteen. There are four issued arithmetic operations, and positions seventeen through thirty-one are unused throughout."
     },
     {
       "id": "s08-c2",
-      "start": 217.292,
-      "end": 234.06,
+      "start": 217.271,
+      "end": 234.039,
       "text": "The positive results are four and the negative result is five. Return to Chapter Eight and separate other-path lanes from unused positions. These explicit arithmetic masks do not establish compiler lowering, hardware path order or elapsed GPU time."
     }
   ],
@@ -175,10 +175,33 @@
       "s05-c2": 14.912,
       "s06-c1": 10.112,
       "s06-c2": 17.216,
-      "s07-c1": 10.133,
+      "s07-c1": 10.112,
       "s07-c2": 12.053,
       "s08-c1": 14.421,
       "s08-c2": 16.768
-    }
+    },
+    "skill": {
+      "repository": "https://github.com/snowch/claude-skills",
+      "commit": "c9a7c521568632aa216932f4c965df386498602a"
+    },
+    "scriptSha256": "42144c38b2840c7877bd3d514ad368cc81bfd278a53a63925e23caa3af4669a5"
+  },
+  "video": {
+    "width": 3840,
+    "height": 2160,
+    "fps": 30
+  },
+  "encoding": {
+    "preset": "veryfast",
+    "crf": 18,
+    "gopFrames": 120,
+    "method": "closed-GOP repetition of native still scenes"
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRate": 48000,
+    "bitrate": 160000,
+    "loudnessTargetLUFS": -16,
+    "truePeakTargetDB": -1.5
   }
 }
