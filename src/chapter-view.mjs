@@ -4,7 +4,7 @@ export function openingCode(source,extraClass='') {
   return `<div class="chapter-code-panel" data-language="pytorch"><p class="chapter-code-label">PyTorch</p><pre class="chapter-opening-code${extraClass?' '+extraClass:''}"><code>${escape(source)}</code></pre>${source.trimStart().startsWith('import torch')?'<div class="chapter-code-download"><button type="button" data-download-python disabled>Download Python</button><a href="desktop.html#pytorch">Desktop setup</a><span data-download-status aria-live="polite"></span></div>':''}</div>`;
 }
 export function browserNotice() {
-  return '<p class="chapter-browser-note">Run the examples below in your browser with no installation or GPU required. The browser simulates the calculation; it does not execute PyTorch or GPU code. To run the PyTorch snippet itself, use a Python environment with PyTorch and an NVIDIA GPU.</p>';
+  return '<p class="chapter-browser-note">Run these browser experiments with no installation or GPU required. The teaching models calculate the displayed results. To execute the PyTorch code on the GPU, use the desktop instructions and a CUDA-enabled PyTorch installation.</p>';
 }
 
 export function codePanel({id,source,language='cuda',label,labelId=id+'-label',selected=false,explainedLocally=false}) {

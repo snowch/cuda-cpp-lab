@@ -9,6 +9,7 @@ export function renderFirstKernelVideo(inline) {
   return `<details class="more-settings sm-recording v2-resource" id="v2-first-video">
     ${resourceSummary('recap', 'Follow the value through the GPU and back', `${metadata.durationSeconds} sec · Video walkthrough, captions and transcript`)}
     <div class="v2-resource-body">
+    <p>This recording follows the same copy back to the CPU and uses 13.0 for its own prediction. The page experiment uses 7.0.</p>
     ${inline ? '<p>Use fullscreen to inspect the code and diagram labels.</p>' : ''}
     ${inline ? `<video data-recording="v2-first-kernel" controls playsinline preload="none" width="1920" height="1080"
       poster="${media}poster.jpg" aria-label="From kernel launch to SM execution, device storage and CPU readback">

@@ -22,8 +22,12 @@ h2{font-size:1.14rem}
 .task{margin:24px 0 16px;background:var(--soft);border-left:3px solid var(--accent);border-radius:0 7px 7px 0;padding:10px 14px}
 .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px;align-items:start}
 .card{min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(12px,2vw,20px)}
-.editor-label{display:flex;gap:8px;justify-content:space-between;align-items:baseline;margin-bottom:9px}
-.editor-label span{color:var(--muted);font-size:.8rem}
+.editor-label{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:9px}
+.kernel-tools{margin:0}
+.kernel-tools[open]{flex-basis:100%}
+.kernel-tools summary{min-height:44px;padding:9px 2px}
+.kernel-tool-actions{display:flex;flex-wrap:wrap;gap:6px}
+#draft-warning,#result-provenance{margin-top:8px;font-size:.9rem;color:var(--muted)}
 textarea{display:block;width:100%;min-height:286px;resize:vertical;white-space:pre;overflow:auto;border:1px solid var(--line);border-radius:7px;background:var(--code);color:var(--code-ink);padding:12px;font:15px/1.55 var(--mono);tab-size:4}
 .controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 button{border:1px solid var(--line);border-radius:6px;padding:7px 11px;background:var(--surface);color:var(--ink);font:600 .9rem/1.45 system-ui,sans-serif;min-height:44px;cursor:pointer}
@@ -57,7 +61,17 @@ pre{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(-
 <p class="task"><strong>Try it.</strong> Click Compile and run with the starter. In the CUDA source editor, change <code>input[i] * 2.0f</code> to <code>input[i] * 3.0f</code>. Predict Output at index 2, then run again and check that row. Next add <code>+ 1.0f</code> to the expression and predict the new value before running.</p>
 <div class="grid">
 <section class="card" aria-labelledby="editor-title">
-<div class="editor-label"><h2 id="editor-title"><label for="source">CUDA source</label></h2><span>Device kernel</span></div>
+<div class="editor-label">
+<h2 id="editor-title"><label for="source">CUDA source</label></h2>
+<details class="kernel-tools" id="editor-tools"><summary>Editor tools</summary>
+<div class="kernel-tool-actions">
+<button id="reset" type="button">Restore starter</button>
+<button id="undo-reset" type="button" hidden>Undo restore</button>
+<button id="export-source" type="button">Export .cu</button>
+</div>
+<p class="note">The first run downloads about 127 MiB of compiler assets.</p>
+</details>
+</div>
 <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="12">extern "C" __global__
 void runKernel(
     const float* input,
@@ -74,21 +88,21 @@ void runKernel(
 <div class="controls">
 <button id="run" class="primary" type="button">Compile and run</button>
 <button id="stop" type="button" hidden>Stop</button>
-<button id="reset" type="button">Restore starter</button>
 </div>
-<p class="note">The first run downloads about 127 MiB of compiler assets. Your edited source stays in this browser.</p>
-<p id="status" role="status">Edit the kernel, then compile and run.</p>
+<p id="draft-warning" role="status" hidden></p>
+<p id="status" role="status">Ready to compile the CUDA source.</p>
 <details id="compiler-messages" hidden><summary>Compiler and execution messages</summary><pre id="diagnostics" hidden aria-label="Compiler diagnostics"></pre></details>
 </section>
 <section class="card" aria-labelledby="output-title">
 <h2 id="output-title">Simulated output</h2>
 <p class="sub">The lesson launches two blocks of four threads and passes five input values.</p>
+<p id="result-provenance" hidden>Output from the previous run. Compile and run to see the result of the current source.</p>
 <table aria-label="Input and simulated output values">
 <thead><tr><th scope="col">Index</th><th scope="col">Input</th><th scope="col">Output</th></tr></thead>
 <tbody id="values"></tbody>
 </table>
 <pre id="program-output" hidden aria-label="Program output" aria-live="polite"></pre>
-<details id="program-operations" hidden><summary>Trace CUDA calls</summary><p class="sub">Calls made by main() in this browser. Byte counts describe allocations and copies; launch dimensions describe requested threads. These are not physical GPU timings.</p><pre></pre></details>
+<details id="program-operations" hidden><summary>Trace CUDA calls</summary><p class="sub">These are calls from main() in the browser simulation. Byte counts give the size of allocations and copies. Launch dimensions give blocks and threads per block.</p><pre></pre></details>
 <details id="ptx-panel" hidden><summary>Inspect generated PTX</summary><p class="sub">PTX is the compiler’s intermediate GPU instruction code. This is an inspection view; make changes in the CUDA source editor.</p><pre id="ptx"></pre></details>
 </section>
 </div>
@@ -1390,6 +1404,9 @@ const editor = document.querySelector('#source');
 const run = document.querySelector('#run');
 const stop = document.querySelector('#stop');
 const reset = document.querySelector('#reset');
+const undoReset = document.querySelector('#undo-reset');
+const draftWarning = document.querySelector('#draft-warning');
+const provenance = document.querySelector('#result-provenance');
 const status = document.querySelector('#status');
 const diagnostics = document.querySelector('#diagnostics');
 const compilerMessages = document.querySelector('#compiler-messages');
@@ -1400,11 +1417,12 @@ const mode = document.documentElement.dataset.inline || new URLSearchParams(loca
 const advanced = Boolean(lab.programs && Object.hasOwn(lab.programs, mode));
 const profile = mode === 'hello' ? 'hello' : undefined;
 const fullProgram = document.documentElement.dataset.program === 'true';
+const filename = profile === 'hello' ? 'hello.cu' : advanced || mode === 'coalescing' ? mode + '.cu' : 'runKernel.cu';
 const consoleOutput = document.querySelector('#program-output');
 const operations = document.querySelector('#program-operations');
 if (fullProgram) {
   editor.value = advanced ? lab.programs[mode] : profile ? lab.firstProgram : mode === 'coalescing' ? lab.coalescingProgram : lab.arrayProgram;
-  document.querySelector('#output-title + p').textContent = 'Output from main(), including any checks written there. A different output value alone is not an execution error.';
+  document.querySelector('#output-title + p').textContent = 'main() prints these values and any checks written in the program.';
   values.closest('table').hidden = true;
   consoleOutput.hidden = false;
 } else if (profile) {
@@ -1421,12 +1439,48 @@ let engine;
 let workerUrl;
 let prepared = false;
 let timeout;
+let hasResult = false;
+const restoreKey = storageKey + ':before-restore';
 
-try {
-  const saved = localStorage.getItem(storageKey);
-  editor.value = saved ?? starter;
-  if (saved !== null && saved !== starter) status.textContent = 'Saved source restored. Compile and run to see its output.';
-} catch { /* Optional storage. */ }
+function showSaveScope(scope) {
+  draftWarning.hidden = scope === 'browser';
+  if (scope === 'tab') draftWarning.textContent = 'This draft is saved for this tab. Export .cu in Editor tools before closing the tab to keep a copy.';
+  if (scope === 'page') draftWarning.textContent = 'Browser storage is unavailable. Export .cu in Editor tools before leaving to keep this edit.';
+}
+
+function readDraft(key) {
+  try {
+    const value = sessionStorage.getItem(key);
+    if (value !== null) return {value, scope: 'tab'};
+  } catch {}
+  try {
+    return {value: localStorage.getItem(key), scope: 'browser'};
+  } catch {
+    return {value: null, scope: 'page'};
+  }
+}
+
+function writeDraft(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    try { sessionStorage.removeItem(key); } catch {}
+    return 'browser';
+  } catch {
+    try {
+      sessionStorage.setItem(key, value);
+      return 'tab';
+    } catch {
+      return 'page';
+    }
+  }
+}
+
+const saved = readDraft(storageKey);
+editor.value = saved.value ?? starter;
+let previousDraft = readDraft(restoreKey).value || null;
+undoReset.hidden = previousDraft === null;
+if (editor.value !== starter) status.textContent = 'Saved draft restored. Compile and run to see its output.';
+showSaveScope(saved.scope);
 
 function showValues(output) {
   values.replaceChildren(...(profile ? [null] : [1, 2, 3, 4, 5]).map((input, index) => {
@@ -1445,12 +1499,7 @@ function showValues(output) {
   }));
 }
 
-function clearResult(message) {
-  showValues();
-  consoleOutput.textContent = '';
-  operations.hidden = true;
-  ptx.textContent = '';
-  ptxPanel.hidden = true;
+function clearMessages(message) {
   diagnostics.textContent = '';
   diagnostics.hidden = true;
   compilerMessages.hidden = true;
@@ -1460,9 +1509,14 @@ function clearResult(message) {
   status.textContent = message;
 }
 
+function showPreviousResult() {
+  provenance.hidden = !hasResult;
+}
+
 function busy(flag) {
   run.disabled = flag;
   reset.disabled = flag;
+  undoReset.disabled = flag;
   editor.readOnly = flag;
   stop.hidden = !flag;
 }
@@ -1505,7 +1559,7 @@ function launchWorker() {
     }
     clearTimeout(timeout);
     if (data.compileError) {
-      fail('Clang could not compile this edit.', data.diagnostics);
+      fail('The CUDA compiler could not compile this source.', data.diagnostics);
       return;
     }
     if (data.error) {
@@ -1525,6 +1579,8 @@ function launchWorker() {
       showValues(data.output);
       status.textContent = 'Compiled and ran in GPGPU-Sim.';
     }
+    hasResult = true;
+    provenance.hidden = true;
     ptx.textContent = data.ptx || '';
     ptxPanel.hidden = !data.ptx;
     diagnostics.textContent = diagnosticText(data.diagnostics);
@@ -1542,7 +1598,8 @@ function launchWorker() {
 }
 
 run.addEventListener('click', () => {
-  clearResult(prepared ? 'Compiling your CUDA source…' : 'Loading the compiler…');
+  clearMessages(prepared ? 'Compiling your CUDA source…' : 'Loading the compiler…');
+  showPreviousResult();
   busy(true);
   try {
     engine ??= launchWorker();
@@ -1575,21 +1632,57 @@ run.addEventListener('click', () => {
 addEventListener('pagehide', shutDown);
 stop.addEventListener('click', () => {
   shutDown();
-  clearResult('Run stopped. Your source is ready to edit.');
+  clearMessages('Run stopped. Your source is ready to edit.');
   busy(false);
   run.focus();
 });
 
 function edited() {
-  clearResult('Source changed. Compile and run to see the new result.');
-  try { localStorage.setItem(storageKey, editor.value); } catch { /* Optional storage. */ }
+  clearMessages('Source changed. Compile and run to check this draft.');
+  showPreviousResult();
+  showSaveScope(writeDraft(storageKey, editor.value));
 }
 
 editor.addEventListener('input', edited);
 reset.addEventListener('click', () => {
+  if (editor.value !== starter) {
+    previousDraft = editor.value;
+    writeDraft(restoreKey, previousDraft);
+    undoReset.hidden = false;
+  }
   editor.value = starter;
+  hasResult = false;
+  showValues();
+  consoleOutput.textContent = '';
+  operations.hidden = true;
+  ptx.textContent = '';
+  ptxPanel.hidden = true;
   edited();
+  status.textContent = 'Starter restored. Undo restore is in Editor tools.';
   editor.focus();
+});
+undoReset.addEventListener('click', () => {
+  if (previousDraft === null) return;
+  editor.value = previousDraft;
+  previousDraft = null;
+  writeDraft(restoreKey, '');
+  undoReset.hidden = true;
+  edited();
+  status.textContent = 'Draft recovered. Compile and run to see its output.';
+  editor.dispatchEvent(new Event('gpu-lab:source-restored'));
+  editor.focus();
+});
+document.querySelector('#export-source').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([editor.value], {type: 'text/plain'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+});
+editor.addEventListener('gpu-lab:result-restored', ({detail}) => {
+  hasResult = detail.hasResult;
+  provenance.hidden = !detail.previous;
 });
 showValues();
 </script>

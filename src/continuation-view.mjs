@@ -23,7 +23,7 @@ export function experimentResult(experiment,result,cursor=0){
 export function traceLength(experiment,result){return experiment.trace===false?1:experiment.traceCount?experiment.traceCount(result):result.trace.length;}
 export function renderContinuation(chapter){
   return `<section class="book-section"><h2>Start with the operation</h2>${openingCode(chapter.source)}${chapter.openingHTML}${browserNotice()}</section>`+
-  chapter.sections.map((section,index)=>{
+  chapter.sections.map(section=>{
     const experiment=section.experiment;
     let interactive='';
     if(experiment){
@@ -35,6 +35,6 @@ export function renderContinuation(chapter){
       <p id="${section.id}-feedback" class="continuation-feedback" role="status">${escape(section.initialPrompt||'Predict the result, then press Run.')}</p>
       <div data-results hidden><div class="continuation-steps" data-steps${steps<=1?' hidden':''}><button type="button" data-back disabled>Previous step</button><button type="button" data-next${steps<=1?' disabled':''}>Next step</button><output data-position>Step 1 of ${steps}</output></div><div data-visual-output>${experimentResult(experiment,result)}</div></div><noscript><details><summary>Compare the worked result</summary>${experimentResult(experiment,result)}</details></noscript></div>`;
     }
-    return `<section class="book-section continuation-section" id="${section.id}"><p class="eyebrow">Idea ${index+1} of ${chapter.sections.length}</p><h2>${section.title}</h2>${section.leadIn?`<p>${escape(section.leadIn)}</p>`:''}${definitions(section.terms)}${section.body}${section.task?readerTask(section.task):''}${interactive}${section.after||''}${renderSectionCuda(section.id)}</section>`;
+    return `<section class="book-section continuation-section" id="${section.id}"><h2>${section.title}</h2>${section.leadIn?`<p>${escape(section.leadIn)}</p>`:''}${definitions(section.terms)}${section.body}${section.task?readerTask(section.task):''}${interactive}${section.after||''}${renderSectionCuda(section.id)}</section>`;
   }).join('')+`${chapter.optionalHTML||''}<section class="book-section continuation-transfer"><h2>Try a new case</h2>${readerTask(chapter.transfer.prompt,'Apply it')}<details><summary>Compare your answer</summary><div>${chapter.transfer.answer}</div></details></section>${chapter.closingHTML||''}`;
 }

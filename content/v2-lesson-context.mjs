@@ -107,7 +107,7 @@ export const lessonContexts = Object.fromEntries(Object.entries(rows).map(([slug
   const code = source.slice(from, to + (end === '\n}\n' ? 2 : 0)).replace(start.startsWith('__global__') ? /$^/g : /^ {4}/gm, '');
   const kernelName = [...source.matchAll(/__global__\s+void\s+(\w+)\s*\(/g)].filter(match => match.index <= from).at(-1)?.[1];
   const inMain = from >= source.indexOf('int main()');
-  const label = `CUDA C++ · ${inMain ? 'main() · host excerpt' : kernelName + (start.startsWith('__global__') ? ' · starter kernel' : ' · kernel body excerpt')}`;
+  const label = `Read-only CUDA C++ · ${inMain ? 'main() · host excerpt' : kernelName + (start.startsWith('__global__') ? ' · starter kernel' : ' · kernel body excerpt')}`;
   const launches = [...source.matchAll(/^\s*\w+<<<[^]*?;/gm)].map(match => match[0].trim()).join('\n');
   return [slug, {code, label, launches, explanation, focus, hardware, stages, references}];
 }));
@@ -125,3 +125,8 @@ const introductions = {
   pipelines: 'Four chunks pass through two reusable GPU storage slots. CUDA streams queue the copies and kernels, and events order their dependencies. The starter checks the resulting values; the optional model explores overlap using explicitly synthetic durations.',
 };
 for (const [slug, introduction] of Object.entries(introductions)) lessonContexts[slug].introduction = introduction;
+
+// The recordings retain their original transcript. Use the more precise source
+// location in the page instructions next to the editable program.
+lessonContexts.divergence.readingExplanation = 'transform tests the sign of each lane’s value. Negative values are negated. The other branch doubles its values. All 32 threads belong to one warp. main() uses alternateSigns to prepare the input signs. Both runs use the same branch condition.';
+lessonContexts.progress.readingExplanation = 'main() launches exchange with four threads. Every thread writes its shared slot and reaches __syncthreads before testing readers. The readers setting chooses which threads use those values after all four threads pass the barrier.';

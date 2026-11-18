@@ -13,7 +13,7 @@ for (const [index, asset] of lab.assets.compiler.entries()) {
   asset.parts = ${JSON.stringify(compilerParts)}[index].map(name => new URL(${JSON.stringify(compilerBase)} + name, location.href).href);
   delete asset.url;
 }${marker}`).replace('The first run downloads about 127 MiB of compiler assets.',
-      'Compiler assets are included in App status downloads and updates.')
+      'The first run loads the compiler. Offline course downloads include those files.')
       .replace('</body>', '<script type="module" src="../src/v2-workbench-state.mjs"></script></body>');
   }
   return html.replace('</head>', `<style>
@@ -114,36 +114,9 @@ if (inlineMode && /^[a-z0-9-]+$/.test(inlineMode)) {
 if (document.documentElement.dataset.inline) {
   ${mountFirstKernelFocus.toString()}
   if (inlineMode === 'hello') mountFirstKernelFocus(editor, reset);
-  const filename = profile === 'hello' ? 'hello.cu' : advanced || inlineMode === 'coalescing' ? inlineMode + '.cu' : 'runKernel.cu';
-  const toolbar = document.createElement('details');
-  toolbar.className = 'kernel-tools';
-  toolbar.id = 'editor-tools';
-  const toolTitle = document.createElement('summary');
-  toolTitle.textContent = 'Editor tools';
-  const toolActions = document.createElement('div');
-  toolActions.className = 'kernel-tool-actions';
-  const exportSource = document.createElement('button');
-  exportSource.type = 'button';
-  exportSource.textContent = 'Export .cu';
-  exportSource.addEventListener('click', () => {
-    const url = URL.createObjectURL(new Blob([editor.value], { type: 'text/plain' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.hidden = true;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-  });
-  toolActions.append(reset, exportSource);
-  toolbar.append(toolTitle, toolActions);
-  const compilerNote = document.querySelector('.card > .note');
-  if (compilerNote) toolbar.append(compilerNote);
   const label = document.querySelector('.editor-label');
   label.querySelector('label').textContent = filename;
   editor.setAttribute('aria-label', 'CUDA source');
-  label.querySelector('span').replaceWith(toolbar);
   document.querySelector('#output-title').textContent = 'Console · simulated output';
   const shortcut = document.createElement('span');
   shortcut.className = 'kernel-shortcut';
