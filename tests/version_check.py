@@ -53,6 +53,7 @@ def check_version(browser, base_url):
     page.keyboard.press('Escape'); expect(page.locator('#app-status-open')).to_be_focused()
     context.close()
     check_background_abort(browser,base_url)
+    check_update_notice(browser,base_url)
     print('PASS: deployed identity, mismatch, offline/reconnect, failure, malformed/cached metadata, immutable running identity, keyboard focus')
 
 
@@ -79,3 +80,52 @@ def check_background_abort(browser,base_url):
     page.evaluate("delete document.visibilityState;document.dispatchEvent(new Event('visibilitychange'))")
     expect(page.locator('#version-status')).to_have_text('Up to date')
     context.close()
+
+
+def check_update_notice(browser, base_url):
+    context = browser.new_context(service_workers='block', viewport={'width': 360, 'height': 800})
+    deployment = {'release': {**RELEASE, 'id': '0' * 64}}
+    context.route('**/release.json?*', lambda route: route.fulfill(json=deployment['release']))
+    page = context.new_page()
+    page.clock.install()
+    page.goto(base_url + 'lessons/hello.html')
+    badge = page.locator('#app-status-summary')
+    toast = page.locator('#update-toast')
+    editor = page.locator('#hello-factor-0')
+    editor.focus()
+    expect(badge).to_have_text('Update available')
+    page.clock.run_for(1500)
+    expect(toast).to_be_hidden()
+    expect(editor).to_be_focused()
+    editor.blur()
+    page.clock.run_for(1500)
+    expect(toast).to_be_visible()
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    brand = page.locator('.topbar .brand').bounding_box()
+    for action in [badge, page.locator('#app-status-open')]:
+        assert action.bounding_box()['x'] >= brand['x'] + brand['width']
+    toast.get_by_role('button', name='Later').click()
+    expect(toast).to_be_hidden()
+    expect(badge).to_be_focused()
+    badge.press('Enter')
+    expect(page.locator('#version-title')).to_be_focused()
+    page.keyboard.press('Escape')
+    expect(badge).to_be_focused()
+
+    page.reload()
+    expect(badge).to_have_text('Update available')
+    page.clock.run_for(1500)
+    expect(toast).to_be_hidden()
+    deployment['release'] = {**RELEASE, 'id': '1' * 64}
+    page.reload()
+    expect(badge).to_have_text('Update available')
+    page.clock.run_for(1500)
+    expect(toast).to_be_visible()
+    toast.get_by_role('button', name='Review update').click()
+    expect(page.locator('#version-title')).to_be_focused()
+    expect(page.locator('#version-detail')).to_contain_text('Download:')
+    expect(toast).to_be_hidden()
+    page.keyboard.press('Escape')
+    expect(badge).to_be_focused()
+    context.close()
+    print('PASS: idle update notice, Later, persistent badge, once per release, review and keyboard focus')

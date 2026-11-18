@@ -70,22 +70,23 @@ icon and standalone window. Chrome and Edge offer a native install prompt when a
 the dialog also explains Safari’s Add to Dock / Add to Home Screen options. Installed apps
 use the same offline course. Installation and shortcut placement are controlled by your browser.
 
-Open **App status → Offline access** and choose **Download for offline use**.
+Open **Save offline** in the course header and choose **Download for offline use**.
 The panel shows the exact file bytes before saving every lesson, simulator, diagram
-and CUDA/PyTorch example, including lessons you have not visited. Wait for
-**Available offline** before disconnecting. External links need internet access;
-running downloaded examples requires their usual local tools. Installing the app
-and checking for updates do not automatically download the offline course.
+and CUDA/PyTorch example, including lessons you have not visited. Wait for the
+header to show **Available offline** before disconnecting. External links need
+internet access, and downloaded examples still need their usual local tools.
+Installing the app and checking for updates do not download the offline course.
 
-App status compares the running build with the deployed release. Choose **Update**
-to prepare it, then **Restart to update** when ready. All open GPU Lab windows save
-their experiment state before restarting together; a busy or non-responsive window
-blocks the restart. **Later** keeps the pending badge visible. Closing all windows
-or refreshing does not apply a prepared update automatically.
+GPU Lab shows a notice when a new release is available. Choose **Review update** or
+open **Update available** in the header to see the version and download size.
+Choose **Update** to prepare it, then **Restart to update** when ready. All open
+GPU Lab windows save their experiment state before restarting together. A busy or
+non-responsive window blocks the restart. **Later** keeps the update badge
+visible. Closing all windows or refreshing does not apply a prepared update.
 
 Cancelled downloads can resume from verified files. Failed replacements leave the
-previous complete copy usable. App status detects missing/evicted files and offers
-repair. **Remove offline copy** asks for confirmation and preserves learner work,
+previous complete copy usable. The header offers to resume or repair an incomplete
+copy. **Remove offline copy** asks for confirmation and preserves learner work,
 preferences and other apps. HTTPS (or localhost) and browser storage are required.
 See [the release contract, migration notes and validation](docs/app-status.md).
 
@@ -117,7 +118,7 @@ The build emits `release.json`, immutable `releases/<build-id>/` assets and a st
 footer; archives and dirty development builds identify themselves without a fake
 revision. App status uses network-only deployed metadata, never GitHub `main`.
 The worker prepares files only on request and verifies size and SHA-256 before
-selection. During development, use App status to update, or unregister the worker
+selection. During development, use the update notice in the header, or unregister the worker
 in browser developer tools while iterating. The browser suites exercise both root
 and `/gpu-lab/` hosting, complete offline access and multiple real built releases.
 
