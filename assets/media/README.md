@@ -13,7 +13,9 @@ The complete production covers 42 videos, including recordings retained for
 bookmarked course pages. The first two current lessons now use progressive
 hardware walkthroughs; their scripts and figures connect source, working values
 and physical resources. The remaining recordings retain their original scripts.
-Speech forms clarify pronunciation separately from canonical captions.
+Speech forms clarify pronunciation separately from canonical captions. The first
+two walkthroughs use focused shots and native captions in a reserved lower area;
+the second defers detailed warp and register discussion to later lessons.
 
 Before writing a walkthrough, read the parent lesson's application question as
 well as its example. Choose a different case or question and show a relationship
@@ -65,7 +67,10 @@ Exports use H.264 at 30 fps, AAC at 160 kbps/48 kHz, a −16 LUFS target and a
 controls encoding cost; the default is `veryfast`. Colour conversion precedes
 frame repetition so each still is converted once. Captions follow measured cue lengths with deliberate
 inter-cue and scene pauses. Videos contain English soft subtitles and also ship
-WebVTT for the browser. Existing URLs stay stable.
+WebVTT for the browser. Existing URLs stay stable. For the first two lessons,
+short display captions subdivide measured narration cues without changing their
+wording. Metadata keeps `cues` for speech screening and `displayCues` for seeking
+the displayed text. Display boundaries are interpolated, not forced word alignment.
 
 For these static decks, the exporter encodes a closed four-second group of
 frames for each scene, then repeats those packets for the scene's measured

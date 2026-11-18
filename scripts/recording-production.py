@@ -124,8 +124,10 @@ def prepare(workers, only=None):
             (folder/f'{i-1}.html').write_text(scene['html'])
             scenes.append({'id': f's{i:02}', 'title': scene['title'], 'captions': scene.get('captions', sentences(scene['text'])),
                            **({'captionSettings':scene['captionSettings']} if 'captionSettings' in scene else {}),
+                           **({'captionMaxChars':scene['captionMaxChars']} if 'captionMaxChars' in scene else {}),
+                           **({'speech':scene['speech']} if 'speech' in scene else {}),
                            **({'hold':scene['hold']} if 'hold' in scene else {})})
-        cues = [{'id': f'{s["id"]}-c{i+1}', 'step': s['title'], 'text': text, 'say': spoken(text)}
+        cues = [{'id': f'{s["id"]}-c{i+1}', 'step': s['title'], 'text': text, 'say': spoken(s.get('speech',s['captions'])[i])}
                 for s in scenes for i, text in enumerate(s['captions'])]
         write(folder/'scenes.json', cues)
         recordings.append({'key': 'v2-'+slug, 'slug': slug, 'kind': 'v2', 'work': str(folder),

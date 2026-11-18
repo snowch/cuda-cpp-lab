@@ -1,8 +1,7 @@
 // Copyright © 2026 Christopher Snow.
-import { resourceSummary } from './v2-resource-view.mjs';
+import { resourceSummary, recordingTranscript } from './v2-resource-view.mjs';
 import scenes from './first-kernel-scenes.json' with {type:'json'};
 import metadata from './first-kernel-media.json' with {type:'json'};
-import { escape } from '../src/continuation-ui.mjs';
 
 export function renderFirstKernelVideo(inline) {
   const media = '../assets/media/first-kernel/';
@@ -17,7 +16,7 @@ export function renderFirstKernelVideo(inline) {
       Read the transcript below.
     </video>` : '<p><a href="https://snowch.github.io/gpu-lab/v2/first-kernel.html#v2-first-video">Open the recording on the course site</a></p>'}
     <details class="sm-transcript"><summary>Read the transcript</summary>
-      ${scenes.map(({title,captions}) => `<section><h3>${escape(title)}</h3><p>${escape(captions.join(' '))}</p></section>`).join('')}
+      ${recordingTranscript(scenes)}
     </details>
     </div>
   </details>`;

@@ -39,8 +39,8 @@ source, storage keys, starter values and execution code are untouched.
 
 Additional reading preparation is separate from the recorded talk-track fields.
 Existing tests verify that all published captions still match their visible
-transcripts. The newer L1 recording remains a separate review copy; this change
-does not treat its creation as approval to replace the published recording.
+transcripts. Subsequent recording revisions are reviewed separately in
+`docs/intro-recording-review.md`.
 
 ## Verification
 

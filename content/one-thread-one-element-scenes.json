@@ -2,143 +2,193 @@
   {
     "id": "s01",
     "stage": "question",
-    "title": "Five values do not need five dedicated cores",
-    "lead": "Follow input[2] from device memory to output[2].",
+    "title": "Follow one input to its output",
     "captions": [
       "The starter doubles five input values.",
-      "Follow the third value through one GPU thread,",
-      "and distinguish that logical thread from the hardware that executes it."
+      "Follow input[2] to output[2]. How does the thread choose that position?"
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The starter doubles five input values.",
+      "Follow input at index two to output at index two. How does the thread choose that position?"
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s02",
-    "stage": "groups",
-    "title": "The launch describes groups of threads",
-    "lead": "Two blocks × four threads = eight launched threads.",
+    "stage": "prepared",
+    "title": "The inputs are already in GPU memory",
     "captions": [
-      "The starter chooses four threads per block.",
-      "Five elements require two blocks, so eight threads are launched.",
-      "A block groups threads; it is not an SM,",
-      "and a thread is not a dedicated arithmetic unit."
+      "The supplied setup already copies the inputs into GPU memory.",
+      "Leave that setup unchanged for this experiment."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The supplied setup already copies the inputs into GPU memory.",
+      "Leave that setup unchanged for this experiment."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s03",
-    "stage": "placement",
-    "title": "A block is assigned to one SM",
-    "lead": "Both blocks are shown on one SM as an example.",
+    "stage": "index",
+    "title": "Find the selected thread’s index",
     "captions": [
-      "Each block runs on one streaming multiprocessor.",
-      "This illustration places both blocks on the same SM.",
-      "They could instead be assigned to different SMs;",
-      "the launch does not choose their placement or promise simultaneous execution."
+      "We follow block zero’s local thread two.",
+      "Zero times four, plus two, gives array index two."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "We follow block zero’s local thread two.",
+      "Zero times four, plus two, gives array index two."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s04",
-    "stage": "warps",
-    "title": "A warp groups threads within a block",
-    "lead": "Each four-thread block uses four of 32 warp positions.",
+    "stage": "positions",
+    "title": "One index selects both positions",
     "captions": [
-      "Threads from one block form warps with thirty-two positions.",
-      "Each block here occupies four positions in its own warp.",
-      "The other positions contain no launched threads; another block cannot fill them."
+      "The same index selects input[2] and output[2]."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The same index selects input at index two and output at index two."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s05",
-    "stage": "index",
-    "title": "The index selects a memory element",
-    "lead": "Block 0, thread 2: i = 0 × 4 + 2 = 2.",
+    "stage": "sm",
+    "title": "The SM executes the thread",
     "captions": [
-      "Select block zero. Follow its local thread two.",
-      "Its index is zero times four plus two.",
-      "It selects input index two and output index two.",
-      "The index chooses data, not a physical arithmetic unit."
+      "An SM, or streaming multiprocessor, is execution hardware on the GPU chip.",
+      "It runs the selected thread’s instructions."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "An SM, or streaming multiprocessor, is execution hardware on the GPU chip.",
+      "It runs the selected thread’s instructions."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s06",
     "stage": "load",
-    "title": "Read into the thread's working state",
-    "lead": "input[2] supplies 3.0 to the calculation on the SM.",
+    "title": "Read input[2] from GPU memory",
     "captions": [
-      "The selected thread requests the value at input index two: three point zero.",
-      "On the SM, registers hold thread working values for instructions.",
-      "This drawing shows the dependency,",
-      "not an exact register allocation or cache transaction."
+      "The thread reads 3.0 from input[2] in GPU memory.",
+      "That value becomes working state for its instructions on the SM."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The thread reads three point zero from input at index two in GPU memory.",
+      "That value becomes working state for its instructions on the SM."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s07",
     "stage": "multiply",
-    "title": "Execution units perform the arithmetic",
-    "lead": "3.0 × 2.0 = 6.0",
+    "title": "Shared hardware performs the multiply",
     "captions": [
-      "The multiply uses that thread's value and produces six point zero.",
-      "Threads retain their own working values while sharing the SM's execution hardware.",
-      "Separate thread values do not require a separate permanent processor for every thread."
+      "The SM’s arithmetic hardware multiplies 3.0 by 2.0, producing 6.0.",
+      "Threads keep their own working values while sharing this hardware."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The SM’s arithmetic hardware multiplies three point zero by two point zero, producing six point zero.",
+      "Threads keep their own working values while sharing this hardware."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s08",
     "stage": "store",
-    "title": "Store into the matching output element",
-    "lead": "The selected thread writes 6.0 to output[2].",
+    "title": "Write the matching output position",
     "captions": [
-      "The store sends the result to output index two in device storage.",
-      "Other valid threads use their own indices.",
-      "The matching positions come from the index expression,",
-      "not the order in which threads happen to finish."
+      "The thread writes 6.0 to output[2] in GPU memory.",
+      "Its index fixes the destination even if other threads finish first."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "The thread writes six point zero to output at index two in GPU memory.",
+      "Its index fixes the destination even if other threads finish first."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s09",
-    "stage": "guard",
-    "title": "Launched threads can skip array operations",
-    "lead": "Indices 5, 6 and 7 fail i < n when n is 5.",
+    "stage": "print",
+    "title": "The CPU prints the copied results",
     "captions": [
-      "Block one's first thread handles the fifth element.",
-      "Its other three threads exist,",
-      "but the bounds check skips their array reads and writes.",
-      "These are different from the twenty-eight unused warp positions,",
-      "which contain no threads."
+      "main copies the GPU results into CPU memory and prints Output."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "main copies the GPU results into CPU memory and prints Output."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s10",
     "stage": "predict",
-    "title": "Predict a different multiplier",
-    "lead": "Set the multiplier to 4.0f. Keep the inputs and launch.",
+    "title": "Try a different multiplier",
     "captions": [
-      "Pause and predict: keep the launch, but use a multiplier of four point zero.",
-      "What will output index two contain, and which hardware does the multiplication?",
-      "Will changing the multiplier move the input and output arrays into the SM?"
+      "Return to the lesson. Find runKernel in the CUDA source editor.",
+      "Change its multiplier from 2.0f to 4.0f.",
+      "Pause. Predict the third Output value and the hardware doing the multiply.",
+      "Click Compile and run. Return to this recording to compare your result."
+    ],
+    "speech": [
+      "Return to the lesson. [pause 0.4] Find runKernel in the CUDA source editor.",
+      "Change its multiplier from two point zero f to four point zero f.",
+      "Pause. Predict the third Output value and the hardware doing the multiply.",
+      "Click Compile and run. Return to this recording to compare your result."
     ],
     "hold": 5,
-    "captionSettings": "line:0 position:50% size:95%"
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   },
   {
     "id": "s11",
     "stage": "answer",
-    "title": "Separate the calculation from array storage",
-    "lead": "output[2] becomes 12.0. The arrays remain in device memory.",
+    "title": "Compare your result",
     "captions": [
-      "Three point zero times four point zero is twelve point zero.",
-      "The SM's execution units perform the arithmetic.",
-      "The arrays stay in device memory; the thread uses working values on the SM.",
-      "In runKernel in the CUDA source editor, set the multiplier to four point zero f.",
-      "Click Compile and run, and inspect the third value in Console's Output array."
+      "With 4.0f, input[2] still supplies 3.0 and output[2] becomes 12.0.",
+      "The same index chooses the destination; the SM still performs the multiply."
     ],
-    "captionSettings": "line:0 position:50% size:95%"
+    "speech": [
+      "With four point zero f, input at index two still supplies three point zero and output at index two becomes twelve point zero.",
+      "The same index chooses the destination; the SM still performs the multiply."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
+  },
+  {
+    "id": "s12",
+    "stage": "summary",
+    "title": "Index, execution and storage",
+    "captions": [
+      "The index selects data. The SM performs arithmetic. GPU memory holds the arrays.",
+      "Lesson three explores the launch size."
+    ],
+    "speech": [
+      "The index selects data. The SM performs arithmetic. GPU memory holds the arrays.",
+      "Lesson three explores the launch size."
+    ],
+    "hold": 0.5,
+    "captionMaxChars": 80,
+    "captionSettings": "position:50% size:92% align:center"
   }
 ]
