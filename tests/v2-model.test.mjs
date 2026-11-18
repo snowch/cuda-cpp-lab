@@ -92,7 +92,7 @@ test('the first lesson introduces a single launch before array indexing', () => 
   const launch = page.indexOf('id="v2-first-launch"');
   const editor = page.indexOf('data-kernel-workbench="hello"');
   const diagram = page.indexOf('class="v2-diagram"');
-  const recording = page.indexOf('Watch the kernel launch');
+  const recording = page.indexOf('id="v2-first-video"');
   const references = page.indexOf('id="v2-first-references"');
   assert.ok(opening >= 0 && opening < launch && launch < editor && editor < diagram &&
     diagram < recording && recording < references);
@@ -151,7 +151,9 @@ test('each lesson connects its actual CUDA starter to execution, hardware and re
     assert.equal(readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/recap.mp4', import.meta.url)).length, media[lesson.slug].bytes);
     const captions = readFileSync(new URL('../assets/media/v2/' + lesson.slug + '/captions.vtt', import.meta.url), 'utf8')
       .split('\n').filter(line => line && line !== 'WEBVTT' && !line.includes(' --> ')).join(' ');
-    const transcript = [context.explanation, context.stages.map(([a,b]) => a + '. ' + b).join(' '), context.hardware].join(' ');
+    const renderedTranscript = page.match(/<details class="sm-transcript">[^]*?<\/details>/)[0];
+    const transcript = [...renderedTranscript.matchAll(/<p>([^]*?)<\/p>/g)].map(match=>match[1]
+      .replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&quot;','"').replaceAll('&#39;',"'").replaceAll('&amp;','&')).join(' ');
     assert.equal(captions, transcript, lesson.slug + ' captions must match the visible transcript');
 
   }

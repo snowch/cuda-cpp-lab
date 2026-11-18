@@ -84,6 +84,8 @@ try:
                 video.evaluate('v=>{v.pause();v.playbackRate=1.25}')
                 page.wait_for_function('text=>[...document.querySelector("video").textTracks[0].activeCues||[]].some(c=>c.text===text)',arg=cue['text'])
                 assert video.evaluate('v=>v.textTracks[0].mode')=='showing', key
+                if key in ['first-kernel','v2-one-thread-one-element']:
+                    assert video.evaluate('v=>[...v.textTracks[0].activeCues].every(c=>c.line===0)'), key
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), key
                 transcript = page.locator('.sm-transcript > summary')
                 transcript.focus();page.keyboard.press('Enter')

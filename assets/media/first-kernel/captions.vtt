@@ -1,37 +1,91 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:04.632
-A CUDA kernel is a function that GPU threads execute.
+00:00:00.600 --> 00:00:02.947 line:0 position:50% size:95%
+The Console shows forty-two point zero.
 
-00:00:04.852 --> 00:00:07.583
-In this file, global marks hello as a kernel.
+00:00:03.167 --> 00:00:05.407 line:0 position:50% size:95%
+But the GPU does not print that line.
 
-00:00:07.803 --> 00:00:11.493
-The thread writes forty-two point zero at output index zero.
+00:00:05.627 --> 00:00:10.021 line:0 position:50% size:95%
+Follow the value from the kernel to device memory, then back to the CPU.
 
-00:00:13.513 --> 00:00:18.100
-On the CPU, main reserves space in GPU memory for one float.
+00:00:12.041 --> 00:00:17.033 line:0 position:50% size:95%
+On this simplified discrete GPU, the compute chip and device memory are separate.
 
-00:00:18.320 --> 00:00:23.077
-The first one requests one block. The second one requests one thread in that block.
+00:00:17.253 --> 00:00:19.728 line:0 position:50% size:95%
+The CPU reserves space for one float.
 
-00:00:23.297 --> 00:00:26.753
-The argument output gives the kernel the address of the float.
+00:00:19.948 --> 00:00:25.089 line:0 position:50% size:95%
+The pointer output identifies that space; allocating it does not execute hello.
 
-00:00:28.773 --> 00:00:34.107
-A streaming multiprocessor, or S M, executes instructions for the GPU thread.
+00:00:27.109 --> 00:00:30.992 line:0 position:50% size:95%
+The CPU submits a launch: one block containing one thread.
 
-00:00:34.327 --> 00:00:37.953
-The kernel stores forty-two point zero in GPU memory.
+00:00:31.212 --> 00:00:33.473 line:0 position:50% size:95%
+These numbers describe logical work.
 
-00:00:38.173 --> 00:00:42.120
-The CPU copies the value back, and main prints it in the console.
+00:00:33.693 --> 00:00:37.875 line:0 position:50% size:95%
+They do not select a physical processor or reserve the whole GPU.
 
-00:00:44.140 --> 00:00:47.788
-Change the value in the assignment, then compile and run again.
+00:00:39.895 --> 00:00:44.865 line:0 position:50% size:95%
+The block is assigned to a streaming multiprocessor, or SM, on the compute chip.
 
-00:00:48.008 --> 00:00:50.739
-The launch still asks for one block and one thread.
+00:00:45.085 --> 00:00:48.285 line:0 position:50% size:95%
+Its execution hardware runs the thread's instructions.
 
-00:00:50.959 --> 00:00:53.604
-Which value will main print this time?
+00:00:48.505 --> 00:00:52.580 line:0 position:50% size:95%
+A thread is an execution of code, not a dedicated piece of hardware.
+
+00:00:54.600 --> 00:00:59.357 line:0 position:50% size:95%
+The assignment stores forty-two point zero at the address for output index zero.
+
+00:00:59.577 --> 00:01:02.265 line:0 position:50% size:95%
+The value belongs to the GPU allocation.
+
+00:01:02.485 --> 00:01:05.152 line:0 position:50% size:95%
+It is not yet the CPU variable value.
+
+00:01:05.372 --> 00:01:08.017 line:0 position:50% size:95%
+Cache details are omitted from this data path.
+
+00:01:10.037 --> 00:01:15.755 line:0 position:50% size:95%
+This device-to-host copy waits for the result and places it in the CPU variable value.
+
+00:01:15.975 --> 00:01:19.900 line:0 position:50% size:95%
+The launch statement by itself did not mean the kernel had already finished.
+
+00:01:21.920 --> 00:01:24.032 line:0 position:50% size:95%
+Now main prints its CPU copy.
+
+00:01:24.252 --> 00:01:28.433 line:0 position:50% size:95%
+The SM executed the assignment, device storage held the result,
+
+00:01:28.653 --> 00:01:31.725 line:0 position:50% size:95%
+and the copy made that result available to the CPU.
+
+00:01:31.945 --> 00:01:33.631 line:0 position:50% size:95%
+These are three different roles.
+
+00:01:35.651 --> 00:01:39.576 line:0 position:50% size:95%
+Pause and predict: if the assignment stores thirteen point zero,
+
+00:01:39.796 --> 00:01:41.609 line:0 position:50% size:95%
+does the launch need more threads?
+
+00:01:41.829 --> 00:01:44.731 line:0 position:50% size:95%
+Which value will the CPU print after the copy?
+
+00:01:50.551 --> 00:01:52.428 line:0 position:50% size:95%
+The launch still requests one thread.
+
+00:01:52.648 --> 00:01:54.589 line:0 position:50% size:95%
+Only the stored value changes.
+
+00:01:54.809 --> 00:01:59.887 line:0 position:50% size:95%
+In hello in the CUDA source editor, set the stored value to thirteen point zero f.
+
+00:02:00.107 --> 00:02:02.752 line:0 position:50% size:95%
+Click Compile and run, and inspect Console.
+
+00:02:02.972 --> 00:02:06.215 line:0 position:50% size:95%
+Leave the allocation, copy and error checks unchanged.

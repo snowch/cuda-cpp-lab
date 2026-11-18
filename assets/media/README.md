@@ -9,10 +9,16 @@ at commit `c9a7c521568632aa216932f4c965df386498602a`. Settings are Kokoro-82M
 v1.0, `af_heart`, speed 1.0, ONNX CPU. The original skill verifies model and voice
 files against pinned SHA-256 hashes. No speech service or GPU is used.
 
-The complete production covers 42 existing videos and 612 narration cues,
-including recordings retained for bookmarked course pages. Canonical lesson
-scripts, examples, numerical diagrams and qualifications remain unchanged.
-Speech forms clarify code identifiers and pronunciation separately from captions.
+The complete production covers 42 videos, including recordings retained for
+bookmarked course pages. The first two current lessons now use progressive
+hardware walkthroughs; their scripts and figures connect source, working values
+and physical resources. The remaining recordings retain their original scripts.
+Speech forms clarify pronunciation separately from canonical captions.
+
+Before writing a walkthrough, read the parent lesson's application question as
+well as its example. Choose a different case or question and show a relationship
+the logical diagram alone does not explain. Inspect caption placement on a phone
+before the final export; captions must leave the relevant source and data visible.
 
 ## Rebuild
 
@@ -32,6 +38,11 @@ uv run scripts/recording-production.py --skill-dir /path/to/record-demo --stage 
 ```
 
 The supplied skill path is its `plugins/demo-video/skills/record-demo` directory.
+To revise selected videos, add `--only first-kernel v2-one-thread-one-element`
+to `--stage prepare`. Subsequent stages use that selection. The final report
+merges new verification with existing evidence only after checking that every
+unselected video's media, captions and poster hashes are unchanged. Use a fresh
+`test-results/record-demo-all` campaign directory when changing the selection.
 The plan, raw audio, original logs and screening checkpoints are in
 `test-results/record-demo-all`. They are ignored authoring files. Normal course
 builds use committed media and never download speech models or synthesise audio.

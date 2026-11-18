@@ -24,6 +24,7 @@ test('every published recording matches the decoded and speech-screened producti
   assert.equal(new Set(screen.scenes.map(cue => cue.id)).size, screen.scenes.length);
   assert.deepEqual(Object.keys(screen.rawFlags).sort(), Object.keys(screen.reviews).sort());
   const screened = new Set(screen.scenes.map(cue => cue.id));
+  const screenedText = new Map(screen.scenes.map(cue => [cue.id,cue.text]));
   assert.deepEqual(Object.keys(screen.spokenForms).sort(), [...screened].sort());
   for (const spoken of Object.values(screen.spokenForms)) {
     assert.doesNotMatch(spoken, /[<>]/, 'Code comparisons need spoken words; Kokoro can omit symbolic operators');
@@ -46,7 +47,7 @@ test('every published recording matches the decoded and speech-screened producti
     assert.deepEqual(media.speech.engine.sha256, production.modelSha256);
     assert.deepEqual([media.speech.voice, media.speech.speed, media.speech.engine.backend], ['af_heart', 1, 'onnx']);
     assert.equal(media.cues.length, item.cueCount);
-    for (const cue of media.cues) assert.ok(screened.has(item.key + '__' + cue.id), item.key + ': unscreened cue');
+    for (const cue of media.cues) assert.equal(screenedText.get(item.key + '__' + cue.id), cue.text, item.key + ': changed or unscreened cue');
     cues += media.cues.length;
   }
   assert.equal(cues, screen.scenes.length);

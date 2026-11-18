@@ -1,93 +1,327 @@
 {
   "one-thread-one-element": {
-    "durationSeconds": 42,
-    "bytes": 2195555,
+    "durationSeconds": 180,
+    "bytes": 14189461,
     "scenes": [
       {
         "id": "s01",
         "start": 0.0,
-        "end": 15.58,
-        "title": "Read the CUDA example"
+        "end": 11.505,
+        "title": "Five values do not need five dedicated cores"
       },
       {
         "id": "s02",
-        "start": 15.58,
-        "end": 29.879,
-        "title": "Follow execution"
+        "start": 11.505,
+        "end": 25.833,
+        "title": "The launch describes groups of threads"
       },
       {
         "id": "s03",
-        "start": 29.879,
-        "end": 41.569,
-        "title": "Locate the hardware"
+        "start": 25.833,
+        "end": 42.892,
+        "title": "A block is assigned to one SM"
+      },
+      {
+        "id": "s04",
+        "start": 42.892,
+        "end": 56.573,
+        "title": "A warp groups threads within a block"
+      },
+      {
+        "id": "s05",
+        "start": 56.573,
+        "end": 71.349,
+        "title": "The index selects a memory element"
+      },
+      {
+        "id": "s06",
+        "start": 71.349,
+        "end": 88.579,
+        "title": "Read into the thread's working state"
+      },
+      {
+        "id": "s07",
+        "start": 88.579,
+        "end": 105.353,
+        "title": "Execution units perform the arithmetic"
+      },
+      {
+        "id": "s08",
+        "start": 105.353,
+        "end": 119.596,
+        "title": "Store into the matching output element"
+      },
+      {
+        "id": "s09",
+        "start": 119.596,
+        "end": 134.72,
+        "title": "Launched threads can skip array operations"
+      },
+      {
+        "id": "s10",
+        "start": 134.72,
+        "end": 155.252,
+        "title": "Predict a different multiplier"
+      },
+      {
+        "id": "s11",
+        "start": 155.252,
+        "end": 179.976,
+        "title": "Separate the calculation from array storage"
       }
     ],
     "cues": [
       {
         "id": "s01-c1",
         "start": 0.6,
-        "end": 5.187,
-        "text": "runKernel uses i to select the same position in input and output."
+        "end": 2.861,
+        "text": "The starter doubles five input values."
       },
       {
         "id": "s01-c2",
-        "start": 5.407,
-        "end": 10.164,
-        "text": "The caller passes n as an element count and supplies separate GPU arrays."
+        "start": 3.081,
+        "end": 5.919,
+        "text": "Follow the third value through one GPU thread,"
       },
       {
         "id": "s01-c3",
-        "start": 10.384,
-        "end": 14.16,
-        "text": "Every launched thread runs this body; the index chooses its data."
+        "start": 6.139,
+        "end": 10.085,
+        "text": "and distinguish that logical thread from the hardware that executes it."
       },
       {
         "id": "s02-c1",
-        "start": 16.18,
-        "end": 17.887,
-        "text": "Read input[i]."
+        "start": 12.105,
+        "end": 14.345,
+        "text": "The starter chooses four threads per block."
       },
       {
         "id": "s02-c2",
-        "start": 18.107,
-        "end": 20.453,
-        "text": "Choose an element using the thread index."
+        "start": 14.565,
+        "end": 18.192,
+        "text": "Five elements require two blocks, so eight threads are launched."
       },
       {
         "id": "s02-c3",
-        "start": 20.673,
-        "end": 21.761,
-        "text": "Multiply."
+        "start": 18.412,
+        "end": 21.1,
+        "text": "A block groups threads; it is not an SM,"
       },
       {
         "id": "s02-c4",
-        "start": 21.981,
-        "end": 24.136,
-        "text": "Apply the multiplier in runKernel."
-      },
-      {
-        "id": "s02-c5",
-        "start": 24.356,
-        "end": 26.127,
-        "text": "Write output[i]."
-      },
-      {
-        "id": "s02-c6",
-        "start": 26.347,
-        "end": 28.459,
-        "text": "Keep the same destination index."
+        "start": 21.32,
+        "end": 24.413,
+        "text": "and a thread is not a dedicated arithmetic unit."
       },
       {
         "id": "s03-c1",
-        "start": 30.479,
-        "end": 33.593,
-        "text": "The SM executes the threads in the assigned block."
+        "start": 26.433,
+        "end": 29.313,
+        "text": "Each block runs on one streaming multiprocessor."
       },
       {
         "id": "s03-c2",
-        "start": 33.813,
-        "end": 40.149,
-        "text": "Threads are logical executions with their own values; they do not each own a physical arithmetic unit."
+        "start": 29.533,
+        "end": 32.968,
+        "text": "This illustration places both blocks on the same SM."
+      },
+      {
+        "id": "s03-c3",
+        "start": 33.188,
+        "end": 36.729,
+        "text": "They could instead be assigned to different SMs;"
+      },
+      {
+        "id": "s03-c4",
+        "start": 36.949,
+        "end": 41.472,
+        "text": "the launch does not choose their placement or promise simultaneous execution."
+      },
+      {
+        "id": "s04-c1",
+        "start": 43.492,
+        "end": 46.799,
+        "text": "Threads from one block form warps with thirty-two positions."
+      },
+      {
+        "id": "s04-c2",
+        "start": 47.019,
+        "end": 50.368,
+        "text": "Each block here occupies four positions in its own warp."
+      },
+      {
+        "id": "s04-c3",
+        "start": 50.588,
+        "end": 55.153,
+        "text": "The other positions contain no launched threads; another block cannot fill them."
+      },
+      {
+        "id": "s05-c1",
+        "start": 57.173,
+        "end": 60.288,
+        "text": "Select block zero. Follow its local thread two."
+      },
+      {
+        "id": "s05-c2",
+        "start": 60.508,
+        "end": 62.961,
+        "text": "Its index is zero times four plus two."
+      },
+      {
+        "id": "s05-c3",
+        "start": 63.181,
+        "end": 66.317,
+        "text": "It selects input index two and output index two."
+      },
+      {
+        "id": "s05-c4",
+        "start": 66.537,
+        "end": 69.929,
+        "text": "The index chooses data, not a physical arithmetic unit."
+      },
+      {
+        "id": "s06-c1",
+        "start": 71.949,
+        "end": 76.515,
+        "text": "The selected thread requests the value at input index two: three point zero."
+      },
+      {
+        "id": "s06-c2",
+        "start": 76.735,
+        "end": 81.023,
+        "text": "On the SM, registers hold thread working values for instructions."
+      },
+      {
+        "id": "s06-c3",
+        "start": 81.243,
+        "end": 83.312,
+        "text": "This drawing shows the dependency,"
+      },
+      {
+        "id": "s06-c4",
+        "start": 83.532,
+        "end": 87.159,
+        "text": "not an exact register allocation or cache transaction."
+      },
+      {
+        "id": "s07-c1",
+        "start": 89.179,
+        "end": 93.403,
+        "text": "The multiply uses that thread's value and produces six point zero."
+      },
+      {
+        "id": "s07-c2",
+        "start": 93.623,
+        "end": 98.657,
+        "text": "Threads retain their own working values while sharing the SM's execution hardware."
+      },
+      {
+        "id": "s07-c3",
+        "start": 98.877,
+        "end": 103.933,
+        "text": "Separate thread values do not require a separate permanent processor for every thread."
+      },
+      {
+        "id": "s08-c1",
+        "start": 105.953,
+        "end": 109.751,
+        "text": "The store sends the result to output index two in device storage."
+      },
+      {
+        "id": "s08-c2",
+        "start": 109.971,
+        "end": 112.595,
+        "text": "Other valid threads use their own indices."
+      },
+      {
+        "id": "s08-c3",
+        "start": 112.815,
+        "end": 115.631,
+        "text": "The matching positions come from the index expression,"
+      },
+      {
+        "id": "s08-c4",
+        "start": 115.851,
+        "end": 118.176,
+        "text": "not the order in which threads happen to finish."
+      },
+      {
+        "id": "s09-c1",
+        "start": 120.196,
+        "end": 123.097,
+        "text": "Block one's first thread handles the fifth element."
+      },
+      {
+        "id": "s09-c2",
+        "start": 123.317,
+        "end": 125.045,
+        "text": "Its other three threads exist,"
+      },
+      {
+        "id": "s09-c3",
+        "start": 125.265,
+        "end": 128.103,
+        "text": "but the bounds check skips their array reads and writes."
+      },
+      {
+        "id": "s09-c4",
+        "start": 128.323,
+        "end": 131.523,
+        "text": "These are different from the twenty-eight unused warp positions,"
+      },
+      {
+        "id": "s09-c5",
+        "start": 131.743,
+        "end": 133.3,
+        "text": "which contain no threads."
+      },
+      {
+        "id": "s10-c1",
+        "start": 135.32,
+        "end": 140.163,
+        "text": "Pause and predict: keep the launch, but use a multiplier of four point zero."
+      },
+      {
+        "id": "s10-c2",
+        "start": 140.383,
+        "end": 144.82,
+        "text": "What will output index two contain, and which hardware does the multiplication?"
+      },
+      {
+        "id": "s10-c3",
+        "start": 145.04,
+        "end": 150.032,
+        "text": "Will changing the multiplier move the input and output arrays into the SM?"
+      },
+      {
+        "id": "s11-c1",
+        "start": 155.852,
+        "end": 159.777,
+        "text": "Three point zero times four point zero is twelve point zero."
+      },
+      {
+        "id": "s11-c2",
+        "start": 159.997,
+        "end": 163.261,
+        "text": "The SM's execution units perform the arithmetic."
+      },
+      {
+        "id": "s11-c3",
+        "start": 163.481,
+        "end": 168.409,
+        "text": "The arrays stay in device memory; the thread uses working values on the SM."
+      },
+      {
+        "id": "s11-c4",
+        "start": 168.629,
+        "end": 173.621,
+        "text": "In runKernel in the CUDA source editor, set the multiplier to four point zero f."
+      },
+      {
+        "id": "s11-c5",
+        "start": 173.841,
+        "end": 178.556,
+        "text": "Click Compile and run, and inspect the third value in Console's Output array."
       }
     ],
     "speech": {
@@ -104,17 +338,48 @@
         "provider": "CPUExecutionProvider"
       },
       "durations": {
-        "s01-c1": 4.587,
-        "s01-c2": 4.757,
-        "s01-c3": 3.776,
-        "s02-c1": 1.707,
-        "s02-c2": 2.347,
-        "s02-c3": 1.088,
-        "s02-c4": 2.155,
-        "s02-c5": 1.771,
-        "s02-c6": 2.112,
-        "s03-c1": 3.115,
-        "s03-c2": 6.336
+        "s01-c1": 2.261,
+        "s01-c2": 2.837,
+        "s01-c3": 3.947,
+        "s02-c1": 2.24,
+        "s02-c2": 3.627,
+        "s02-c3": 2.688,
+        "s02-c4": 3.093,
+        "s03-c1": 2.88,
+        "s03-c2": 3.435,
+        "s03-c3": 3.541,
+        "s03-c4": 4.523,
+        "s04-c1": 3.307,
+        "s04-c2": 3.349,
+        "s04-c3": 4.565,
+        "s05-c1": 3.115,
+        "s05-c2": 2.453,
+        "s05-c3": 3.136,
+        "s05-c4": 3.392,
+        "s06-c1": 4.565,
+        "s06-c2": 4.288,
+        "s06-c3": 2.069,
+        "s06-c4": 3.627,
+        "s07-c1": 4.224,
+        "s07-c2": 5.035,
+        "s07-c3": 5.056,
+        "s08-c1": 3.797,
+        "s08-c2": 2.624,
+        "s08-c3": 2.816,
+        "s08-c4": 2.325,
+        "s09-c1": 2.901,
+        "s09-c2": 1.728,
+        "s09-c3": 2.837,
+        "s09-c4": 3.2,
+        "s09-c5": 1.557,
+        "s10-c1": 4.843,
+        "s10-c2": 4.437,
+        "s10-c3": 4.992,
+        "s11-c1": 3.925,
+        "s11-c2": 3.264,
+        "s11-c3": 4.928,
+        "s11-c4": 4.992,
+        "s11-c5": 4.715
       },
       "skill": {
         "repository": "https://github.com/snowch/claude-skills",

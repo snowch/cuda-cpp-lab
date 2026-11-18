@@ -106,7 +106,8 @@ def decode(r):
 
 def report(plan):
     expected={r['video'] for r in plan['recordings']}
-    assert expected=={str(p.relative_to(ROOT)) for p in (ROOT/'assets/media').rglob('*.mp4')}
+    inventory={str(p.relative_to(ROOT)) for p in (ROOT/'assets/media').rglob('*.mp4')}
+    assert expected <= inventory if plan.get('partial') else expected == inventory
     previous=read(WORK/'before.json')
     speech_rows,flagged=[],{}
     for worker in range(plan['workers']):
@@ -141,6 +142,27 @@ def report(plan):
                         'fullDecode':True,'width':3840,'height':2160,'fps':30,
                         'measuredLUFS':decoded['measuredLUFS'],'measuredTruePeakDB':decoded['measuredTruePeakDB'],
                         'minSceneSSIM':decoded['minSceneSSIM']})
+    if plan.get('partial'):
+        baseline=read(WORK/'previous-production.json')
+        old_screen=read(WORK/'previous-screen.json')
+        keys={r['key'] for r in plan['recordings']}
+        for entry in baseline['recordings']:
+            if entry['key'] in keys:
+                continue
+            video=ROOT/entry['video']
+            assert digest(video)==entry['sha256'], 'Unselected video changed: '+entry['key']
+            assert digest(video.parent/'captions.vtt')==entry['captionSha256']
+            assert digest(video.parent/'poster.jpg')==entry['posterSha256']
+            entries.append(entry)
+        keep=lambda cue_id:cue_id.split('__')[0] not in keys
+        speech_rows=[s for s in old_screen['scenes'] if keep(s['id'])]+speech_rows
+        flagged={**{k:v for k,v in old_screen['rawFlags'].items() if keep(k)},**flagged}
+        reviews={**{k:v for k,v in old_screen['reviews'].items() if keep(k)},**reviews}
+        spoken_forms={**{k:v for k,v in old_screen['spokenForms'].items() if keep(k)},**spoken_forms}
+        by_key={entry['key']:entry for entry in entries}
+        entries=[by_key[entry['key']] for entry in baseline['recordings']]
+        assert {entry['video'] for entry in entries}==inventory
+        assert sum(entry['cueCount'] for entry in entries)==len(speech_rows)
     write(ROOT/'content/recording-production.json',{'skill':{'repository':'https://github.com/snowch/claude-skills','commit':'c9a7c521568632aa216932f4c965df386498602a'},
           'voice':'af_heart','speed':1.0,'backend':'onnx','modelSha256':MODEL_HASHES,
           'asrModel':'small.en','asrCueCount':len(speech_rows),'rawFlagCount':len(flagged),'recordings':entries,
