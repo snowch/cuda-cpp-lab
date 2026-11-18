@@ -228,6 +228,12 @@ by sentence against the stated prerequisites.
   prerequisites. Such a recording page need not duplicate the parent’s references
   and documentation exercises. Include media in offline verification and check
   playback, seeking and paused restoration after a return or update.
+- [ ] Check the recording against the parent lesson before synthesis. Essential
+  task preparation must be visible in the lesson, including the role of any supplied
+  setup needed to explain its result. Define additional architecture terms in the
+  recording before relying on them. Check each narrated action against the real
+  controls and each illustrated state against the program. Keep published audio,
+  captions and transcripts together when revising lesson prose.
 - [ ] End each published chapter/lab with `renderChapterReferences(slug)`: a References
   section with two or three annotated official links, followed by Use the documentation
   with at least two applied questions and local answer disclosures. The GPU map is a
