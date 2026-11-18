@@ -123,6 +123,7 @@ def prepare(workers, only=None):
         for i, scene in enumerate(item['scenes'], 1):
             (folder/f'{i-1}.html').write_text(scene['html'])
             scenes.append({'id': f's{i:02}', 'title': scene['title'], 'captions': scene.get('captions', sentences(scene['text'])),
+                           **({'captionSettings':scene['captionSettings']} if 'captionSettings' in scene else {}),
                            **({'hold':scene['hold']} if 'hold' in scene else {})})
         cues = [{'id': f'{s["id"]}-c{i+1}', 'step': s['title'], 'text': text, 'say': spoken(text)}
                 for s in scenes for i, text in enumerate(s['captions'])]

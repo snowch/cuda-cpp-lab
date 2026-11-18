@@ -31,6 +31,11 @@ ask a new mapping-versus-calculation question. Captions and transcripts are the
 same reviewed script. A successful example or media test does not establish
 learner understanding.
 
+Phone review found that long narration captions obscured the map. Short speech
+cues and top-positioned WebVTT captions keep the diagram available during
+playback. Native controls can still cover the bottom of the video while visible;
+the caption placement does not depend on those controls hiding.
+
 Production uses the same pinned [record-demo skill](https://github.com/snowch/claude-skills/blob/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo/SKILL.md)
 and voice as the rest of the course. Automated speech checks and author visual
 review are distinct from human listening approval or learner testing.

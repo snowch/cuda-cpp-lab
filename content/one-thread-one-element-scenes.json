@@ -5,8 +5,11 @@
     "title": "Five values do not need five dedicated cores",
     "lead": "Follow input[2] from device memory to output[2].",
     "captions": [
-      "The starter doubles five input values. Follow the third value through one GPU thread, and distinguish that logical thread from the hardware that executes it."
-    ]
+      "The starter doubles five input values.",
+      "Follow the third value through one GPU thread,",
+      "and distinguish that logical thread from the hardware that executes it."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s02",
@@ -14,8 +17,12 @@
     "title": "The launch describes groups of threads",
     "lead": "Two blocks × four threads = eight launched threads.",
     "captions": [
-      "The starter chooses four threads per block. Five elements require two blocks, so eight threads are launched. A block groups threads; it is not an SM, and a thread is not a dedicated arithmetic unit."
-    ]
+      "The starter chooses four threads per block.",
+      "Five elements require two blocks, so eight threads are launched.",
+      "A block groups threads; it is not an SM,",
+      "and a thread is not a dedicated arithmetic unit."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s03",
@@ -23,8 +30,12 @@
     "title": "A block is assigned to one SM",
     "lead": "Both blocks are shown on one SM as an example.",
     "captions": [
-      "Each block runs on one streaming multiprocessor. This illustration places both blocks on the same SM. They could instead be assigned to different SMs; the launch does not choose their placement or promise simultaneous execution."
-    ]
+      "Each block runs on one streaming multiprocessor.",
+      "This illustration places both blocks on the same SM.",
+      "They could instead be assigned to different SMs;",
+      "the launch does not choose their placement or promise simultaneous execution."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s04",
@@ -32,8 +43,11 @@
     "title": "A warp groups threads within a block",
     "lead": "Each four-thread block uses four of 32 warp positions.",
     "captions": [
-      "For instruction execution, an SM groups threads from one block into warps of thirty-two positions. Each block here occupies four positions in its own warp. The other positions contain no launched threads; another block cannot fill them."
-    ]
+      "Threads from one block form warps with thirty-two positions.",
+      "Each block here occupies four positions in its own warp.",
+      "The other positions contain no launched threads; another block cannot fill them."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s05",
@@ -41,8 +55,12 @@
     "title": "The index selects a memory element",
     "lead": "Block 0, thread 2: i = 0 × 4 + 2 = 2.",
     "captions": [
-      "Follow local thread two in block zero. Its index is zero times four plus two. It selects input index two and output index two. The index chooses data, not a physical arithmetic unit."
-    ]
+      "Select block zero. Follow its local thread two.",
+      "Its index is zero times four plus two.",
+      "It selects input index two and output index two.",
+      "The index chooses data, not a physical arithmetic unit."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s06",
@@ -50,8 +68,12 @@
     "title": "Read into the thread's working state",
     "lead": "input[2] supplies 3.0 to the calculation on the SM.",
     "captions": [
-      "The selected thread requests the value at input index two: three point zero. On the SM, registers hold thread working values for instructions. This drawing shows the dependency, not an exact register allocation or cache transaction."
-    ]
+      "The selected thread requests the value at input index two: three point zero.",
+      "On the SM, registers hold thread working values for instructions.",
+      "This drawing shows the dependency,",
+      "not an exact register allocation or cache transaction."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s07",
@@ -59,8 +81,11 @@
     "title": "Execution units perform the arithmetic",
     "lead": "3.0 × 2.0 = 6.0",
     "captions": [
-      "The multiply uses that thread's value and produces six point zero. Threads retain their own working values while sharing the SM's execution hardware. Separate thread values do not require a separate permanent processor for every thread."
-    ]
+      "The multiply uses that thread's value and produces six point zero.",
+      "Threads retain their own working values while sharing the SM's execution hardware.",
+      "Separate thread values do not require a separate permanent processor for every thread."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s08",
@@ -68,8 +93,12 @@
     "title": "Store into the matching output element",
     "lead": "The selected thread writes 6.0 to output[2].",
     "captions": [
-      "The store sends the result to output index two in device storage. Other valid threads use their own indices. The matching positions come from the index expression, not the order in which threads happen to finish."
-    ]
+      "The store sends the result to output index two in device storage.",
+      "Other valid threads use their own indices.",
+      "The matching positions come from the index expression,",
+      "not the order in which threads happen to finish."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s09",
@@ -77,18 +106,26 @@
     "title": "Launched threads can skip array operations",
     "lead": "Indices 5, 6 and 7 fail i < n when n is 5.",
     "captions": [
-      "Block one's first thread handles the fifth element. Its other three threads exist, but the bounds check skips their array reads and writes. These are different from the twenty-eight unused warp positions, which contain no threads."
-    ]
+      "Block one's first thread handles the fifth element.",
+      "Its other three threads exist,",
+      "but the bounds check skips their array reads and writes.",
+      "These are different from the twenty-eight unused warp positions,",
+      "which contain no threads."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s10",
     "stage": "predict",
     "title": "Predict a different multiplier",
-    "lead": "Change 2.0f to 0.5f. Keep the inputs and launch.",
+    "lead": "Set the multiplier to 0.5f. Keep the inputs and launch.",
     "captions": [
-      "Pause and predict: with a multiplier of zero point five, what will output index two contain? Do the block count, thread count or selected array indices need to change?"
+      "Pause and predict: with a multiplier of zero point five,",
+      "what will output index two contain?",
+      "Do the block count, thread count or selected array indices need to change?"
     ],
-    "hold": 5
+    "hold": 5,
+    "captionSettings": "line:0 position:50% size:95%"
   },
   {
     "id": "s11",
@@ -96,7 +133,12 @@
     "title": "The calculation changes; the mapping stays",
     "lead": "output[2] becomes 1.5. The launch still has eight threads.",
     "captions": [
-      "Three point zero times zero point five is one point five. The indices and launch stay unchanged. In runKernel in the CUDA source editor, replace two point zero f with zero point five f, click Compile and run, and inspect the third value in Console's Output array."
-    ]
+      "Three point zero times zero point five is one point five.",
+      "The indices and launch stay unchanged.",
+      "In runKernel in the CUDA source editor,",
+      "set the multiplier to zero point five f, click Compile and run,",
+      "and inspect the third value in Console's Output array."
+    ],
+    "captionSettings": "line:0 position:50% size:95%"
   }
 ]

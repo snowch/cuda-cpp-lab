@@ -119,7 +119,8 @@ def encode(r):
             audio, source_sr = sf.read(folder/'audio'/f'{cue_id}.wav', dtype='float32')
             assert source_sr == sr and audio.ndim == 1 and np.isfinite(audio).all() and np.max(np.abs(audio)) < 1
             end = cursor + len(audio)/sr
-            captions += [f'{stamp(cursor)} --> {stamp(end)}', text, '']
+            settings = scene.get('captionSettings', '')
+            captions += [f'{stamp(cursor)} --> {stamp(end)}'+(' '+settings if settings else ''), text, '']
             srt += [str(len(cues)+1), f'{stamp(cursor, True)} --> {stamp(end, True)}', text, '']
             cues.append({'id': cue_id, 'start': round(cursor, 3), 'end': round(end, 3), 'text': text})
             pieces.extend([audio, np.zeros(round(.22*sr), dtype=np.float32)])

@@ -20,6 +20,10 @@ test('intro recordings use the starter mapping, distinguish skipped threads and 
   const question=scenes.findIndex(s=>s.stage==='predict');
   assert.ok(question>0&&scenes[question+1].stage==='answer');
   assert.ok(scenes[question].hold>=5);
+  for(const scene of scenes){
+   assert.ok(scene.captions.every(c=>c.length<=86),'Short captions must leave the diagram readable');
+   assert.equal(scene.captionSettings,'line:0 position:50% size:95%');
+  }
   assert.match(introDeck(slug),/System RAM/);
  }
 });
