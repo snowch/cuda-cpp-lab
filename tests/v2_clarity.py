@@ -139,5 +139,34 @@ def check_v2_clarity(browser, url, root):
             expect(editor).to_have_value(durable)
             page.reload()
             expect(editor).to_have_value(durable)
+
+    # Undo must retain a durable recovery copy until the recovered source is durable.
+    for scope in ['tab', 'page']:
+        tools.press('Enter')
+        frame.get_by_role('button', name='Restore starter').press('Enter')
+        expect(editor).to_have_value(starter)
+        editor.evaluate('''(_, scope) => {
+          const nativeSet = Storage.prototype.setItem;
+          Storage.prototype.setItem = function(key, value) {
+            if (key === 'gpu-lab-v2:editable-cuda-kernelhello:program' && (this === localStorage || scope === 'page')) {
+              throw new DOMException('simulated quota', 'QuotaExceededError');
+            }
+            return nativeSet.call(this, key, value);
+          };
+        }''', scope)
+        undo = frame.get_by_role('button', name='Undo restore')
+        undo.press('Enter')
+        expect(editor).to_have_value(durable)
+        expect(frame.locator('#draft-warning')).to_be_visible()
+        assert editor.evaluate('''() => localStorage.getItem(
+          'gpu-lab-v2:editable-cuda-kernelhello:program:before-restore'
+        )''') == durable
+        page.reload()
+        expect(editor).to_have_value(durable if scope == 'tab' else starter)
+        tools.press('Enter')
+        undo.press('Enter')
+        expect(editor).to_have_value(durable)
+        page.reload()
+        expect(editor).to_have_value(durable)
     context.close()
     print('PASS: optional editor tools/warnings, visible compile errors, saved draft/output/diagnostics, valid changed assignment and separate program exit', flush=True)

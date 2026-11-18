@@ -1644,11 +1644,14 @@ stop.addEventListener('click', () => {
 function edited() {
   clearMessages('Source changed. Compile and run to check this draft.');
   showPreviousResult();
-  if (previousDraft !== null && recoveryScope !== 'browser') {
+  const isRecoveredDraft = editor.value === previousDraft;
+  if (!isRecoveredDraft && recoveryScope !== 'browser') {
     recoveryScope = writeDraft(restoreKey, previousDraft);
   }
   // Only replace the durable draft after its recovery copy is also durable.
-  showSaveScope(writeDraft(storageKey, editor.value, recoveryScope));
+  const scope = writeDraft(storageKey, editor.value, isRecoveredDraft ? 'browser' : recoveryScope);
+  showSaveScope(scope);
+  return scope;
 }
 
 editor.addEventListener('input', edited);
@@ -1671,11 +1674,12 @@ reset.addEventListener('click', () => {
 undoReset.addEventListener('click', () => {
   if (previousDraft === null) return;
   editor.value = previousDraft;
-  previousDraft = null;
-  recoveryScope = 'browser';
-  writeDraft(restoreKey, '');
-  undoReset.hidden = true;
-  edited();
+  if (edited() === 'browser') {
+    previousDraft = null;
+    recoveryScope = 'browser';
+    writeDraft(restoreKey, '');
+    undoReset.hidden = true;
+  }
   status.textContent = 'Draft recovered. Compile and run to see its output.';
   editor.dispatchEvent(new Event('gpu-lab:source-restored'));
   editor.focus();
