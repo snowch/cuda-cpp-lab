@@ -1,9 +1,12 @@
 # App status and release lifecycle
 
-Issue #22 replaces the GitHub branch-head indicator and automatic offline save
-with one App status control on every generated course page. The public labels
-match the contract in Assembly Lab #35, Metadata Systems #2 and Video Lab #6.
-The installed app and a normal browser tab use the same lifecycle.
+Issue #22 established the shared App status and release contract. On each course
+page, **Save offline** opens the offline section and changes to show the state of
+the download. A new deployment can show a non-modal notice while the learner is
+idle. **Review update** opens Version with the release and download size, and
+**Later** dismisses the notice. The header keeps **Update available** or
+**Update ready** visible until the learner acts or the status changes. The same
+lifecycle applies in an installed app and a browser tab.
 
 ## Release contract
 

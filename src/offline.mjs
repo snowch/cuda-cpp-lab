@@ -5,14 +5,64 @@ const $ = id => document.getElementById(id);
 const base = new URL(document.querySelector('meta[name="gpu-base"]').content, location.href);
 const running = document.querySelector('meta[name="gpu-release"]').content;
 const dialog = $('app-status-dialog');
+const offlineButton = $('app-status-open');
+const updateButton = $('app-status-summary');
+const toast = $('update-toast');
+const updateNoticeKey = `gpu-lab:${base.href}:update-notices`;
 let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort;
 let downloading = false, restarting = false, mode, removed = false, refreshGeneration = 0, cacheLifetime = 0;
 let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for updates';
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
 let unavailable = !supported;
 let remembered = false, remembering, connected = false;
+let returnFocus, noticeTimer, toastRelease;
+const noticedReleases = new Set();
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
 function error(message = '') { $('app-status-error').textContent = message; }
+
+function readUpdateNotices() {
+  try {
+    return JSON.parse(localStorage.getItem(updateNoticeKey) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function hideToast() {
+  const restoreFocus = toast.contains(document.activeElement);
+  toast.hidden = true;
+  toastRelease = null;
+  $('update-announcement').textContent = '';
+  if (restoreFocus) (updateButton.hidden ? offlineButton : updateButton).focus({ preventScroll: true });
+}
+
+function scheduleUpdateNotice() {
+  if (window !== window.top) return;
+  clearTimeout(noticeTimer);
+  const release = latest?.id;
+  const available = release && release !== running && snapshot.pending !== release && !downloading && !dialog.open;
+  if (!toast.hidden && (!available || toastRelease !== release)) hideToast();
+  if (!available || noticedReleases.has(release)) return;
+  noticeTimer = setTimeout(() => {
+    if (document.visibilityState !== 'visible' || !document.hasFocus()) return;
+    // The learner may be editing or running code inside a lesson frame.
+    if (document.activeElement?.closest('main :is(input, textarea, select, iframe, [contenteditable="true"])') ||
+        document.querySelector('main [aria-busy="true"]')) return;
+    noticedReleases.add(release);
+    const notices = readUpdateNotices();
+    if (Array.isArray(notices) && notices.includes(release)) return;
+    try {
+      const recent = Array.isArray(notices) ? notices.slice(-19) : [];
+      localStorage.setItem(updateNoticeKey, JSON.stringify([...recent, release]));
+    } catch {
+      // Keep the notice once per page if the browser blocks storage.
+    }
+    toastRelease = release;
+    toast.hidden = false;
+    $('update-announcement').textContent = $('update-toast-message').textContent;
+  }, 1200);
+}
+
 function render() {
   const progress = $('download-progress');
   const feedback = $(mode === 'update' ? 'update-download-feedback' : 'offline-download-feedback');
@@ -23,7 +73,8 @@ function render() {
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
   $('version-status').textContent = downloading && mode === 'update' ? 'Downloading update' : ready ? 'Update ready' : version;
-  $('app-status-summary').textContent = `${document.querySelector('.build-info a')?.textContent || running.slice(0, 7)} · ${ready ? 'Update ready' : available || pending ? 'Update available' : version === 'Up to date' ? 'Up to date' : 'Check version'}`;
+  updateButton.hidden = !(available || pending);
+  updateButton.textContent = ready ? 'Update ready' : 'Update available';
   $('download-update').hidden = !available || Boolean(ready && snapshot.pending === latest.id);
   $('download-update').disabled = downloading || !supported;
   $('restart-update').hidden = !ready; $('later-update').hidden = !ready;
@@ -39,10 +90,19 @@ function render() {
   $('save-offline').hidden = Boolean(snapshot.offlineReady || ready) || !supported;
   $('save-offline').disabled = downloading || !release;
   $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
+  offlineButton.textContent = unavailable ? 'Offline access'
+    : downloading && mode === 'offline' ? 'Saving…'
+    : snapshot.offlineReady ? 'Available offline'
+    : ready ? 'Restart to save'
+    : snapshot.partial === running ? 'Resume download'
+    : snapshot.saved ? 'Repair offline copy'
+    : 'Save offline';
+  offlineButton.dataset.saved = Boolean(snapshot.offlineReady);
   $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
   $('remove-offline').disabled = downloading;
   const cacheNote = cacheLifetime ? ` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.` : '';
   $('version-detail').textContent = !supported ? 'This browser cannot save or prepare updates here. You can keep using GPU Lab online.' : latest && available ? `Deployed release ${latest.commit?.slice(0, 7) || latest.id.slice(0, 7)}${latest.date ? ' · ' + latest.date : ''}. Download: ${bytes(latest.bytes)}.${cacheNote}` : latest && cacheLifetime ? 'The published release matches this app.'+cacheNote : version === 'Cannot check for updates' ? 'You are offline. Saved files remain usable; the published version cannot be checked.' : version === 'Couldn’t check for updates' ? 'The deployed release could not be verified. Try again when connected.' : '';
+  scheduleUpdateNotice();
 }
 function rpc(type, data = {}, progress) {
   return new Promise((resolve, reject) => {
@@ -181,9 +241,29 @@ async function download(save) {
   finally { downloading = false; $('download-progress').hidden = true; if (!prepared) await refresh(); render(); }
 }
 $('running-version').append('Running ', document.querySelector('.build-info').cloneNode(true), ` · Build ${running.slice(0, 12)}`);
-$('app-status-open').addEventListener('click', () => { dialog.showModal(); check(); if (!worker || removed) connect(); else refresh(); });
+function openStatus(section, opener) {
+  returnFocus = opener;
+  const heading = $(section);
+  dialog.querySelector('.status-heading').after(heading.closest('section'));
+  dialog.showModal();
+  dialog.scrollTop = 0;
+  heading.focus({ preventScroll: true });
+  scheduleUpdateNotice();
+  check();
+  if (!worker || removed) connect(); else refresh();
+}
+offlineButton.addEventListener('click', () => {
+  const pendingOffline = !snapshot.offlineReady && snapshot.pending !== running && snapshot.pendingReady;
+  openStatus(pendingOffline ? 'version-title' : 'offline-title', offlineButton);
+});
+updateButton.addEventListener('click', () => openStatus('version-title', updateButton));
+$('review-update').addEventListener('click', () => openStatus('version-title', updateButton));
+$('dismiss-update').addEventListener('click', hideToast);
 $('app-status-close').addEventListener('click', () => dialog.close());
-dialog.addEventListener('close', () => $('app-status-open').focus({ preventScroll: true }));
+dialog.addEventListener('close', () => {
+  (returnFocus && !returnFocus.hidden ? returnFocus : offlineButton).focus({ preventScroll: true });
+  scheduleUpdateNotice();
+});
 $('check-update').addEventListener('click', () => { check(true); refresh(); });
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));
@@ -208,6 +288,9 @@ navigator.serviceWorker?.addEventListener('message', ({ data }) => {
 addEventListener('online', () => { lastCheck = 0; check(); refresh(); });
 addEventListener('offline', () => { checkingAbort?.abort('offline'); latest=null; version = 'Cannot check for updates'; render(); });
 addEventListener('focus', () => { check(); refresh(); });
+for (const event of ['focus', 'focusout', 'pointerdown', 'keydown', 'scroll']) {
+  addEventListener(event, scheduleUpdateNotice, { capture: true, passive: true });
+}
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') { check(); refresh(); }
   else { checkingAbort?.abort('hidden'); }

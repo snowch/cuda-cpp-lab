@@ -122,10 +122,12 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
+            expect(tab.locator('#app-status-open')).to_have_text('Save offline')
             expect(tab.locator('#save-offline')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
             expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
+            expect(tab.locator('#app-status-open')).to_have_text('Restart to save')
             expect(tab.locator('#save-offline')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#later-update').click();tab.reload()
@@ -143,6 +145,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             ctx.set_offline(True);tab.locator('#restart-update').click()
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
             panel(tab);ready(tab)
+            expect(tab.locator('#app-status-open')).to_have_text('Available offline')
             expect(tab.locator('#save-offline')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_visible()
             tab.locator('#app-status-close').click()
@@ -225,15 +228,18 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 CourseHandler.slow=True
                 page.locator('#save-offline').click()
                 expect(page.locator('#download-progress')).to_be_visible()
+                expect(page.locator('#app-status-open')).to_have_text('Saving…')
                 expect(page.locator('#offline-download-feedback #download-progress')).to_be_visible()
                 assert page.locator('#download-progress').evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'offline-title'
                 page.wait_for_function('document.getElementById("asset-progress").value > 0')
                 page.locator('#cancel-download').click()
                 expect(page.locator('#save-offline')).to_have_text('Resume download')
+                expect(page.locator('#app-status-open')).to_have_text('Resume download')
                 expect(page.locator('#offline-status')).to_have_text('Offline download incomplete')
                 CourseHandler.slow=False
                 before=CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
                 page.locator('#save-offline').click(); ready(page)
+                expect(page.locator('#app-status-open')).to_have_text('Available offline')
                 assert before == CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
                 page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-saved.png'))
                 page.keyboard.press('Escape')
@@ -464,6 +470,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 except AssertionError:
                     print('Eviction check diagnostics:',page.locator('#app-status-dialog').inner_text(),flush=True)
                     raise
+                expect(page.locator('#app-status-open')).to_have_text('Repair offline copy')
                 context.set_offline(False);CourseHandler.corrupt='examples/gather.cu'
                 assert not page.evaluate('''async url => (await fetch(url+'examples/gather.cu')).ok''',url)
                 CourseHandler.corrupt=None;page.locator('#save-offline').click();ready(page)
@@ -472,6 +479,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 # REMOVE waits for any in-flight full-book cache scan. Its RPC
                 # permits 15 seconds; allow that response plus UI scheduling.
                 expect(page.locator('#offline-status')).to_have_text('Not saved for offline use',timeout=20000)
+                expect(page.locator('#app-status-open')).to_have_text('Save offline')
                 assert page.evaluate('caches.keys()') == ['sibling-app:keep']
                 assert page.evaluate("localStorage.getItem('user-content')") == 'keep'
                 expect(page.locator('#lesson-complete')).to_be_checked()
