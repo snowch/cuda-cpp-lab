@@ -38,12 +38,13 @@ python previews/l1-recording/capture.py
 uv run "$SKILL_DIR/scripts/tts.py" test-results/l1-recording-review af_heart 1.0
 uv run "$SKILL_DIR/scripts/phonemes.py" test-results/l1-recording-review --all
 uv run "$SKILL_DIR/scripts/asr.py" test-results/l1-recording-review small.en
-DEMO_FFMPEG_PRESET=veryfast DEMO_FFMPEG_THREADS=2 uv run "$SKILL_DIR/scripts/deck.py" test-results/l1-recording-review l1-review 'GPU Lab: how the GPU result reaches Console'
+DEMO_FFMPEG_PRESET=ultrafast DEMO_FFMPEG_THREADS=4 uv run "$SKILL_DIR/scripts/deck.py" test-results/l1-recording-review l1-review 'GPU Lab: how the GPU result reaches Console'
 ```
 
 The source deck and speech output stay in ignored `test-results/l1-recording-review`.
-The review MP4 copies the narrated export's video/audio streams without the optional
-soft-subtitle stream, since its captions are already in the picture. The silent
+The 4K narrated MP4 copies the export's video/audio streams without the optional
+soft-subtitle stream, since its captions are already in the picture. The smaller
+review MP4 is a 1920×1080 encode of the same recording for convenient playback. The silent
 4K picture master and timecoded shot list are produced by the same upstream build.
 
 Functional and media verification is recorded in `verification.json`. Speech

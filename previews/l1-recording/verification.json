@@ -1,0 +1,193 @@
+{
+  "scope": "Review copy only; not integrated into the course",
+  "durationSeconds": 130.766667,
+  "voice": {
+    "voice": "af_heart",
+    "speed": 1.0,
+    "engine": {
+      "backend": "onnx",
+      "model": "Kokoro-82M v1.0",
+      "release": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.1/",
+      "sha256": {
+        "kokoro-v1.0.onnx": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+        "voices-v1.0.bin": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
+      },
+      "provider": "CPUExecutionProvider"
+    },
+    "durations": {
+      "s01": 7.147,
+      "s02": 5.952,
+      "s03": 8.256,
+      "s04": 6.208,
+      "s05": 5.525,
+      "s06": 8.704,
+      "s07": 5.568,
+      "s08": 6.464,
+      "s09": 6.272,
+      "s10": 8.32,
+      "s11": 7.915,
+      "s12": 5.696,
+      "s13": 6.677,
+      "s14": 7.083,
+      "s15": 8.0,
+      "s16": 6.467
+    }
+  },
+  "skill": {
+    "commit": "c9a7c521568632aa216932f4c965df386498602a",
+    "workflow": "Original record-demo tts.py, phonemes.py, asr.py and deck.py"
+  },
+  "functionalVerification": {
+    "courseTestsPassed": 196,
+    "courseBuildPassed": true,
+    "native4kFullDecodePassed": true,
+    "nativeVideo": {
+      "width": 3840,
+      "height": 2160,
+      "fps": 30
+    },
+    "reviewVideo": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 30
+    },
+    "all16ShotBoundsChecked": true,
+    "captionAndGraphicOverlap": false,
+    "playerChecks": [
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      },
+      {
+        "width": 820,
+        "height": 1180,
+        "theme": "light",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      },
+      {
+        "width": 820,
+        "height": 1180,
+        "theme": "dark",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "play": true,
+        "keyboardPause": true,
+        "seek": true,
+        "pausedAfterSeek": true
+      }
+    ],
+    "reviewFullDecodePassed": true
+  },
+  "speechScreening": {
+    "initialRawFlags": 1,
+    "remainingRawFlags": 0,
+    "correction": "Shortened closing instruction; added a deliberate pause; rescreened to 174 wpm.",
+    "encodedIntegratedLoudnessLUFS": -16.52,
+    "encodedTruePeakDBTP": -1.46,
+    "phonemesInspected": true,
+    "humanListeningApproval": false
+  },
+  "instructionalReview": {
+    "objective": "Distinguish SM execution, GPU storage and a copy into CPU storage before printing.",
+    "checkpoint": "GPU write and CPU initialisation finished; copy has not started.",
+    "diagramScope": "Illustrative discrete-GPU data path, not execution timing.",
+    "learnerTestingPerformed": false,
+    "learningEffectivenessEstablished": false
+  },
+  "visualReview": {
+    "capturedShotsInspected": 16,
+    "encodedPlayerContextsInspected": 6,
+    "limitation": "Small inline portrait playback makes code small; fullscreen/landscape is clearer. Native controls temporarily overlay the lower picture while visible."
+  },
+  "files": {
+    ".gitignore": {
+      "bytes": 10,
+      "sha256": "72aaab303f949d44eb78a00843da428e1f51de49811ff063648e9cda73986e87"
+    },
+    "README.md": {
+      "bytes": 3326,
+      "sha256": "32078f17ad4c1eeca20c3842d6f438104f934f07a212f34794d6c5a3bf287918"
+    },
+    "asr-screen.json": {
+      "bytes": 7339,
+      "sha256": "7faf658cf6cbae150dbdee1b64b70ec9a5e491d77782773f34b84145196df18f"
+    },
+    "captions.srt": {
+      "bytes": 1980,
+      "sha256": "8cbd294a1e1dfcf642eef09c3b7c5e53a7dfc06639d624e18f8935e6cd27bdfb"
+    },
+    "capture.py": {
+      "bytes": 2896,
+      "sha256": "fc112beff9061c4d7a586acb0c4152705cb1e66184d6ba4d2ab903c24249d1b5"
+    },
+    "contact-sheet.jpg": {
+      "bytes": 135955,
+      "sha256": "9b0ee7dee77f8d2a45c23bf03b14dca180388fa53aef45b047317a89e28aa99d"
+    },
+    "l1-review-4k-narrated.mp4": {
+      "bytes": 13998341,
+      "sha256": "cfac8f9e5909748c441d96c7e3a1985c0a2ce1341ea37fd0c617270273a54834"
+    },
+    "l1-review-4k-silent.mp4": {
+      "bytes": 11581948,
+      "sha256": "d65699436ca3f1851cab65ef2db27b2ace1976d6e77c98a26ce5752358954195"
+    },
+    "l1-review.mp4": {
+      "bytes": 4080443,
+      "sha256": "b088cd19dcf52a27519b7f14498b4bf17e5781c119d52eb75a1f5f52c1ec9a2d"
+    },
+    "poster.jpg": {
+      "bytes": 61558,
+      "sha256": "71596cf8345dcb15febd3c3f79e7c560725ba4b84d35ed544455cd6733011c75"
+    },
+    "render.mjs": {
+      "bytes": 8548,
+      "sha256": "15781567fafb73763b8472a24b56c07ef5cbede0917cdc912853243fb82499be"
+    },
+    "scenes.json": {
+      "bytes": 4826,
+      "sha256": "0a5fb8d56a0fc84c86d7be2bd10732cbdd6c87f6f8ea6b16186153009fad20e3"
+    },
+    "shot-list.md": {
+      "bytes": 2298,
+      "sha256": "4a123492e5dc4848d524f509d680ccb26009b93a3aa36856e86af36d217bdeb5"
+    },
+    "transcript.md": {
+      "bytes": 2160,
+      "sha256": "7b4647996ae79618dcb08c5af72ff2a4887bcf8bd9cc015e960eb3649291f87c"
+    }
+  }
+}

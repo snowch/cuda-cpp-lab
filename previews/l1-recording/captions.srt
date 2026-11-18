@@ -1,0 +1,63 @@
+1
+00:00:00,500 --> 00:00:07,647
+The lesson supplies a complete starter program. This walkthrough explains how its GPU result reaches the Console.
+
+2
+00:00:08,647 --> 00:00:14,599
+The GPU writes 42.0, but the CPU prints it. What connects those two steps?
+
+3
+00:00:15,599 --> 00:00:23,855
+hello is a kernel: a function that runs on the GPU. Its body writes 42.0 into output[0].
+
+4
+00:00:24,855 --> 00:00:31,063
+The supplied setup reserves space for that value in GPU memory. You can leave this setup unchanged.
+
+5
+00:00:32,063 --> 00:00:37,588
+In main, the CPU launches hello. The two ones request one block containing one thread.
+
+6
+00:00:38,588 --> 00:00:47,292
+A thread is one execution of the kernel. An SM, or streaming multiprocessor, is GPU hardware that executes its instructions.
+
+7
+00:00:48,292 --> 00:00:53,860
+The thread writes 42.0 into output[0] in GPU memory.
+
+8
+00:00:54,860 --> 00:01:01,324
+The program also has a CPU variable named value. main initialises it to 0.0.
+
+9
+00:01:02,324 --> 00:01:08,596
+Suppose the GPU write and the CPU initialisation have both finished. The copy has not started.
+
+10
+00:01:09,596 --> 00:01:17,916
+Pause here. Is the CPU variable value still 0.0, or has the GPU write changed it to 42.0?
+
+11
+00:01:23,416 --> 00:01:31,331
+value is still 0.0. The GPU wrote to output[0], a different location in GPU memory.
+
+12
+00:01:32,330 --> 00:01:38,026
+The cudaMemcpy call copies the GPU result into value in CPU memory.
+
+13
+00:01:39,026 --> 00:01:45,703
+For this call, main waits for the copy to complete before continuing. value now holds 42.0.
+
+14
+00:01:46,703 --> 00:01:53,786
+The CPU reads value and prints 42.0 in Console. The kernel itself did not print that line.
+
+15
+00:01:54,786 --> 00:02:02,786
+The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code.
+
+16
+00:02:03,786 --> 00:02:10,253
+Return to the lesson. Find the assignment inside hello, then the copy and print calls inside main.

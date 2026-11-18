@@ -133,7 +133,8 @@
     "slide": 16,
     "step": "Try tracing the same path",
     "stage": "transfer",
-    "text": "Back in the lesson, trace those three roles in your edited run: which code writes the result, copies it, and prints it?",
-    "hold": 0.5
+    "text": "Return to the lesson. Find the assignment inside hello, then the copy and print calls inside main.",
+    "hold": 0.5,
+    "say": "Return to the lesson. [pause 0.6] Find the assignment inside hello, then the copy and print calls inside main."
   }
 ]
