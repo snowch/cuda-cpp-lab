@@ -43,7 +43,9 @@ P('more-threads-than-elements',3,'Why eight threads can form two warps',
  S('Check grouping separately from values',[
   'In the CUDA source editor, set threadsPerBlock to eight and click Compile and run.',
   'Trace CUDA calls shows one block of eight threads. Console’s five outputs stay the same; the warp diagram explains grouping, not measured execution time.'],
-  ()=>array('Output · the same five values',e.boundsOther.output)),
+  ()=>array('Output · the same five values',e.boundsOther.output),{speech:[
+   'In the CUDA source editor, set threadsPerBlock to eight and click Compile and run.',
+   'Trace [pause 0.3] CUDA calls shows one block of eight threads. Console’s five outputs stay the same; the warp diagram explains grouping, not measured execution time.']}),
 ]);
 
 P('from-cpu-array-to-gpu-result',4,'Follow values across two memory domains',
