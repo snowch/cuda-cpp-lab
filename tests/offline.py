@@ -355,6 +355,13 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 cdp.send('Storage.overrideQuotaForOrigin', {'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc})
                 cdp.detach()
                 # Failed replacement keeps the complete old release available.
+                # A valid candidate file may already have arrived before Cancel.
+                # Remove only its replacement copy so the injected 503 exercises
+                # a missing-file fetch rather than correct cache reuse.
+                page.evaluate('''async ({base,id})=>{
+                    const cache=await caches.open(`gpu-lab:${base}:release-${id}`);
+                    await cache.delete(new URL('examples/gather.cu',base));
+                }''',{'base':url,'id':releases['two']['id']})
                 CourseHandler.fail='examples/gather.cu';page.locator('#download-update').click()
                 expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
                 ready(page);expect(page.locator('#restart-update')).to_be_hidden()
