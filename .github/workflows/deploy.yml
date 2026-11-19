@@ -53,9 +53,23 @@ jobs:
         with:
           path: dist
 
+  pytorch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install CPU PyTorch for current reference calculations
+        run: pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+      - run: python tests/current_python.py
+
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: [check]
+    needs: [check, pytorch]
     runs-on: ubuntu-latest
     permissions:
       pages: write
