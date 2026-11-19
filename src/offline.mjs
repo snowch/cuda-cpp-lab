@@ -11,7 +11,7 @@ let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for upda
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
 let unavailable = !supported;
 let remembered = false, remembering, connected = false;
-let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId,downloadWork;
+let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId,downloadWork,preparingRestart;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
 const progressSize = n => `${(n / 1000000).toFixed(1)} MB`;
 function error(message = '',source='operation') {
@@ -24,8 +24,8 @@ function error(message = '',source='operation') {
 function render() {
   const focused=document.activeElement;
   const job=snapshot.download;
-  const locked=Boolean(downloadWork)||downloading||Boolean(job?.busy);
-  const active=((Boolean(downloadWork)||downloading)&&!downloadCancelled)||Boolean(job?.busy);
+  const locked=Boolean(downloadWork||preparingRestart)||downloading||Boolean(job?.busy);
+  const active=Boolean(preparingRestart)||((Boolean(downloadWork)||downloading)&&!downloadCancelled)||Boolean(job?.busy);
   const stopping=cancelling&&active;
   const requested=Boolean(job?.wanted&&job.state!=='ready');
   if(job&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')mode=job.mode;
@@ -35,9 +35,9 @@ function render() {
   // Repeated status refreshes must preserve focus inside the group.
   if (progress.parentElement !== feedback) feedback.append(progress);
   progress.hidden=cancelling||!(active||requested);
-  if(job&&!downloading)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
+  if(job&&!downloading&&!preparingRestart)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
   const notice=$('download-behaviour');
-  notice.textContent=job?.error?'':requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?'Your browser can continue this download in the background.':job?.state==='verifying'?'All files must pass verification before the download is ready.':'Completed files are kept. Return here to resume if your browser pauses the download.';
+  notice.textContent=job?.error?'':requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?'Your browser can continue this download in the background.':preparingRestart||job?.state==='verifying'?'All files must pass verification before the download is ready.':'Completed files are kept. Return here to resume if your browser pauses the download.';
   if(job?.error&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')error(job.error,'download');
   else if($('app-status-error').dataset.source==='download')error('');
   if($('app-status-error').dataset.source?.startsWith('download')&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
@@ -46,7 +46,7 @@ function render() {
   const ready = pending && snapshot.pendingReady;
   const incomplete=available&&snapshot.partial===latest.id;
   const transferring=active||requested||cancelling;
-  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : incomplete?'Update download incomplete':version;
+  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? preparingRestart||job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : incomplete?'Update download incomplete':version;
   $('app-status-summary').textContent = ready?'Update ready':transferring&&mode==='update'?$('version-status').textContent:transferring?'Offline download':available||pending?'Update available':version==='Up to date'?'Up to date':'Check version';
   $('update-section').hidden=transferring&&mode==='offline';
   $('offline-section').hidden=Boolean(ready||(transferring&&mode==='update')||(available&&!snapshot.offlineReady));
@@ -104,6 +104,8 @@ async function refresh() {
     let result = await rpc('STATUS');
     if(!result.downloadVersion)result={...result,...await legacyInfo(result)};
     if (generation !== refreshGeneration) return;
+    result=await recoverCompletedUpdate(result);
+    if (generation !== refreshGeneration) return;
     snapshot = result; unavailable = false;
     runningRelease ||= snapshot.runningRelease;
     render();
@@ -111,6 +113,32 @@ async function refresh() {
     if (generation !== refreshGeneration) return;
     unavailable = true; error(failure.message); render();
   }
+}
+function completedUpdateNeedsRestart(state) {
+  // Older installed workers can select a completed update before this pinned
+  // page restarts. A finished, consented request identifies that exact release.
+  return window===window.top&&!removed&&!restarting&&state.offlineReady&&
+    state.active!==running&&!state.pending&&state.download?.state==='ready'&&
+    !state.download.wanted&&state.downloadRelease?.id===state.active;
+}
+async function recoverCompletedUpdate(state) {
+  if(preparingRestart)return preparingRestart;
+  if(downloadCancelled||downloading||downloadWork||state.busy||!completedUpdateNeedsRestart(state))return state;
+  snapshot=state;mode='update';
+  // save:false asks both older and current workers to prepare an explicit
+  // restart. The already-saved complete copy retains its offline consent.
+  // Use the worker's verified manifest, rather than selecting a newer download.
+  preparingRestart=rpc('PREPARE',{release:state.downloadRelease,save:false},showProgress)
+    .catch(async failure=>{
+      // Another tab may be preparing the same restart in the installed worker.
+      const current=await rpc('STATUS');
+      if(downloadCancelled||current.busy||current.pendingReady)return current;
+      throw failure;
+    })
+    .then(async result=>result.downloadVersion?result:{...result,...await legacyInfo(result)})
+    .finally(()=>{preparingRestart=null;render();});
+  showProgress({bytes:0,total:state.downloadRelease.bytes});render();
+  return preparingRestart;
 }
 async function metadata(url, signal, options) {
   const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin', signal, headers: { 'Cache-Control': 'no-cache' } });
@@ -302,7 +330,7 @@ function download(save,resume){
   // is pending. They must join one request rather than start competing jobs.
   if(downloadWork)return downloadWork;
   downloadCancelled=false;localDownloadId=undefined;mode=save?'offline':'update';error();
-  downloadWork=performDownload(save,resume).finally(()=>{downloadWork=null;render();});
+  downloadWork=performDownload(save,resume).finally(()=>{downloadWork=null;render();if(!downloadCancelled&&completedUpdateNeedsRestart(snapshot))refresh();});
   render();return downloadWork;
 }
 async function performDownload(save, resume) {

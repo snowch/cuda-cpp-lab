@@ -156,3 +156,21 @@ scope, late-check rejection, atomic selection, all-window guards, restore paths
 and truthful labels. That is author review, not independent human review. The
 pull request remains the place for the independent review requested by #22;
 CI provides separate automated verification but is not described as human review.
+
+### Recovery of a completed update selected by an older worker
+
+The pinned page and installed worker may come from different releases. A worker
+from `7ee4913` can report a verified completed download as active while an older
+page still runs. The page recognises that finished request and re-prepares its
+cached manifest as a pending update through the existing `PREPARE` protocol with
+`save: false`. The saved copy retains its offline flag, and explicit Restart still
+saves/guards all open windows. This repair does not activate a waiting worker,
+reload the page automatically or request the published release again.
+
+For a tab already pinned to an older client without this recovery, closing every
+GPU Lab tab/app window and reopening permits the waiting worker to activate and
+opens the downloaded copy. Keep the scoped caches and learner storage intact.
+`tests/offline_background.py` reproduces the original loop with the actual
+`ace5867` client and compiled `7ee4913` worker, checks that one-time recovery, and
+checks the new client against that installed worker in six layouts/themes and
+both native and foreground paths, including offline and two-tab guarded restarts.
