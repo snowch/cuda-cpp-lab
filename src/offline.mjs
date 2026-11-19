@@ -60,6 +60,7 @@ function render() {
   // Keep the existing update/offline status slots for older pinned clients,
   // but expose one message under Course status in the current interface.
   $('version-status').textContent=status;
+  $('course-ready-icon').toggleAttribute('hidden',transferring||Boolean(ready)||Boolean(available)||!downloaded||version!=='Up to date');
   $('offline-status').textContent=offlineTransfer?status:unavailable?'Offline downloads are unavailable':downloaded?'Downloaded and ready to use offline.':ready?'Downloaded update is ready after restarting.':!otherCourseDownloaded&&(snapshot.saved||snapshot.partial)?'Offline download incomplete':'Not downloaded for offline use';
   $('offline-status').dataset.state=downloaded?'ready':'unavailable';
   $('update-section').hidden=offlineTransfer;

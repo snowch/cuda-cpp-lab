@@ -225,7 +225,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page=context.new_page();page.goto(route)
                 quota=context.new_cdp_session(page);budget={'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc,'quotaSize':course_quota}
                 quota.send('Storage.overrideQuotaForOrigin',budget)
-                panel(page);expect(page.locator('#save-offline')).to_be_visible()
+                panel(page);expect(page.locator('#save-offline')).to_be_visible();expect(page.locator('#course-ready-icon')).to_be_hidden()
                 assert not any(x.endswith('examples/first-kernel.cu') for x in CourseHandler.requests),'Opening App status must not download the course.'
                 page.evaluate("caches.open('sibling-app:keep');localStorage.setItem('user-content','keep')")
                 CourseHandler.slow=True;page.locator('#save-offline').click()
@@ -235,7 +235,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page.locator('#cancel-download').click();expect(page.locator('#save-offline')).to_have_text('Resume download')
                 CourseHandler.slow=False
                 before=CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
-                page.locator('#save-offline').click();ready(page)
+                page.locator('#save-offline').click();ready(page);expect(page.locator('#course-ready-icon')).to_be_visible()
                 assert before==CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
                 page.keyboard.press('Escape');context.set_offline(True)
                 for file in releases['one']['files']:
