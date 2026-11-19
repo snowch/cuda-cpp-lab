@@ -131,6 +131,7 @@ def prepare(workers, only=None):
                 for s in scenes for i, text in enumerate(s['captions'])]
         write(folder/'scenes.json', cues)
         recordings.append({'key': 'v2-'+slug, 'slug': slug, 'kind': 'v2', 'work': str(folder),
+                           **({'learning':item['learning']} if 'learning' in item else {}),
                            'scenes': scenes, 'cues': cues, 'video': f'assets/media/v2/{slug}/recap.mp4'})
     if only:
         assert {r['key'] for r in recordings} == set(only), 'Unknown recording key'

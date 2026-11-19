@@ -28,7 +28,7 @@ def digest(path):
 
 def fingerprint(r, speech):
     folder = Path(r['work'])
-    inputs = {'key': r['key'], 'scenes': r['scenes'], 'exporterSha256': digest(__file__),
+    inputs = {'key': r['key'], 'scenes': r['scenes'], 'learning':r.get('learning'), 'exporterSha256': digest(__file__),
               'speech': {k: speech[k] for k in ['voice', 'speed', 'engine', 'skill']},
               'preset': os.environ.get('DEMO_FFMPEG_PRESET', 'veryfast'),
               'frames': [digest(folder/'slides'/(s['id']+'.png')) for s in r['scenes']],
@@ -221,6 +221,7 @@ def encode(r):
         rows.append(f'| {stamp(cut["start"])} | {stamp(cut["end"])} | {scene["title"]} | '+ ' '.join(scene['captions']).replace('|', '\\|')+' |')
     (out/(r['key']+'-shot-list.md')).write_text('\n'.join(rows)+'\n')
     result = {'durationSeconds': round(float(probe['format']['duration'])), 'bytes': dest.stat().st_size,
+              **({'learning':r['learning']} if 'learning' in r else {}),
               'scenes': cuts, 'cues': cues, 'displayCues': display, 'speech': speech, 'video': {'width': 3840, 'height': 2160, 'fps': 30},
               'encoding': {'preset': os.environ.get('DEMO_FFMPEG_PRESET', 'veryfast'), 'crf': 18,
                            'gopFrames': 120, 'method': 'closed-GOP repetition of native still scenes'},
