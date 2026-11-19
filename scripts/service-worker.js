@@ -137,7 +137,7 @@ async function rememberPage(release, paths) {
   const latest = await readState();
   if (!latest.active) { latest.active = release.id; await writeState(latest); }
 }
-async function prepare(release, save, port, signal, downloadId) {
+async function prepare(release, save, port, signal, downloadId, running) {
   validateRelease(release);
   const cache = await caches.open(cacheName(release.id));
   await cache.put(MANIFEST, new Response(JSON.stringify(release)));
@@ -159,14 +159,20 @@ async function prepare(release, save, port, signal, downloadId) {
     port.postMessage({ progress: { bytes, total: release.bytes } });
     if (downloadId) await reportDownload(downloadId, {bytes,total:release.bytes,stage:'verified'});
   }
-  await markPrepared(release, save, signal, () => port.postMessage({progress:{bytes:release.bytes,total:release.bytes}}));
+  if(downloadId){await changeDownload(downloadId,{state:'verifying'});await broadcast({type:'STATUS_CHANGED'});}
+  await markPrepared(release, save, signal, () => port.postMessage({progress:{bytes:release.bytes,total:release.bytes}}), running);
 }
-async function markPrepared(release, save, signal, progress) {
+async function markPrepared(release, save, signal, progress, running) {
   signal.throwIfAborted();
   if (!await complete(release, progress)) throw new Error('The saved files could not be verified. Free storage and retry.');
   signal.throwIfAborted();
   const state = await readState();
-  if (save && (!state.active || state.active === release.id)) {
+  // Cache metadata can be evicted while a pinned page stays open. The caller's
+  // running version, not the presence of an active cache, distinguishes an
+  // update from saving the current course. Keep it pending until explicit restart.
+  const updating = /^[a-f0-9]{64}$/.test(running) && running !== release.id;
+  if (updating && (!state.active || state.active === release.id)) state.active = running;
+  if (!updating && save && (!state.active || state.active === release.id)) {
     state.active = release.id; state.saved = true;
   } else {
     state.pending = release.id;
@@ -234,7 +240,7 @@ async function newDownload(release, data) {
   }
   if(previous?.wanted && previous.state==='planning' && Date.now()-previous.started<30000)
     throw new Error('Another window is preparing this download. Wait for it to finish.');
-  return writeDownload({id:'gpu-lab-'+crypto.randomUUID(),release:release.id,
+  return writeDownload({id:'gpu-lab-'+crypto.randomUUID(),release:release.id,running:data.running,
     mode:data.mode==='offline'?'offline':'update',save:Boolean(data.save),wanted:true,
     state:'planning',started:Date.now(),bytes:0,cachedBytes:0,total:release.bytes,error:null});
 }
@@ -271,7 +277,7 @@ async function planDownload(data, port) {
     }
     operation.signal.throwIfAborted();
     if (!requests.length) {
-      await markPrepared(data.release,Boolean(data.save),operation.signal,value=>port.postMessage({progress:value}));
+      await markPrepared(data.release,Boolean(data.save),operation.signal,value=>port.postMessage({progress:value}),data.running);
       await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
       return {ready:true,status:await status(data.running,data.release)};
     }
@@ -334,7 +340,7 @@ async function receiveBackground(event, outcome) {
     if(validationFailure)throw validationFailure;
     const current=await readDownload();
     if(outcome==='success'&&current?.id===job.id&&current.wanted) {
-      await markPrepared(release,job.save,operation.signal);
+      await markPrepared(release,job.save,operation.signal,undefined,job.running);
       await changeDownload(job.id,{state:'ready',wanted:false,bytes:release.bytes,error:null});
       await event.updateUI?.({title:job.mode==='update'?'GPU Lab update ready':'GPU Lab available offline'});
     } else {
@@ -436,7 +442,7 @@ self.addEventListener('message', event => {
           if(existing?.wanted && await nativeDownload(existing))throw new Error('The browser is already downloading this course.');
           if(data.requestDownload || data.downloadId){job=await newDownload(data.release,data);operationDownload=job.id;await changeDownload(job.id,{state:'foreground',error:null});}
           const state = await readState(); state.partial = data.release.id; await writeState(state);
-          await prepare(data.release, Boolean(data.save), port, operation.signal, job?.id);
+          await prepare(data.release, Boolean(data.save), port, operation.signal, job?.id, data.running);
           if(job)await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
           // prepare() has just verified every byte. Reuse that result for this
           // response instead of scanning the new release again. Later STATUS

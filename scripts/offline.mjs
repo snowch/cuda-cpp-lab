@@ -16,17 +16,21 @@ async function filesUnder(directory, prefix = '') {
 const markup = `<button id="app-status-open" type="button" aria-haspopup="dialog">App status <span id="app-status-summary">Check version</span></button>`;
 const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title">
 <div class="status-heading"><h2 id="app-status-title">App status</h2><button id="app-status-close" type="button" autofocus>Close</button></div>
-<section aria-labelledby="version-title"><h3 id="version-title">Version</h3><p id="running-version"></p>
+<div id="app-status-feedback"><p id="app-status-error" role="status"></p></div>
+<section id="update-section" aria-labelledby="version-title"><h3 id="version-title">Updates</h3>
 <p id="version-status" role="status">Checking for updates</p><p id="version-detail"></p>
-<div class="status-actions"><button id="check-update" type="button">Check for updates</button><button id="download-update" type="button" hidden>Update</button><button id="restart-update" type="button" hidden>Restart to update</button><button id="later-update" type="button" hidden>Later</button></div>
+<div class="status-actions"><button id="restart-update" type="button" hidden>Restart to update</button><button id="download-update" type="button" hidden>Update</button><button id="later-update" type="button" hidden>Later</button><button id="check-update" type="button">Check for updates</button></div>
 <div id="update-download-feedback"></div>
-<p id="restart-note" hidden>Restart reloads all open GPU Lab tabs and app windows. Their routes, experiment inputs and results are restored. A window that is busy or cannot save its work will block the restart.</p></section>
-<section aria-labelledby="offline-title"><h3 id="offline-title">Offline access</h3><p id="offline-status" role="status">Not saved for offline use</p>
-<p id="offline-size"></p><p>Downloads and updates include all lessons, recordings, browser simulators, the CUDA compiler, diagrams and example files for offline use. Desktop execution needs separate PyTorch or CUDA/GPGPU-Sim tools; their installations are not part of this offline download. External links need internet access.</p>
-<div class="status-actions"><button id="save-offline" type="button">Download for offline use</button><button id="remove-offline" type="button" hidden>Remove offline copy</button></div>
-<div id="offline-download-feedback"><div id="download-progress" hidden><label id="download-progress-label" for="asset-progress">Verified download progress</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><p id="download-behaviour"></p><button id="cancel-download" type="button">Cancel download</button></div></div>
-<div id="remove-confirmation" hidden><p>Remove GPU Lab’s downloaded files from this browser? Your experiment work, preferences and other apps will be kept.</p><button id="confirm-remove" type="button">Remove downloaded files</button><button id="cancel-remove" type="button">Keep offline copy</button></div></section>
-<p id="app-status-error" role="status"></p>
+<p id="restart-note" hidden>Restart reloads your open GPU Lab windows and restores their lessons and saved work. Finish any running experiment first.</p></section>
+<section id="offline-section" aria-labelledby="offline-title"><h3 id="offline-title">Offline access</h3><p id="offline-status" role="status">Not saved for offline use</p>
+<p id="offline-size"></p>
+<div class="status-actions"><button id="save-offline" type="button">Download for offline use</button></div>
+<div id="offline-download-feedback"><div id="download-progress" hidden><label id="download-progress-label" for="asset-progress">Checking files</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><p id="download-behaviour"></p><button id="cancel-download" type="button">Cancel download</button></div></div></section>
+<details id="app-status-details"><summary>Version and download details</summary><p id="running-version"></p><p id="release-detail"></p>
+<p>Downloads include all lessons, recordings, diagrams, examples, browser simulators and the CUDA compiler. Browser storage overhead is additional. External links need internet access.</p>
+<p>Running examples outside the browser needs separate PyTorch or CUDA/GPGPU-Sim tools.</p>
+<button id="remove-offline" type="button" hidden>Remove offline copy</button>
+<div id="remove-confirmation" hidden><p>Remove GPU Lab’s downloaded files from this browser? Your experiment work, preferences and other apps will be kept.</p><button id="confirm-remove" type="button">Remove downloaded files</button><button id="cancel-remove" type="button">Keep offline copy</button></div></details>
 ${installHelp}
 </dialog>`;
 export async function buildOffline(directory, identity = { commit: null, date: null }) {

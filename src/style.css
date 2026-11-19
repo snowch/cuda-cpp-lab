@@ -58,6 +58,11 @@ footer { flex-wrap:wrap; }
 #download-progress { margin-top:20px; }
 #asset-progress { display:block; width:100%; accent-color:var(--accent); }
 #app-status-error { margin-top:16px; }
+#app-status-error:empty,#version-detail:empty,#download-behaviour:empty { display:none; }
+#version-status,#offline-status { font-weight:600; font-size:18px; margin:0 0 12px; }
+#app-status-details { border-top:1px solid var(--line); margin-top:24px; padding-top:16px; }
+#app-status-details summary { font-size:14px; }
+#app-status-dialog #download-update,#app-status-dialog #restart-update,#app-status-dialog #save-offline { background:var(--accent); color:var(--bg); border-color:var(--accent); }
 .restore-notice { border:2px solid var(--accent); padding:16px; }
 @media(max-width:760px) { .topbar { height:auto; min-height:74px; flex-wrap:wrap; gap:8px; padding:10px 16px; } .top-actions { gap:8px; flex-wrap:wrap; } #app-status-open { max-width:180px; } }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
