@@ -82,12 +82,12 @@ export function gate({arrivals=8,readers=4,phase='ready'}={}){
   rect(835,80,320,155,'box')+text(855,122,'Next operation','label')+text(995,191,phase==='bad'?'Not valid':`${readers} reader${readers===1?'':'s'}`,'value','middle')+
   arrow(374,160,457,160)+(phase==='bad'?'':arrow(747,160,830,160))+text(40,277,phase==='bad'?'Invalid participation: no valid result is defined.':'Shared-memory ownership and barrier participation belong to the block.','small'));
 }
-export function tileView(example,phase=0){
+export function tileView(example,phase=0,{before=false}={}){
  const p=example.phases[phase];
  return svg(rect(12,4,1176,290,'chip')+text(32,40,'SM · one block’s tile and private working sums','label')+
   matrixGrid(p.left,35,96,{size:96,kind:'active',label:'Shared A tile'})+matrixGrid(p.right,285,96,{size:96,kind:'active',label:'Shared B tile'})+
-  arrow(510,175,650,175)+matrixGrid(p.sums,680,92,{size:86,label:'Private sums'})+
-  text(900,112,`K ${p.begin}–${p.begin+example.tile-1}`,'label')+text(900,164,'C00 so far','small')+text(900,220,fp(p.sums[0][0]),'value')+text(35,280,'All block threads arrive before reading and before reusing the tiles.','small'));
+  arrow(510,175,650,175)+matrixGrid(p.sums.map((row,r)=>row.map((_,c)=>`C${r}${c}`)),680,92,{size:86,label:'Private sums'})+
+  text(900,112,`K ${p.begin}–${p.begin+example.tile-1}`,'label')+text(900,164,'C00 so far','small')+text(900,220,fp(before?0:p.sums[0][0]),'value')+text(35,280,'All block threads arrive before reading and before reusing the tiles.','small'));
 }
 export function cacheView(example,{append=false}={}){
  return svg(text(28,40,'GPU memory · key and value arrays','label')+

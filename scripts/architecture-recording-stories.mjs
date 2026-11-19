@@ -192,7 +192,9 @@ P('reduction',8,'Connect shared writes to safe partner reads',
  S('Only part of the block adds at a stage',[
   'At partner distance four, threads zero through three add the upper four values into the lower four positions.',
   'The next stage must use these completed partial sums, so every block thread reaches the following barrier.'],
-  ()=>array('After the first partner-add stage',e.reduction.levels[1].map(x=>x.value))),
+  ()=>array('After the first partner-add stage',e.reduction.levels[1].map(x=>x.value)),{speech:[
+   'At partner distance four. [pause 0.4] Threads zero through three add the upper four values into the lower four positions.',
+   'The next stage must use these completed partial sums, so every block thread reaches the following barrier.']}),
  S('The reduction narrows to one addition',[
   'The next partner stage leaves two partial sums: sixteen point zero and twenty point zero.',
   'Thread zero adds them to form thirty-six point zero. Fewer adding threads does not change the block’s matching barrier participants.'],
@@ -246,7 +248,7 @@ P('matmul',10,'See which values a shared tile reuses',
  S('A block loads two shared input tiles',[
   'Four threads form a two-by-two output block. They cooperatively load a two-by-two tile from each input into their block’s shared memory.',
   'The first block barrier completes those shared writes before the tile is consumed.'],
-  ()=>tileView(e.matrix,0)),
+  ()=>tileView(e.matrix,0,{before:true})),
  S('Shared inputs feed private working sums',[
   'Threads computing the same output row can reuse an A value. Threads computing the same output column can reuse a B value.',
   'Each thread keeps its own partial output sum. Sharing the inputs does not merge the output accumulators.'],
