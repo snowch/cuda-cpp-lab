@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 const base = new URL(document.querySelector('meta[name="gpu-base"]').content, location.href);
 const running = document.querySelector('meta[name="gpu-release"]').content;
 const dialog = $('app-status-dialog');
-let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort, connecting, runningMetadata;
+let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort, connecting, runningMetadata,retryingCheck=false;
 let downloading = false, cancelling = false, restarting = false, mode, removed = false, refreshGeneration = 0, cacheLifetime = 0;
 let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for updates';
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
@@ -46,39 +46,53 @@ function render() {
   const ready = pending && snapshot.pendingReady;
   const incomplete=available&&snapshot.partial===latest.id;
   const transferring=active||requested||cancelling;
-  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? preparingRestart||job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : incomplete?'Update download incomplete':version;
-  $('app-status-summary').textContent = ready?'Update ready':transferring&&mode==='update'?$('version-status').textContent:transferring?'Offline download':available||pending?'Update available':version==='Up to date'?'Up to date':'Check version';
-  $('update-section').hidden=transferring&&mode==='offline';
-  $('offline-section').hidden=Boolean(ready||(transferring&&mode==='update')||(available&&!snapshot.offlineReady));
+  const failedCheck=['Cannot check for updates','Couldn’t check for updates'].includes(version);
+  const offlineTransfer=transferring&&mode==='offline';
+  const verifying=Boolean(preparingRestart)||job?.state==='verifying';
+  let status=stopping?'Stopping download':active?verifying?(mode==='update'?'Checking update':'Checking download'):(mode==='update'?'Downloading update':'Downloading course'):requested?(mode==='update'?'Update download paused':'Download paused'):ready?'Update downloaded and checked':incomplete?'Update download incomplete':version;
+  if(!transferring&&!ready&&!available){
+    if(snapshot.offlineReady)status=version==='Up to date'?'Up to date. Downloaded and ready to use offline.':'Downloaded and ready to use offline.';
+    else if(snapshot.saved||snapshot.partial)status=version==='Up to date'?'Up to date. Offline download incomplete.':'Offline download incomplete';
+  }
+  // Keep the existing update/offline status slots for older pinned clients,
+  // but expose one message under Course status in the current interface.
+  $('version-status').textContent=status;
+  $('offline-status').textContent=offlineTransfer?status:unavailable?'Offline downloads are unavailable':snapshot.offlineReady?'Downloaded and ready to use offline.':ready?'Downloaded update is ready after restarting.':snapshot.saved||snapshot.partial?'Offline download incomplete':'Not downloaded for offline use';
+  $('offline-status').dataset.state=snapshot.offlineReady?'ready':'unavailable';
+  $('update-section').hidden=offlineTransfer;
+  $('offline-section').hidden=!offlineTransfer;
+  $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||pending?'Update available':version==='Up to date'?'Up to date':snapshot.offlineReady?'Downloaded':'Check version';
   $('app-status-details').hidden=transferring;
   $('install-help').hidden=transferring;
-  $('download-update').hidden = locked || !available || Boolean(ready && snapshot.pending === latest.id);
-  $('download-update').disabled = locked || !supported;
-  $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Update';
-  $('restart-update').hidden = !ready; $('later-update').hidden = !ready;
-  $('restart-note').hidden = !ready;
+  $('download-update').hidden=locked||!available||Boolean(ready&&snapshot.pending===latest.id);
+  $('download-update').disabled=locked||!supported;
+  $('download-update').classList.toggle('primary',!ready);
+  $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Download update';
+  $('restart-update').hidden=!ready;$('later-update').hidden=!ready;
+  $('restart-note').hidden=!ready;
   $('restart-update').disabled=restarting||locked;
-  $('check-update').disabled = Boolean(checking);
-  $('check-update').hidden = transferring;
-  $('check-update').textContent = version === 'Couldn’t check for updates' ? 'Retry' : 'Check for updates';
-  let offline = unavailable ? 'Offline access unavailable' : stopping&&mode==='offline'?'Stopping download':active && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
-  $('offline-status').textContent = offline;
-  $('offline-status').dataset.state = snapshot.offlineReady ? 'ready' : 'unavailable';
-  const release = runningRelease;
-  $('offline-size').textContent = release ? `${progressSize(release.bytes)} for the complete course, including recordings.` : 'Connect to check the download size.';
-  $('offline-size').hidden = Boolean(transferring||snapshot.offlineReady||(ready && !snapshot.offlineReady));
-  $('save-offline').hidden = locked || Boolean(snapshot.offlineReady || ready || available) || !supported;
-  $('save-offline').disabled = locked || !release;
-  $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
-  $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
-  $('remove-offline').disabled = locked;
-  const cacheNote = cacheLifetime ? ` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.` : '';
-  $('version-detail').textContent = !supported ? 'This browser cannot prepare updates. You can keep using GPU Lab online.' : ready?'The complete update has been downloaded and checked.':transferring?'':available?`${progressSize(latest.bytes)} download. Your saved work is kept.`:version==='Cannot check for updates'?'You are offline. Saved lessons remain usable.':version==='Couldn’t check for updates'?'Connect to the internet and try again.':'';
-  $('release-detail').textContent = latest ? `Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}` : '';
+  $('check-update').disabled=Boolean(checking);
+  $('check-update').hidden=transferring;
+  $('check-update').textContent='Check for updates';
+  $('retry-update').hidden=transferring||Boolean(ready)||!(failedCheck||retryingCheck);
+  $('retry-update').disabled=Boolean(checking)||retryingCheck;
+  $('retry-update').textContent=retryingCheck?'Checking…':'Retry';
+  const release=runningRelease;
+  $('save-offline').hidden=locked||Boolean(snapshot.offlineReady||ready||available)||!supported;
+  $('save-offline').disabled=locked||!release;
+  $('save-offline').textContent=unavailable?'Retry offline access':snapshot.partial===running?'Resume download':snapshot.saved?'Repair offline copy':'Download for offline use';
+  $('retry-update').classList.toggle('primary',$('save-offline').hidden&&$('download-update').hidden&&$('restart-update').hidden);
+  $('offline-size').textContent=release?`${progressSize(release.bytes)} for the complete course, including recordings.`:'Connect to check the download size.';
+  $('offline-size').hidden=transferring||Boolean(snapshot.offlineReady||ready||available)||$('save-offline').hidden;
+  $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
+  $('remove-offline').disabled=locked;
+  const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
+  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Resume to finish the download.':available?`${progressSize(latest.bytes)} download. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
+  $('release-detail').textContent=latest?`Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}`:'';
   // State changes hide the previous action. Keep keyboard users at the next
   // useful control rather than dropping focus behind the modal.
   if(dialog.open&&dialog.contains(focused)&&!focused.getClientRects().length){
-    const next=['restart-update','cancel-download','download-update','save-offline','app-status-close'].map($).find(element=>element.getClientRects().length&&!element.disabled);
+    const next=focused.id==='retry-update'?$('course-status'):['restart-update','cancel-download','download-update','save-offline','retry-update','app-status-close'].map($).find(element=>element.getClientRects().length&&!element.disabled);
     next?.focus({preventScroll:true});
   }
 }
@@ -409,7 +423,13 @@ $('running-version').append('Running ', document.querySelector('.build-info').cl
 $('app-status-open').addEventListener('click', () => { dialog.showModal(); check(); if (!worker || removed) connect(); else refresh(); });
 $('app-status-close').addEventListener('click', () => dialog.close());
 dialog.addEventListener('close', () => $('app-status-open').focus({ preventScroll: true }));
-$('check-update').addEventListener('click', () => { check(true); refresh(); });
+const recheck=()=>{check(true);refresh();};
+$('check-update').addEventListener('click',recheck);
+$('retry-update').addEventListener('click',async()=>{
+  retryingCheck=true;
+  try{await Promise.all([check(true),refresh()]);}
+  finally{retryingCheck=false;render();}
+});
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));
 $('cancel-download').addEventListener('click', async () => {
