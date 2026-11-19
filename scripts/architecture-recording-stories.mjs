@@ -391,8 +391,8 @@ P('inference',14,'Locate the key-value cache in device memory',
 ]);
 
 const resourceView=model=>svg(rect(15,5,1170,285,'chip')+text(35,47,'Imaginary SM budget · 128 shared bytes, 1024 registers','label')+
- rect(40,90,470,150,'box')+text(60,133,'Tile width','label')+text(275,205,model.tile,'big','middle')+
- rect(655,90,490,150,'active')+text(675,133,'Blocks that fit','label')+text(900,205,model.residentBlocks,'big','middle'));
+ rect(40,90,470,170,'box')+text(60,133,'Tile width','label')+text(275,220,model.tile,'big','middle')+
+ rect(655,90,490,170,'active')+text(675,133,'Blocks that fit','label')+text(900,220,model.residentBlocks,'big','middle'));
 P('matmul-investigation',15,'Balance reuse against SM resource demand',
  'Explain why operand-load counts and shared storage do not establish a faster tile configuration.',
  '8 × 8 calculation · explicitly imaginary resource budget · no real GPU occupancy or timing claim',[

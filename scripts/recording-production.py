@@ -72,6 +72,9 @@ def spoken(text):
     }
     for token, replacement in aliases.items():
         text = text.replace(token, replacement)
+    # Single-letter resource labels must sound like letters, not an article.
+    text = re.sub(r'\b(warp|slot|buffer|block|matrix) A\b', r'\1 [A](/ˈeɪ/)', text, flags=re.I)
+    text = text.replace('of A with', 'of [A](/ˈeɪ/) with').replace('an A value', 'an [A](/ˈeɪ/) value')
     text = re.sub(r'(?<!\[)\bCUDA\b', '[CUDA](/ˈkuːdə/)', text, flags=re.I)
     text = text.replace('Which value will main print this time?', 'Which value will the function main print this time?')
     text = text.replace('value < 0.0f', 'whether value is less than zero')
@@ -79,6 +82,16 @@ def spoken(text):
     text = text.replace('i < n protects', 'the check that i is less than n protects')
     text = text.replace('Keep the barrier outside t < readers.',
                         'Keep the barrier outside the condition t is less than readers.')
+    # Give new definitions and editor actions a short, intentional processing beat.
+    for original, paced in [
+        ('from one block whose instructions', 'from one block [pause 0.35] whose instructions'),
+        ('own working value and the block’s shared array', 'own working value [pause 0.35] and the block’s shared array'),
+        ('supply addresses to the S M’s load and store hardware', 'supply addresses [pause 0.35] to the S M’s load and store hardware'),
+        ('Each of the two blocks still has its own shared workspace.', 'Each of the two blocks [pause 0.35] still has its own shared workspace.'),
+        ('source editor, set threads per block to eight and click Compile and run.', 'source editor, [pause 0.35] set threads per block to eight [pause 0.3] and click Compile and run.'),
+        ('only one distinct word to supply, so the model broadcasts', 'only one distinct word to supply, [pause 0.35] so the model broadcasts'),
+    ]:
+        text = text.replace(original, paced)
     return text.replace('↔', 'to').replace('×', 'times').replace('→', 'then')
 
 
