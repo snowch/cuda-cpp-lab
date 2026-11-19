@@ -194,6 +194,7 @@ def check_v2_editor_focus(browser, url, root):
         page=context.new_page()
         page.goto(url+'v2/cuda-source-workbench.html?embed=hello')
         expect(page.locator('#source-focus-help')).not_to_contain_text('copy and print calls')
+        expect(page.locator('#source-focus-help')).not_to_contain_text('experiment above')
         editor=page.get_by_role('textbox',name='CUDA source')
         expect(editor).to_have_class('has-source-focus')
         assert editor.evaluate('''e=>{

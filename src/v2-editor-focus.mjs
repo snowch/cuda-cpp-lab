@@ -60,7 +60,7 @@ export function mountLessonFocus(editor, reset, mode) {
   guidance.querySelector('p').textContent=mode==='hello'&&excerpts.length
     ? 'The lesson’s CUDA excerpts, including the copy and print calls, use blue text. Change the gold value assigned to output[0]. The remaining setup and error checks can stay unchanged for now.'
     : (excerpts.length?'The lesson’s CUDA excerpts, kernels and launches use blue text. ':'The kernels and their launches use blue text. ')+
-      'Gold marks the '+lessonSourceFocus[mode].label+'. Follow the experiment above; the remaining setup can stay unchanged for now.';
+      'Gold marks the '+lessonSourceFocus[mode].label+'. '+(excerpts.length?'Follow the experiment above; the remaining':'The remaining')+' setup can stay unchanged for now.';
   editor.before(guidance);
   const surface=document.createElement('div');surface.className='source-editor';editor.before(surface);
   const ink=document.createElement('pre');ink.className='source-ink';ink.setAttribute('aria-hidden','true');surface.append(ink,editor);
