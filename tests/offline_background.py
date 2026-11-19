@@ -10,6 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event,Thread
 from urllib.parse import unquote,urlsplit
+from app_status import manual_check
 from playwright.sync_api import sync_playwright,expect
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -80,7 +81,7 @@ def native_closed_page(browser,url):
         page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
         page.screenshot(path=str(RESULTS/'native-downloading.png'));page.close();Handler.pause.set()
         page=c.new_page();page.goto(url);page.wait_for_function('navigator.serviceWorker.controller!==null')
-        page.locator('#app-status-open').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        page.locator('#app-status-open').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         assert page.locator('#draft').input_value()=='learner work retained';assert job(page)['state']=='ready'
         page.screenshot(path=str(RESULTS/'native-after-page-close.png'))
         page.close();page=c.new_page();page.goto(url+'?download=1');expect(page.locator('#app-status-dialog')).to_be_visible();assert 'download=' not in page.url
@@ -90,8 +91,8 @@ def fallback_resume(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-        page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
         current=job(page);assert current['wanted'] and current['bytes']>0
         candidate=json.loads((Handler.roots['two']/'release.json').read_text())
@@ -104,7 +105,7 @@ def fallback_resume(browser,url):
         }''',{'id':candidate['id'],'sha':css['sha256']}),'The candidate stylesheet must be verified in CacheStorage before worker termination.'
         page.screenshot(path=str(RESULTS/'fallback-downloading.png'))
         before=list(Handler.requests);session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
-        page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert page.locator('html').get_attribute('data-test-release')=='one','A finished download must not reload the learner.'
         assert page.locator('#draft').input_value()=='saved during update'
         resumed=Handler.requests[len(before):]
@@ -119,8 +120,8 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         if not native:c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-        Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
+        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
         expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
         expect(page.locator('#version-status')).to_have_text('Downloading update')
         if native and not browser_cancel:page.screenshot(path=str(RESULTS/'update-downloading.png'))
@@ -135,7 +136,7 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
         assert payload_requests()==count,'Cancel must not turn into an automatic retry when returning.'
         assert not job(page)['wanted'];assert page.locator('html').get_attribute('data-test-release')=='one'
         if native and not browser_cancel:page.screenshot(path=str(RESULTS/'cancelled-update.png'))
-        page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert page.locator('html').get_attribute('data-test-release')=='one'
     print(f'PASS Cancel survives reopening: {"native" if native else "fallback"}, {"browser control" if browser_cancel else "app control"}; explicit resume succeeds',flush=True)
 
@@ -143,14 +144,14 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
 def rejected_response(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':820,'height':1100},color_scheme='dark') as c:
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-        Handler.revision='two';Handler.corrupt='src/experiment-state.mjs';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        Handler.revision='two';Handler.corrupt='src/experiment-state.mjs';manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).to_contain_text('did not match the release',timeout=30000)
         assert not job(page)['wanted'];assert not rpc(page,'STATUS')['pendingReady'];assert page.locator('html').get_attribute('data-test-release')=='one'
-        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.')
         assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
         page.screenshot(path=str(RESULTS/'rejected-file.png'))
-        count=payload_requests();Handler.corrupt=False;page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        count=payload_requests();Handler.corrupt=False;page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert payload_requests()==count,'Valid files after a rejected response must remain cached, including the large payload.'
         page.screenshot(path=str(RESULTS/'verified-repair-ready.png'))
     print('PASS native hash rejection keeps the old course, never reports ready, and repairs only the rejected file',flush=True)
@@ -161,8 +162,8 @@ def previous_worker_recovery(browser,url):
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);assert rpc(page,'STATUS').get('downloadVersion') is None
-        page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-        Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
+        page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
         page.locator('#cancel-download').click()
         # Keep the body gated until the older worker has acknowledged Cancel.
         # Otherwise the server can win the abort race and legitimately leave a
@@ -175,7 +176,7 @@ def previous_worker_recovery(browser,url):
         page.evaluate('async()=>{const r=await navigator.serviceWorker.ready;await r.update()}')
         page.wait_for_function('navigator.serviceWorker.getRegistration().then(r=>!!r.waiting)')
         session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
-        page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert rpc(page,'STATUS')['downloadVersion']==1
         assert page.locator('html').get_attribute('data-test-release')=='one'
     Handler.previous_worker=False
@@ -214,19 +215,19 @@ def full_course_native(browser,update_root):
             draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
             page.close()
             page=c.new_page();page.goto(url);page.locator('#app-status-open').click()
-            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=120000)
+            expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=120000)
             expect(page.locator('#app-status-error')).to_be_empty()
             assert job(page)['state']=='ready'
             assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
             page.screenshot(path=str(RESULTS/'full-course-native-ready.png'))
             c.set_offline(True);page.reload();page.locator('#app-status-open').click()
-            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+            expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
             assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
             # Cancellation must also release the page's request lock when its
             # existing complete cache contains every recording/compiler asset.
             c.set_offline(False);Handler.revision='two';Handler.pause=Event()
             page.evaluate("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-            page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+            manual_check(page);expect(page.locator('#download-update')).to_be_visible()
             before=payload_requests();page.locator('#download-update').click()
             until(lambda:payload_requests()>before)
             page.locator('#cancel-download').focus();page.locator('#cancel-download').press('Enter')
@@ -235,7 +236,7 @@ def full_course_native(browser,update_root):
             until(lambda:not job(page)['wanted'] and not job(page)['busy'],timeout=30)
             Handler.pause.set();Handler.pause=None
             expect(page.locator('#download-update')).to_be_enabled(timeout=30000)
-            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+            expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
     finally:server.shutdown()
     print('PASS the complete production course downloads across page closure, reopens offline with its CUDA draft, and releases Update after cancelling a replacement',flush=True)
 
@@ -244,9 +245,9 @@ def quota_startup_error(browser,url):
     with browser.new_context() as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);page.locator('#save-offline').click()
-        expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         assert job(page)['state']=='ready'
-        Handler.revision='two';page.locator('#check-update').click()
+        Handler.revision='two';manual_check(page)
         expect(page.locator('#download-update')).to_be_visible()
         cdp=c.new_cdp_session(page)
         cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/'),'quotaSize':1})
@@ -255,11 +256,11 @@ def quota_startup_error(browser,url):
         expect(page.locator('#app-status-error')).to_be_visible()
         assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
         assert page.locator('html').get_attribute('data-test-release')=='one'
-        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.')
         expect(page.locator('#restart-update')).to_be_hidden()
         cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/')});cdp.detach()
         page.locator('#download-update').click()
-        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         expect(page.locator('#app-status-error')).to_be_empty()
     print('PASS a new request reports real quota failure beside Update despite a previous completed job; the old course remains available and retry succeeds',flush=True)
 
@@ -277,7 +278,7 @@ def previous_client_upgrade(browser,url,old_root):
                 page.locator('#app-status-close').click();page.locator('#draft').fill('old client draft');page.locator('#app-status-open').click()
                 if missing_state:
                     page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));const cache=await caches.open(name);await cache.delete(new URL('__app_status_state__',location.href))}")
-                Handler.revision='two';page.locator('#check-update').click()
+                Handler.revision='two';manual_check(page)
                 expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
                 candidate=json.loads((Handler.roots['two']/'release.json').read_text())
                 until(lambda:(s:=rpc(page,'STATUS')).get('partial') is None and (s.get('active')==candidate['id'] or s.get('pending')==candidate['id']))
@@ -300,18 +301,18 @@ def missing_state_native(browser,url):
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active')==page.locator('meta[name="gpu-release"]').get_attribute('content') and not s['busy'])
         page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));const cache=await caches.open(name);await cache.delete(new URL('__app_status_state__',location.href))}")
-        Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
-        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        Handler.revision='two';manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         expect(page.locator('#restart-update')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
-        expect(page.locator('#version-detail')).to_have_text('The complete update has been downloaded and checked.')
+        expect(page.locator('#version-detail')).to_have_text('')
         assert page.locator('html').get_attribute('data-test-release')=='one'
         # Recover an already complete cache with the old worker's incorrect
         # active selection. Status recovery must need no new transfer.
         candidate=json.loads((Handler.roots['two']/'release.json').read_text())
         page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
-        before=payload_requests();page.locator('#check-update').click()
+        before=payload_requests();manual_check(page)
         until(lambda:rpc(page,'STATUS').get('pending')==candidate['id'])
-        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert payload_requests()==before,'A verified existing candidate needs no payload download to recover Restart.'
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
     print('PASS native downloads keep updates pending after lost metadata and recover Restart for an already verified candidate without downloading its payload again',flush=True)
@@ -335,7 +336,7 @@ def completed_native_update_recovery(browser,url,old_root):
                     companion=c.new_page();companion.goto(url);companion.locator('#draft').fill('the other tab draft')
                     page.bring_to_front()
                 page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).delete(new URL('__app_status_state__',location.href))}")
-                Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+                Handler.revision='two';manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
                 candidate=json.loads((Handler.roots['two']/'release.json').read_text())
                 until(lambda:(rpc(page,'STATUS').get('download') or {}).get('state')=='ready',30)
                 if old_client:
@@ -357,11 +358,11 @@ def completed_native_update_recovery(browser,url,old_root):
                     expect(page.locator('#draft')).to_have_value('saved through completed-update recovery')
                     continue
                 expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
-                expect(page.locator('#version-status')).to_have_text('Update ready')
+                expect(page.locator('#version-status')).to_have_text('Update downloaded and checked')
                 expect(page.locator('#download-update')).to_be_hidden();expect(page.locator('#app-status-error')).to_be_empty()
                 assert page.locator('html').get_attribute('data-test-release')=='one'
                 state=rpc(page,'STATUS');assert state['pending']==candidate['id'] and state['pendingReady'] and state['pendingSaved']
-                before=payload_requests();page.locator('#check-update').click()
+                before=payload_requests();manual_check(page)
                 expect(page.locator('#restart-update')).to_be_visible();assert payload_requests()==before
                 page.evaluate("theme=>document.documentElement.dataset.theme=theme",theme)
                 page.screenshot(path=str(RESULTS/f'completed-update-ready-{width}-{theme}.png'))
@@ -402,13 +403,13 @@ def cancel_completed_update_recovery(browser,url):
             }""")
             page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active') is not None and not s['busy'])
             page.evaluate("async()=>{window.cancelRecoveryOnce=true;const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).delete(new URL('__app_status_state__',location.href))}")
-            Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+            Handler.revision='two';manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
             page.wait_for_function('window.cancelRecoveryOnce===false')
             expect(page.locator('#download-update')).to_be_visible(timeout=30000);expect(page.locator('#download-update')).to_be_enabled()
             expect(page.locator('#download-progress')).to_be_hidden();expect(page.locator('#restart-update')).to_be_hidden()
             expect(page.locator('#app-status-error')).to_be_empty()
             count=page.evaluate('window.recoveryRequests');before=payload_requests()
-            for _ in range(2):page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_enabled()
+            for _ in range(2):manual_check(page);expect(page.locator('#download-update')).to_be_enabled()
             assert page.evaluate('window.recoveryRequests')==count,'Cancel must not restart cache verification automatically.'
             page.locator('#download-update').click();expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
             assert payload_requests()==before
@@ -427,12 +428,27 @@ def no_completed_cache_downgrade(browser,url):
             # to restart that page into the different cached release.
             rpc(page,'PREPARE',release=candidate,save=True,requestDownload=True,mode=mode,running=running if mode=='offline' else '0'*64)
             page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
-            before=payload_requests();page.locator('#check-update').click()
+            before=payload_requests();manual_check(page)
             expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
             expect(page.locator('#restart-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
+            expect(page.locator('#save-offline')).to_have_text('Download for offline use')
+            expect(page.locator('#save-offline')).to_be_visible()
+            expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
             assert rpc(page,'STATUS').get('pending') is None
             assert payload_requests()==before
             assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
+            page.locator('#save-offline').click()
+            # Saving the open version prepares it for every window when an old
+            # complete course is still selected. Keep the coordinated restart.
+            expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
+            expect(page.locator('#restart-update')).to_be_visible()
+            assert rpc(page,'STATUS')['pending']==running
+            page.locator('#restart-update').click()
+            expect(page.locator('#app-status-dialog')).to_be_hidden(timeout=30000)
+            page.locator('#app-status-open').click()
+            expect(page.locator('#version-status')).to_have_text('Up to date. Downloaded and ready to use offline.',timeout=30000)
+            assert rpc(page,'STATUS')['active']==running
+            expect(page.locator('#restart-update')).to_be_hidden()
     print('PASS a completed offline copy or unrelated older update never restarts the currently published page into that cached release',flush=True)
 
 def dialog_states(browser,url):
@@ -446,12 +462,26 @@ def dialog_states(browser,url):
                 # theme explicitly; preferred colour scheme alone does not set it.
                 page.evaluate('theme=>document.documentElement.dataset.theme=theme',theme)
                 assert dialog.evaluate('e=>getComputedStyle(e).backgroundColor')==('rgb(28, 46, 49)' if theme=='dark' else 'rgb(255, 255, 255)')
+                expect(dialog.get_by_role('heading',name='Course status',exact=True)).to_have_count(1)
+                expect(dialog.get_by_role('heading',name='Offline access',exact=True)).to_have_count(0)
+                expect(dialog.get_by_role('heading',name='Updates',exact=True)).to_have_count(0)
+                expect(page.locator('#check-update')).to_be_hidden()
+                expect(page.locator('#save-offline')).to_be_visible()
+                expect(page.locator('#retry-update')).to_be_hidden()
+                expect(page.locator('#version-status')).to_have_text('Up to date')
                 expect(page.locator('#app-status-details')).not_to_have_attribute('open','')
                 expect(page.locator('#running-version')).to_be_hidden()
                 expect(page.locator('#offline-size')).to_contain_text('MB')
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-idle.png'))
-                page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-                Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+                page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+                expect(page.locator('#version-status')).to_have_text('Up to date. Downloaded and ready to use offline.')
+                expect(page.locator('#version-status')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
+                expect(page.locator('#check-update')).to_be_hidden();expect(page.locator('#save-offline')).to_be_hidden()
+                assert page.locator('#app-status-dialog > section').count()==1
+                page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloaded.png'))
+                Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible()
+                expect(page.locator('#download-update')).to_have_text('Download update')
+                expect(page.locator('#version-detail')).to_contain_text('complete course for offline use')
                 before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
                 expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()
                 for control in ['check-update','download-update','offline-section','app-status-details','install-help']:expect(page.locator('#'+control)).to_be_hidden()
@@ -462,7 +492,7 @@ def dialog_states(browser,url):
                 expect(page.locator('#download-update')).to_be_visible(timeout=30000)
                 expect(page.locator('#version-status')).to_have_text('Update download incomplete')
                 expect(page.locator('#restart-update')).to_be_hidden()
-                page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+                page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
                 expect(page.locator('#restart-update')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
                 expect(page.locator('#download-progress')).to_be_hidden()
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-ready.png'))
@@ -472,7 +502,7 @@ def dialog_states(browser,url):
 def early_cancel(browser,url):
     Handler.revision='one';Handler.pause=None
     with browser.new_context() as c:
-        page=open_page(c,url);Handler.revision='two';page.locator('#check-update').click()
+        page=open_page(c,url);Handler.revision='two';manual_check(page)
         expect(page.locator('#download-update')).to_be_visible()
         before=payload_requests()
         # Both clicks in one task cancel before the first awaited startup step.

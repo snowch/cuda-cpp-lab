@@ -12,6 +12,7 @@ from threading import Event, Thread
 from tempfile import TemporaryDirectory
 import time
 from urllib.parse import unquote, urlsplit
+from app_status import manual_check
 from playwright.sync_api import TimeoutError, sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,15 +80,15 @@ def panel(page):
     if not page.locator('#app-status-dialog').is_visible(): page.locator('#app-status-open').click()
 
 def check(page):
-    panel(page); page.locator('#check-update').click()
+    panel(page); manual_check(page)
 
 def ready(page):
-    expect(page.locator('#offline-status')).to_have_text('Available offline', timeout=DOWNLOAD_TIMEOUT)
+    expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.', timeout=DOWNLOAD_TIMEOUT)
 
 def update_ready(page):
     started = time.monotonic()
     try:
-        expect(page.locator('#version-status')).to_have_text('Update ready', timeout=DOWNLOAD_TIMEOUT)
+        expect(page.locator('#version-status')).to_have_text('Update downloaded and checked', timeout=DOWNLOAD_TIMEOUT)
         expect(page.locator('#app-status-error')).to_be_empty()
     except AssertionError:
         print('Update diagnostics:', {
@@ -133,11 +134,11 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             CourseHandler.revision='one'
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             ctx=foreground(browser.new_context());tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
-            expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
+            expect(tab.locator('#offline-status')).to_have_text('Not downloaded for offline use')
             expect(tab.locator('#save-offline')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
-            expect(tab.locator('#offline-status')).to_have_text('Available after restarting update')
+            expect(tab.locator('#offline-status')).to_have_text('Downloaded update is ready after restarting.')
             expect(tab.locator('#save-offline')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#later-update').click();tab.reload()
@@ -151,7 +152,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             assert 'CUDA' in reason,reason
             expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
             expect(hello.locator('#program-output')).to_contain_text('7.0')
-            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
+            panel(tab);expect(tab.locator('#version-status')).to_have_text('Update downloaded and checked')
             ctx.set_offline(True);tab.locator('#restart-update').click()
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
             panel(tab);ready(tab)
@@ -228,7 +229,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 panel(page)
                 expect(page.locator('#version-status')).to_have_text('Up to date')
                 page.wait_for_function('navigator.serviceWorker.controller !== null')
-                expect(page.locator('#offline-status')).to_have_text('Not saved for offline use')
+                expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
                 expect(page.locator('#offline-size')).to_contain_text(f"{releases['one']['bytes']/1000000:.1f} MB")
                 # Installation/checking/opening must not fetch other labs or CUDA assets.
                 assert not any(x.startswith('releases/') and x.endswith('examples/gather.cu') for x in CourseHandler.requests)
@@ -242,7 +243,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page.locator('#save-offline').click()
                 expect(page.locator('#download-progress')).to_be_visible()
                 expect(page.locator('#offline-download-feedback #download-progress')).to_be_visible()
-                assert page.locator('#download-progress').evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'offline-title'
+                assert page.locator('#download-progress').evaluate('el => el.closest("section").id') == 'course-status'
                 page.wait_for_function('document.getElementById("asset-progress").value > 0')
                 page.locator('#cancel-download').click()
                 expect(page.locator('#save-offline')).to_have_text('Resume download')
@@ -514,7 +515,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page.locator('#remove-offline').click();page.locator('#confirm-remove').click()
                 # REMOVE waits for any in-flight full-book cache scan. Its RPC
                 # permits 15 seconds; allow that response plus UI scheduling.
-                expect(page.locator('#offline-status')).to_have_text('Not saved for offline use',timeout=20000)
+                expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use',timeout=20000)
                 assert page.evaluate('caches.keys()') == ['sibling-app:keep']
                 assert page.evaluate("localStorage.getItem('user-content')") == 'keep'
                 expect(page.locator('#lesson-complete')).to_be_checked()
@@ -543,7 +544,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options));ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'v1.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
-            panel(tab);ready(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
+            panel(tab);ready(tab);expect(tab.locator('#version-status')).to_have_text('Update downloaded and checked')
             started=time.monotonic();tab.locator('#restart-update').click()
             try:
                 # A cold restart verifies both retained and pending releases.
