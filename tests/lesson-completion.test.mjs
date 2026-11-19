@@ -2,8 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {LessonCompletionStore,lessonIds,completionKey} from '../src/lesson-completion-store.mjs';
-import {renderLessonCompletion,renderLessonForward} from '../src/lesson-completion-view.mjs';
-import {renderBookNav,renderRoadmap} from '../content/book.mjs';
+
 const storage=()=>{const data=new Map();return {data,getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value)};};
 
 test('manual marks survive reopening and stale tabs do not overwrite other lessons',()=>{
@@ -39,21 +38,4 @@ test('unknown and malformed marks cannot complete a lesson',()=>{
   assert.equal(store.completed.size,0);
   assert.equal(store.set('unknown',true),false);
   assert.equal(saved.data.get(completionKey('unknown')),'true');
-});
-
-test('lessons expose native manual marks beside next links and both contents lists expose indicators',()=>{
-  const next='<a href="next.html">Next</a>';
-  for(const id of lessonIds){
-    const html=renderLessonForward(id,next);
-    assert.match(html,/type="checkbox"/);assert.ok(html.indexOf('lesson-complete')<html.indexOf(next));
-    assert.match(html,new RegExp(`data-completion-lesson="${id}"`));
-  }
-  assert.equal(renderLessonCompletion('desktop'),'');
-  assert.equal(renderLessonCompletion('meet-gpu'),'');
-  assert.equal(renderLessonForward('desktop',next),next);
-  const nav=renderBookNav(),overview=renderRoadmap();
-  for(const id of lessonIds.filter(id=>!['memory','kernel','shared-memory'].includes(id))){
-    assert.ok(nav.includes(`data-completion-lesson="${id}"`));
-    assert.ok(overview.includes(`data-completion-lesson="${id}"`));
-  }
 });

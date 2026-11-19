@@ -139,8 +139,7 @@ It requires the CUDA toolkit and an NVIDIA GPU. It is a correctness exercise, no
 The initial implementation has not been validated on GPU hardware.
 
 `examples/ai-kernels.cu` adds self-checking naive matmul, tiled matmul and block reduction.
-The GPGPU-Sim workflow compiles and checks those kernels as well as gather. The WMMA sketch
-and online-attention pseudocode in the lessons are illustrations rather than executable examples.
+The GPGPU-Sim workflow compiles and checks those kernels as well as gather. The current course also provides complete WMMA and scalar online-attention starter programs; their functional simulation limits are described in the lessons.
 
 ## Repository layout
 
@@ -151,8 +150,8 @@ and online-attention pseudocode in the lessons are illustrations rather than exe
 - `content/v2-cuda-source-workbench.html`: editable CUDA programs and compiler integration.
 - `src/v2-model.mjs`, `src/v2-traces.mjs`: teaching models and execution traces.
 - `src/theme.mjs`: theme persistence.
-- `index.html`, `content/lessons.mjs`: original book pages retained for existing URLs.
-- `content/memory.html`, `src/app.mjs`, `src/style.css`: Lab 01 and its interactive views.
+- `content/v2-appendices.mjs`, `content/profiling.mjs`: current desktop and profiling appendices.
+- `src/style.css`, `src/v2.css`: shared course presentation.
 - `tests/`: model invariants, boundary cases, browser interactions and responsive layout.
 - `examples/`: optional runnable CUDA exercises.
 - `docs/`: curriculum, model scope, sources and development rules.

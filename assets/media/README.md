@@ -9,8 +9,8 @@ at commit `c9a7c521568632aa216932f4c965df386498602a`. Settings are Kokoro-82M
 v1.0, `af_heart`, speed 1.0, ONNX CPU. The original skill verifies model and voice
 files against pinned SHA-256 hashes. No speech service or GPU is used.
 
-The complete production covers 42 videos, including recordings retained for
-bookmarked course pages. The first two current lessons now use progressive
+The published course contains 21 videos. Unused V1 recordings and their decks
+have been retired; the current first-kernel recording keeps its existing media URL. The first two current lessons now use progressive
 hardware walkthroughs; their scripts and figures connect source, working values
 and physical resources. The remaining recordings retain their original scripts.
 Speech forms clarify pronunciation separately from canonical captions. The first
@@ -59,8 +59,8 @@ in resumable batches; unchanged WAVs retain their completed screens.
 ## Exports and verification
 
 Frames render directly at 3840 × 2160. A size gate rejects incorrect dimensions;
-720p/1080p images are not stretched to 4K. Existing Plex typography, teal palette
-and GPU diagrams are retained. Inside an SM uses its approved vector PDF.
+720p/1080p images are not stretched to 4K. Frames use the course’s Plex typography and teal/blue palette with original GPU
+diagrams.
 
 Exports use H.264 at 30 fps, AAC at 160 kbps/48 kHz, a −16 LUFS target and a
 −1.5 dB true-peak target. CRF 18 retains code and diagram detail; the FFmpeg preset

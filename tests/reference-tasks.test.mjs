@@ -3,8 +3,7 @@ import {parallelChapters} from '../src/parallel-chapters.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {guides,referenceTasks,renderReferenceTask,chapterReferences,renderChapterReferences} from '../src/reference-tasks.mjs';
-import {lessons,renderLesson} from '../content/lessons.mjs';
-import {chapters} from '../content/book.mjs';
+
 import {pythonSource} from '../src/hello-model.mjs';
 
 test('reference exercises use official guides and retain local answer comparisons',()=>{
@@ -33,30 +32,4 @@ test('reference exercises use official guides and retain local answer comparison
   for(const key of ['reduction','matmul','tensor-cores','attention','inference']) assert.equal(referenceTasks[key].independent,true);
   assert.throws(()=>renderReferenceTask('missing'));
   assert.equal(referenceTasks['hello-pytorch'].code,pythonSource());
-});
-test('every published chapter and lab has annotated references before two or more exercises',()=>{
-  const pages=new Set([...parallelChapters.map(c=>c.slug),...chapters.filter(c=>c.opening).map(c=>c.slug),...lessons.map(l=>l.slug),'memory','kernel','launch-from-input','desktop','profiling','inside-sm']);
-  assert.deepEqual(new Set(Object.keys(chapterReferences)),pages);
-  for(const slug of pages){
-    const entry=chapterReferences[slug],html=renderChapterReferences(slug);
-    assert.ok(entry.sources.length>=2&&entry.sources.length<=3,slug);
-    assert.ok(entry.tasks.length>=2,slug);
-    for(const [key,label,description] of [...entry.sources,...(entry.optional??[])]){
-      assert.ok(guides[key]&&label&&description,slug);
-    }
-    const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
-    assert.equal(ids.length,new Set(ids).size,slug);
-    assert.ok(html.indexOf('id="chapter-references-title"')<html.indexOf('id="documentation-exercises-title"'));
-    assert.ok(html.indexOf('id="documentation-exercises-title"')<html.indexOf('class="reference-task"'));
-    assert.doesNotMatch(html,/href="undefined"/);
-  }
-  assert.throws(()=>renderChapterReferences('missing'));
-  const hello=renderChapterReferences('hello');
-  assert.match(hello,/not a CUDA API/);
-  assert.match(hello,/not code generated from this expression/);
-  lessons.forEach((lesson,i)=>{
-    const html=renderLesson(lesson,i);
-    assert.match(html,new RegExp('id="reference-'+lesson.slug+'"'));
-    assert.ok(html.indexOf('id="chapter-references-title"')>html.indexOf('>Change one thing. Explain the result.</h2>'));
-  });
 });
