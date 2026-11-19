@@ -422,6 +422,9 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                         print('Restart diagnostics:', {'route':tab.url,'error':page.locator('#app-status-error').inner_text(),'status':page.locator('#app-status-summary').inner_text()},flush=True)
                         raise
                     assert tab.evaluate('''id=>[...document.scripts].filter(s=>s.type==='module').every(s=>s.src.includes('/releases/'+id+'/'))''',releases['two']['id'])
+                # New HTML exposes its release marker before the map module and
+                # its saved-state restoration have finished loading.
+                concept_map.wait_for_load_state('load')
                 expect(concept_map.locator('#a-w1-lane-7')).to_have_attribute('open','')
                 expect(concept_map.locator('#a-w1-lane-7')).to_contain_text('thread 39')
                 expect(concept_map.locator('#map-chapter, .map-match, .map-highlight')).to_have_count(0)

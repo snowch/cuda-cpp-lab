@@ -188,3 +188,44 @@ lifecycle checks, the actual older client/worker regression and a complete-cours
 offline download pass. The production build and all 204 unit checks pass. These
 are functional and presentation checks, not evidence of learning effectiveness
 or physical Android background execution.
+
+## Page excerpts and editor colours
+
+The current course has 27 lessons, with 48 starter CUDA excerpts across 25 inline
+editors. The resource-budget and native-measurement activities have no CUDA editor.
+The audit found three gaps in the former kernel/launch-only highlighting:
+
+- First kernel: the CPU result variable, device-to-host copy and print call.
+- CPU array to GPU result: GPU allocation and the input copy.
+- Pipelines: the ready event and compute-stream dependency.
+
+Starter code panels now declare `editorExcerpt: true`. The editor reads the
+rendered excerpts from its owning lesson and locates their tokens in the current
+source. Whitespace, indentation and numeric edits do not move the association to
+an unrelated line. Comments and quoted fake calls do not act as anchors. Separate
+statements can match an excerpt that omits intervening checks; wrapped CUDA calls
+also remain identifiable in older saved drafts. Only the paint layer changes.
+
+Existing kernels and launches remain blue; gold edit targets take precedence.
+The three newly covered host-code regions use the same blue text on the same dark
+editor surface. No source text, saved draft, native selection behaviour or editor
+control is replaced. PyTorch, shell commands, optional teaching-model code and the
+separate capstone reference solution remain distinct from starter excerpts.
+
+The frontend-design and instructional-design reviews favour a direct visual
+connection between the code being explained and its actual editable location.
+This is a navigation/attention gap, not a new GPU learning objective. The existing
+monospace type, colour meanings and finder controls stay consistent; guidance
+explains the additional blue regions. Essential instructions stay beside the
+editor, without introducing another disclosure or control.
+
+All 207 unit checks and the production build pass. The excerpt audit resolves all
+48 rendered starter excerpts to the canonical programs and checks omitted checks,
+formatting/literal edits and misleading comments/strings. Browser checks verify
+actual painted glyphs and every excerpt in all 25 editors at 390px/dark and
+1440px/light, plus six touch/DPR cases. They also reject unmarked CUDA panels in
+the main reading flow. The three changed lessons' excerpt → task → guidance →
+editor → Console sequence was reviewed at 390, 820 and 1440 pixels in both themes.
+Native editing, selection, scrolling, resizing, export, restore/undo and saved
+source remain functional. These are functional/presentation checks, not evidence
+of improved learning outcomes or tests on a physical Android device.

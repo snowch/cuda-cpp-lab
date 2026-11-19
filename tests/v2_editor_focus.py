@@ -246,11 +246,53 @@ def check_all_lesson_focus(browser, url, root):
                 assert_source_ink(editor,kernel,'blue')
                 assert editor.evaluate("e=>e.parentElement.querySelector('.source-ink').textContent.slice(0,-1)===e.value")
                 assert editor.input_value()==source
+                # Check the actual rendered excerpts against the actual paint
+                # spans, including CPU-side code outside kernels and launches.
+                audit=editor.evaluate('''async e=>{
+                    const script=[...document.scripts].find(s=>s.src.includes('/v2-editor-focus.mjs'));
+                    const {cudaTokens,locateCudaExcerpt}=await import(new URL('./cuda-excerpts.mjs',script.src));
+                    const excerpts=[...frameElement.ownerDocument.querySelectorAll('[data-editor-excerpt] code')].map(c=>c.textContent);
+                    const untracked=[...frameElement.ownerDocument.querySelectorAll('[data-language="cuda"] pre')]
+                        .filter(pre=>!pre.closest('details')&&!pre.hasAttribute('data-editor-excerpt')).map(pre=>pre.id);
+                    let offset=0;const painted=[];
+                    for(const node of e.parentElement.querySelector('.source-ink').childNodes){
+                        const end=offset+node.textContent.length;
+                        if(node.nodeType===1&&node.matches('.source-lesson-ink,.source-target-ink'))painted.push({index:offset,end});
+                        offset=end;
+                    }
+                    const missing=[],unpainted=[];const tokens=cudaTokens(e.value);
+                    for(const excerpt of excerpts){
+                        const match=locateCudaExcerpt(e.value,excerpt,tokens);missing.push(...match.missing);
+                        for(const range of match.ranges)for(const token of tokens.filter(t=>t.index>=range.index&&t.end<=range.end))
+                            if(!painted.some(p=>p.index<=token.index&&p.end>=token.end))unpainted.push(token);
+                    }
+                    return {count:excerpts.length,missing,unpainted,untracked};
+                }''')
+                assert audit['count']>0 and not audit['missing'] and not audit['unpainted'] and not audit['untracked'],(slug,audit)
+                if slug in HOST_EXCERPTS:
+                    reveal_excerpt(editor,HOST_EXCERPTS[slug]);assert_source_ink(editor,HOST_EXCERPTS[slug],'blue')
+                    editor.screenshot(path=str(root/f'test-results/editor-excerpt-{slug}-{width}-{theme}.png'))
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        print(f'PASS: all 25 editable lesson focus targets and visible code colours: {width}px/{theme}',flush=True)
-    for slug in ['first-kernel','one-thread-one-element','from-cpu-array-to-gpu-result','matmul','histograms','softmax-capstone']:
+        print(f'PASS: all 25 editors, 48 rendered starter excerpts, edit targets and visible code colours: {width}px/{theme}',flush=True)
+    for slug in ['first-kernel','pipelines','from-cpu-array-to-gpu-result','matmul','histograms','softmax-capstone']:
         with browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2.75) as context:
             page=context.new_page();page.goto(url+'v2/'+slug+'.html');frame=page.frame_locator('[data-kernel-workbench]');editor=frame.get_by_role('textbox',name='CUDA source')
             frame.get_by_role('button',name='Show target line').click();target=editor.evaluate("e=>e.value.slice(e.selectionStart).split(String.fromCharCode(10))[0].trim()");assert_source_ink(editor,target,'gold')
+            if slug in HOST_EXCERPTS:
+                reveal_excerpt(editor,HOST_EXCERPTS[slug]);assert_source_ink(editor,HOST_EXCERPTS[slug],'blue')
             editor.screenshot(path=str(root/f'test-results/editor-touch-{slug}.png'))
     print('PASS: six touch/mobile/DPR rendering checks (Chromium emulation, not a physical Android device)',flush=True)
+
+
+HOST_EXCERPTS={
+    'first-kernel':'result = cudaMemcpy(&value',
+    'from-cpu-array-to-gpu-result':'CUDA_CHECK(cudaMalloc(&d_x',
+    'pipelines':'check(cudaEventRecord(ready[s], copy))',
+}
+
+def reveal_excerpt(editor,text):
+    editor.evaluate("""(e,text)=>{
+        const at=e.value.indexOf(text);if(at<0)throw Error('Missing excerpt '+text);
+        e.setSelectionRange(at,at);e.scrollLeft=0;
+        e.scrollTop=Math.max(0,(e.value.slice(0,at).split('\\n').length-1)*parseFloat(getComputedStyle(e).lineHeight)-30);
+    }""",text)

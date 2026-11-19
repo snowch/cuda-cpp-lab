@@ -10,7 +10,7 @@ import { referenceTopics } from './v2-references.mjs';
 import { verificationCase } from '../src/v2-practical-model.mjs';
 import { practicalActivities } from '../src/v2-practical-instructions.mjs';
 const sourceLink = (file, title) => `<a href="../examples/v2-practical/${file}" download>${title}</a>`;
-const panel = (id,source,label='Read-only CUDA C++ · starter excerpt') => codePanel({id,source,label,explainedLocally:true});
+const panel = (id,source,label='Read-only CUDA C++ · starter excerpt') => codePanel({id,source,label,explainedLocally:true,editorExcerpt:['practical-kernel','practical-launches'].includes(id)});
 const select = (name,label,options) => `<label for="practical-${name}">${label}</label><select id="practical-${name}" name="${name}">${options.map(option=>{const [value,text]=Array.isArray(option)?option:[option,option];return `<option value="${value}">${text}</option>`;}).join('')}</select>`;
 const number = (name,label,value,min,max) => `<label for="practical-${name}">${label}</label><input id="practical-${name}" name="${name}" type="number" value="${name==='prediction'?'':value}" min="${min}" max="${max}" step="1" required>`;
 const textarea = (name,label) => `<label for="practical-${name}">${label}</label><textarea id="practical-${name}" name="${name}" rows="5" required></textarea>`;
