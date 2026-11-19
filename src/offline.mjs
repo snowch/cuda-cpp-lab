@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 const base = new URL(document.querySelector('meta[name="gpu-base"]').content, location.href);
 const running = document.querySelector('meta[name="gpu-release"]').content;
 const dialog = $('app-status-dialog');
-let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort;
+let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort, connecting;
 let downloading = false, restarting = false, mode, removed = false, refreshGeneration = 0, cacheLifetime = 0;
 let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for updates';
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
@@ -131,7 +131,9 @@ async function check(force = false) {
   })();
   render(); return checking;
 }
-async function connect() {
+function connect() {
+  if(connecting)return connecting;
+  connecting=(async()=>{
   if (!supported) { render(); return; }
   try {
     registration = await navigator.serviceWorker.register(new URL('sw.js', base), { scope: base.href, updateViaCache: 'none' });
@@ -144,6 +146,8 @@ async function connect() {
     }
     removed = false; await refresh(); connected = true; await remember();resumeDownloads();
   } catch (failure) { unavailable = true; error(failure.message); render(); }
+  })().finally(()=>{connecting=null;});
+  return connecting;
 }
 async function remember() {
   if (remembered || remembering || downloading || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
@@ -265,6 +269,8 @@ async function resumeDownloads() {
 async function download(save, resume) {
   const release=resume?.release||(save?runningRelease:latest);
   if(!release||downloading)return;
+  if(connecting)await connecting;
+  if(!connected)await connect();
   await remembering;
   if(save&&snapshot.offlineReady&&!resume)return;
   if(!worker||removed||unavailable)await connect();

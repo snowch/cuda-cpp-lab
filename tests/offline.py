@@ -65,6 +65,14 @@ class CourseHandler(BaseHTTPRequestHandler):
         try: self.wfile.write(body)
         except (BrokenPipeError, ConnectionResetError): pass
 
+def foreground(context):
+    # This suite verifies the unsupported-browser foreground path. Playwright's
+    # minimal headless shell advertises Background Fetch but never transfers its
+    # jobs. offline_background.py uses full Chromium for real native downloads,
+    # including the complete production course.
+    context.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+    return context
+
 def panel(page):
     # Release markup can appear before the restarted page has attached its controls.
     page.wait_for_load_state('load')
@@ -120,7 +128,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # A V2 Update is also the offline download, including the real compiler.
             CourseHandler.revision='one'
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
-            ctx=browser.new_context();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
+            ctx=foreground(browser.new_context());tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not saved for offline use')
             expect(tab.locator('#save-offline')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
@@ -207,7 +215,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
                 CourseHandler.revision='one'; CourseHandler.fail=None; CourseHandler.slow=False; CourseHandler.requests=[]
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
-                context=browser.new_context(viewport={'width':width,'height':900},color_scheme=theme,has_touch=width<500,reduced_motion='reduce')
+                context=foreground(browser.new_context(viewport={'width':width,'height':900},color_scheme=theme,has_touch=width<500,reduced_motion='reduce'))
                 errors=[]; context.on('page',lambda page:page.on('pageerror',lambda error:errors.append(str(error))))
                 page=context.new_page(); page.goto(url+'lessons/hello.html?exercise=1#idea-2'); panel(page)
                 expect(page.locator('#version-status')).to_have_text('Up to date')
@@ -490,14 +498,14 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             CourseHandler.revision='one';CourseHandler.requests=[]
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             profile=temp/'profile'
-            ctx=p.chromium.launch_persistent_context(str(profile),**options)
+            ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options))
             tab=ctx.pages[0];tab.goto(url+'v1.html');panel(tab);tab.locator('#save-offline').click();ready(tab)
             manifest=ctx.new_cdp_session(tab).send('Page.getAppManifest')
             assert not manifest['errors'],manifest
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
             tab.locator('#later-update').click();ctx.close()
-            ctx=p.chromium.launch_persistent_context(str(profile),**options);ctx.set_offline(True)
+            ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options));ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'v1.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
             panel(tab);ready(tab);expect(tab.locator('#version-status')).to_have_text('Update ready')
@@ -521,7 +529,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # Exercise the actual former worker and its automatically saved cache.
             CourseHandler.revision='one';CourseHandler.legacy=True
             legacy_profile=temp/'legacy-profile'
-            ctx=p.chromium.launch_persistent_context(str(legacy_profile),**options)
+            ctx=foreground(p.chromium.launch_persistent_context(str(legacy_profile),**options))
             tab=ctx.pages[0];tab.goto(url+'v1.html')
             tab.wait_for_function('navigator.serviceWorker.controller !== null')
             legacy_key=f'gpu-lab:{url}:legacy-complete'
@@ -530,7 +538,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             tab.evaluate('''async () => { const r=await navigator.serviceWorker.getRegistration();await r.update();}''')
             tab.wait_for_function('''async () => Boolean((await navigator.serviceWorker.getRegistration()).waiting)''')
             ctx.close()
-            ctx=p.chromium.launch_persistent_context(str(legacy_profile),**options)
+            ctx=foreground(p.chromium.launch_persistent_context(str(legacy_profile),**options))
             tab=ctx.pages[0];tab.goto(url+'v1.html');panel(tab)
             expect(tab.locator('html')).to_have_attribute('data-test-release','two')
             expect(tab.locator('#offline-status')).to_have_text('Offline download incomplete')

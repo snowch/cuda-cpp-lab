@@ -163,6 +163,37 @@ def previous_worker_recovery(browser,url):
     Handler.previous_worker=False
     print('PASS an actual previous-production worker honours Cancel and hands a durable partial request to the naturally activated new worker',flush=True)
 
+def full_course_native(browser):
+    """Exercise the real production download, not only small lifecycle fixtures."""
+    assert (ROOT/'dist/release.json').is_file(),'Build the course before this check.'
+    Handler.roots={'one':ROOT/'dist'};Handler.revision='one';Handler.requests=[]
+    Handler.pause=None;Handler.corrupt=False;Handler.previous_worker=False
+    server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
+    Thread(target=server.serve_forever,daemon=True).start()
+    url=f'http://127.0.0.1:{server.server_port}/gpu-lab/v2/first-kernel.html'
+    try:
+        with browser.new_context(viewport={'width':390,'height':1000},color_scheme='dark') as c:
+            page=c.new_page();page.goto(url)
+            page.locator('#app-status-open').click()
+            # Click as soon as the control allows it: startup retention and the
+            # explicit download must share connection work without racing.
+            page.locator('#save-offline').click()
+            page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
+            page.locator('#app-status-close').click()
+            editor=page.frame_locator('[data-kernel-workbench="hello"]').locator('#source')
+            draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
+            page.close()
+            page=c.new_page();page.goto(url);page.locator('#app-status-open').click()
+            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=120000)
+            assert job(page)['state']=='ready'
+            assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
+            page.screenshot(path=str(RESULTS/'full-course-native-ready.png'))
+            c.set_offline(True);page.reload();page.locator('#app-status-open').click()
+            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+            assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
+    finally:server.shutdown()
+    print('PASS the complete production course downloads natively across page closure and reopens offline with the saved CUDA draft',flush=True)
+
 def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
@@ -174,6 +205,7 @@ def main():
                     native_closed_page(browser,url);fallback_resume(browser,url)
                     cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
+                    full_course_native(browser)
                 finally:browser.close()
         finally:
             if Handler.pause:Handler.pause.set()

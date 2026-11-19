@@ -85,12 +85,20 @@ establish learning effectiveness; no learner study is claimed.
 ## Verification record
 
 `npm run check` passes all 204 unit checks and builds the production course. The
-focused browser runs pass seven download lifecycle cases, all 25 editors at
+focused browser runs pass eight download lifecycle cases, all 25 editors at
 390px/dark and 1440px/light, six additional touch/DPR cases, L1's detailed native
 editing checks and both introductory starter/edit exercises. The built App status
 dialog and L1 reading sequence were reviewed at 390px, 820px and 1440px in both
 themes, including keyboard opening, closing and focus return. Download, update,
 cancellation, verified completion and rejected-file states were also inspected.
+
+The native suite also downloads the complete production course across page
+closure, reopens it offline and verifies a saved CUDA edit. The older offline
+suite explicitly exercises the unsupported-browser foreground fallback:
+Playwright's minimal headless shell advertises Background Fetch but accepts jobs
+without transferring bytes. Native checks use full Chromium. An immediate
+download waits for shared startup retention, avoiding concurrent initialisation
+and download operations.
 
 The focused lifecycle checks use the production builder, actual workers,
 CacheStorage, network responses and native Chromium Background Fetch. They cover
