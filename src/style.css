@@ -187,3 +187,7 @@ button:focus-visible,a:focus-visible { outline-offset:4px; }
  .topbar .github-star span { display:none; }
  .topbar .github-star { min-width:44px; justify-content:center; }
 }
+
+/* A verified complete course has a quiet visual confirmation beside its text. */
+.course-state { display:flex; align-items:flex-start; gap:10px; }
+#course-ready-icon { width:20px; height:20px; margin-top:2px; flex:none; fill:none; stroke:var(--accent); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }

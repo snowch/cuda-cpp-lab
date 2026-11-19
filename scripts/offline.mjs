@@ -18,7 +18,7 @@ const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title"
 <div class="status-heading"><h2 id="app-status-title">App status</h2><button id="app-status-close" type="button" autofocus>Close</button></div>
 <div id="app-status-feedback"><p id="app-status-error" role="status"></p></div>
 <section id="course-status" aria-labelledby="version-title" tabindex="-1"><h3 id="version-title">Course status</h3>
-<div id="update-section"><p id="version-status" role="status">Checking for updates</p></div>
+<div id="update-section" class="course-state"><svg id="course-ready-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden><path d="m5 12 4 4 10-10"/></svg><p id="version-status" role="status">Checking for updates</p></div>
 <div id="offline-section"><p id="offline-status" role="status"></p></div>
 <p id="version-detail"></p>
 <p id="offline-size"></p>
