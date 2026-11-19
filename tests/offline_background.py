@@ -94,6 +94,14 @@ def fallback_resume(browser,url):
         page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
         current=job(page);assert current['wanted'] and current['bytes']>0
+        candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+        css=next(file for file in candidate['files'] if file['path']=='src/style.css')
+        assert page.evaluate('''async ({id,sha})=>{
+            const base=new URL('./',location.href),cache=await caches.open('gpu-lab:'+base.href+':release-'+id);
+            const response=await cache.match(new URL('src/style.css',base));if(!response)return false;
+            const digest=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());
+            return [...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,'0')).join('')===sha;
+        }''',{'id':candidate['id'],'sha':css['sha256']}),'The candidate stylesheet must be verified in CacheStorage before worker termination.'
         page.screenshot(path=str(RESULTS/'fallback-downloading.png'))
         before=list(Handler.requests);session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
         page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
@@ -101,7 +109,7 @@ def fallback_resume(browser,url):
         assert page.locator('#draft').input_value()=='saved during update'
         resumed=Handler.requests[len(before):]
         assert sum(p.endswith('zz-payload.bin') for p in resumed)==1
-        assert not any(p.endswith('/src/style.css') for p in resumed),'Completed verified files must be reused.'
+        assert 'releases/'+candidate['id']+'/src/style.css' not in resumed,('The completed candidate stylesheet must be reused.',resumed)
         page.screenshot(path=str(RESULTS/'fallback-resumed-ready.png'))
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two');expect(page.locator('#draft')).to_have_value('saved during update')
     print('PASS unsupported-browser fallback resumes after worker termination, reuses verified files and waits for explicit restart',flush=True)
