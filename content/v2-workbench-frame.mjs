@@ -60,7 +60,7 @@ html[data-inline] .source-focus button { margin-top:8px; min-height:44px; }
 html[data-inline] #source-focus-missing { margin-top:8px; color:#b8cdc4; }
 html[data-inline] .source-editor { position:relative; background:#0f211d; border-radius:7px; }
 html[data-inline] .source-editor > .source-ink {
-  position:absolute; inset:0; width:100%; height:100%; margin:0;
+  position:absolute; inset:0; width:100%; height:100%; max-height:none; margin:0;
   border:1px solid transparent; border-radius:7px; background:transparent;
   overflow:hidden; white-space:pre; pointer-events:none; color:#edf8f1;
 }

@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results/background-updates';RESULTS.mkdir(parents=True,exist_ok=True)
 class Handler(BaseHTTPRequestHandler):
-    revision='one';roots={};requests=[];pause=None;corrupt=False
+    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False
     def log_message(self,*args):pass
     def do_GET(self):
         path=unquote(urlsplit(self.path).path).removeprefix('/gpu-lab/').lstrip('/') or 'index.html'
@@ -25,8 +25,8 @@ class Handler(BaseHTTPRequestHandler):
             root=next((p for p in self.roots.values() if (p/path).is_file()),root)
         file=(root/path).resolve()
         if not file.is_relative_to(root) or not file.is_file():self.send_error(404);return
-        self.requests.append(path);data=file.read_bytes()
-        if self.corrupt and path.endswith('zz-payload.bin'):data=b'bad'+data[3:]
+        self.requests.append(path);data=(ROOT/'tests/fixtures/previous-download-worker.js').read_bytes() if path=='sw.js' and self.previous_worker else file.read_bytes()
+        if self.corrupt and path.endswith(self.corrupt):data=b'bad'+data[3:]
         mime={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.html':'text/html'}.get(file.suffix,'application/octet-stream')
         self.send_response(200);self.send_header('Content-Type',mime);self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers()
         pause=self.pause
@@ -47,7 +47,7 @@ def fixture(temp,name):
     return folder
 
 def launch(p):
-    binary=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium')
+    binary=os.environ.get('CHROMIUM_PATH')
     return p.chromium.launch(**({'executable_path':binary} if binary else {'channel':'chromium'}))
 
 def open_page(context,url):
@@ -74,11 +74,12 @@ def native_closed_page(browser,url):
         assert payload_requests()==0,'Visiting a page must not consent to a course download.'
         page.locator('#app-status-close').click();page.locator('#draft').fill('learner work retained');expect(page.locator('#draft')).to_have_value('learner work retained');page.locator('#app-status-open').click();page.locator('#save-offline').click();until(lambda:payload_requests()>0)
         page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
-        page.close();Handler.pause.set()
+        page.screenshot(path=str(RESULTS/'native-downloading.png'));page.close();Handler.pause.set()
         page=c.new_page();page.goto(url);page.wait_for_function('navigator.serviceWorker.controller!==null')
         page.locator('#app-status-open').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         assert page.locator('#draft').input_value()=='learner work retained';assert job(page)['state']=='ready'
         page.screenshot(path=str(RESULTS/'native-after-page-close.png'))
+        page.close();page=c.new_page();page.goto(url+'?download=1');expect(page.locator('#app-status-dialog')).to_be_visible();assert 'download=' not in page.url
     Handler.pause=None;print('PASS native Background Fetch completes across page closure; drafts retained; no unsolicited download',flush=True)
 
 def fallback_resume(browser,url):
@@ -89,6 +90,7 @@ def fallback_resume(browser,url):
         page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
         current=job(page);assert current['wanted'] and current['bytes']>0
+        page.screenshot(path=str(RESULTS/'fallback-downloading.png'))
         before=list(Handler.requests);session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
         page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
         assert page.locator('html').get_attribute('data-test-release')=='one','A finished download must not reload the learner.'
@@ -100,6 +102,67 @@ def fallback_resume(browser,url):
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two');expect(page.locator('#draft')).to_have_value('saved during update')
     print('PASS unsupported-browser fallback resumes after worker termination, reuses verified files and waits for explicit restart',flush=True)
 
+
+def cancelled_request(browser,url,native=True,browser_cancel=False):
+    Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
+    with browser.new_context(viewport={'width':390,'height':844}) as c:
+        if not native:c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
+        expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
+        expect(page.locator('#version-status')).to_have_text('Downloading update')
+        if native and not browser_cancel:page.screenshot(path=str(RESULTS/'update-downloading.png'))
+        if browser_cancel:
+            current=job(page);page.evaluate('async id=>(await (await navigator.serviceWorker.ready).backgroundFetch.get(id)).abort()',current['id'])
+        else:page.locator('#cancel-download').click()
+        Handler.pause.set();Handler.pause=None
+        until(lambda:not job(page)['wanted'] and not job(page)['busy'])
+        count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(300)
+        assert payload_requests()==count,'Cancel must not turn into an automatic retry when returning.'
+        assert not job(page)['wanted'];assert page.locator('html').get_attribute('data-test-release')=='one'
+        if native and not browser_cancel:page.screenshot(path=str(RESULTS/'cancelled-update.png'))
+        page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        assert page.locator('html').get_attribute('data-test-release')=='one'
+    print(f'PASS Cancel survives reopening: {"native" if native else "fallback"}, {"browser control" if browser_cancel else "app control"}; explicit resume succeeds',flush=True)
+
+
+def rejected_response(browser,url):
+    Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
+    with browser.new_context(viewport={'width':820,'height':1100},color_scheme='dark') as c:
+        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        Handler.revision='two';Handler.corrupt='src/install.mjs';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        expect(page.locator('#app-status-error')).to_contain_text('did not match the release',timeout=30000)
+        assert not job(page)['wanted'];assert not rpc(page,'STATUS')['pendingReady'];assert page.locator('html').get_attribute('data-test-release')=='one'
+        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
+        page.screenshot(path=str(RESULTS/'rejected-file.png'))
+        count=payload_requests();Handler.corrupt=False;page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        assert payload_requests()==count,'Valid files after a rejected response must remain cached, including the large payload.'
+        page.screenshot(path=str(RESULTS/'verified-repair-ready.png'))
+    print('PASS native hash rejection keeps the old course, never reports ready, and repairs only the rejected file',flush=True)
+
+
+def previous_worker_recovery(browser,url):
+    Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False;Handler.previous_worker=True
+    with browser.new_context(viewport={'width':390,'height':844}) as c:
+        c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        page=open_page(c,url);assert rpc(page,'STATUS').get('downloadVersion') is None
+        page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
+        page.locator('#cancel-download').click();Handler.pause.set();Handler.pause=None
+        until(lambda:not rpc(page,'STATUS')['busy'])
+        count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(200);assert payload_requests()==count
+        Handler.pause=Event();page.locator('#download-update').click();until(lambda:payload_requests()>=count+1)
+        Handler.previous_worker=False
+        page.evaluate('async()=>{const r=await navigator.serviceWorker.ready;await r.update()}')
+        page.wait_for_function('navigator.serviceWorker.getRegistration().then(r=>!!r.waiting)')
+        session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
+        page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        assert rpc(page,'STATUS')['downloadVersion']==1
+        assert page.locator('html').get_attribute('data-test-release')=='one'
+    Handler.previous_worker=False
+    print('PASS an actual previous-production worker honours Cancel and hands a durable partial request to the naturally activated new worker',flush=True)
+
 def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
@@ -107,7 +170,10 @@ def main():
         try:
             with sync_playwright() as p:
                 browser=launch(p)
-                try:native_closed_page(browser,url);fallback_resume(browser,url)
+                try:
+                    native_closed_page(browser,url);fallback_resume(browser,url)
+                    cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
+                    rejected_response(browser,url);previous_worker_recovery(browser,url)
                 finally:browser.close()
         finally:
             if Handler.pause:Handler.pause.set()

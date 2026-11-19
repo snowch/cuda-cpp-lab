@@ -150,6 +150,7 @@ async function prepare(release, save, port, signal, downloadId) {
       const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), {
         cache: 'no-store', signal: AbortSignal.any([signal, timeout]), credentials: 'same-origin',
       });
+      if(!response.ok)throw new Error('Download paused because a file is unavailable. Completed files are kept; it will resume when you return.');
       if (!await verified(response.clone(), file)) throw new Error('A downloaded file did not match the release. Retry after deployment finishes.');
       signal.throwIfAborted();
       await cache.put(key, response);
@@ -181,8 +182,10 @@ let downloadWrites = Promise.resolve();
 async function readDownload() {
   const response = await (await caches.open(META)).match(DOWNLOAD_REQUEST);
   if (!response) return null;
-  const job = await response.json();
-  return job && /^[a-f0-9]{64}$/.test(job.release) && typeof job.id === 'string' && job.id.startsWith('gpu-lab-') ? job : null;
+  try {
+    const job=await response.json();
+    return job&&typeof job.wanted==='boolean'&&['offline','update'].includes(job.mode)&&/^[a-f0-9]{64}$/.test(job.release)&&typeof job.id==='string'&&job.id.startsWith('gpu-lab-')?job:null;
+  } catch {return null;}
 }
 function writeDownload(job) {
   const work = downloadWrites.then(async () => {
@@ -240,9 +243,9 @@ async function reportDownload(id, progress) {
   if (job) await broadcast({type:'DOWNLOAD_PROGRESS',id,progress});
 }
 async function failDownload(id, failure) {
-  const message = failure.message || String(failure);
-  const retry = failure.name !== 'QuotaExceededError' && !/match the release|could not be verified/.test(message);
-  await changeDownload(id,job=>job.wanted?{state:'paused',wanted:retry,error:message}:null);
+  const message = failure.name==='QuotaExceededError'?'Browser storage is full. Free space and resume the download.':['TimeoutError','TypeError'].includes(failure.name)?'Download paused. Completed files are kept. Reconnect or return to resume.':failure.message || String(failure);
+  const retry = !['AbortError','QuotaExceededError'].includes(failure.name) && !/match the release|could not be verified/.test(message);
+  await changeDownload(id,job=>job.wanted?{state:'paused',wanted:retry,error:failure.name==='AbortError'?null:message}:null);
 }
 async function planDownload(data, port) {
   if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
@@ -280,16 +283,28 @@ async function planDownload(data, port) {
 async function cancelDownload(id) {
   const job=await readDownload();
   if (id && job?.id!==id) return;
-  if (job && job.state!=='ready') await changeDownload(job.id,{wanted:false,state:'paused',error:null});
-  operation?.abort();
-  const native=await nativeDownload(job);
-  if (native) await native.abort();
+  try {if(job&&job.state!=='ready')await stopDownloadRequest(job.id);}
+  finally {
+    operation?.abort();
+    const native=await nativeDownload(job);
+    if(native)await native.abort();
+  }
   await broadcast({type:'STATUS_CHANGED'});
+}
+async function stopDownloadRequest(id) {
+  try {await changeDownload(id,{wanted:false,state:'paused',error:null});}
+  catch(failure) {
+    // Storage pressure must not preserve consent for an automatic retry.
+    // Remove only the request; the verified course and learner work are kept.
+    const job=await readDownload();
+    if(job?.id===id)await (await caches.open(META)).delete(DOWNLOAD_REQUEST);
+    else throw failure;
+  }
 }
 async function receiveBackground(event, outcome) {
   let job=await readDownload();
   if (!job || job.id!==event.registration.id) return;
-  if (outcome==='abort') await changeDownload(job.id,{wanted:false,state:'paused',error:null});
+  if (outcome==='abort') await stopDownloadRequest(job.id);
   // A short page-cache operation may already own CacheStorage. Let it finish
   // before importing the browser's responses, including when no page is open.
   while (operation) await operationFinished;
@@ -302,20 +317,21 @@ async function receiveBackground(event, outcome) {
     if(!release)throw new Error('The download metadata is missing. Choose the download again.');
     await changeDownload(job.id,{state:'verifying'});
     const expected=new Map(release.files.map(file=>[new URL(`releases/${release.id}/${file.path}`,BASE).href,file]));
-    const cache=await caches.open(cacheName(release.id));let bytes=job.cachedBytes;
+    const cache=await caches.open(cacheName(release.id));let bytes=job.cachedBytes,validationFailure;
     if(event.registration.recordsAvailable)for(const record of await event.registration.matchAll()) {
       operation.signal.throwIfAborted();
       const file=expected.get(record.request.url);
-      if(!file)throw new Error('A downloaded file did not match the release. Retry after deployment finishes.');
+      if(!file){validationFailure=new Error('A downloaded file did not match the release. Retry after deployment finishes.');continue;}
       let response;
-      try {response=await record.responseReady;} catch {if(outcome==='success')throw new Error('A download response is missing. Retry the download.');continue;}
+      try {response=await record.responseReady;} catch {if(outcome==='success')validationFailure=new Error('A download response is missing. Retry the download.');continue;}
       if(!await verified(response.clone(),file)) {
         if(outcome!=='success')continue;
-        throw new Error('A downloaded file did not match the release. Retry after deployment finishes.');
+        validationFailure=new Error('A downloaded file did not match the release. Retry after deployment finishes.');continue;
       }
       await cache.put(new URL(file.path,BASE),response);bytes+=file.bytes;
       await reportDownload(job.id,{bytes,total:release.bytes,stage:'verified'});
     }
+    if(validationFailure)throw validationFailure;
     const current=await readDownload();
     if(outcome==='success'&&current?.id===job.id&&current.wanted) {
       await markPrepared(release,job.save,operation.signal);
@@ -327,7 +343,10 @@ async function receiveBackground(event, outcome) {
       const error=!failed?null:reason==='quota-exceeded'?'Browser storage is full. Free space and resume the download.':reason==='download-total-exceeded'?'The download size changed. Retry after deployment finishes.':'Download interrupted. Completed files are kept; it will resume when you return.';
       await changeDownload(job.id,current=>({state:'paused',wanted:Boolean(current.wanted&&retry),error:current.wanted?error:null}));
     }
-  } catch (failure) {await failDownload(job.id,failure);}
+  } catch (failure) {
+    await failDownload(job.id,failure);
+    try{await event.updateUI?.({title:'GPU Lab download needs attention'});}catch{/* The in-app status retains the failure. */}
+  }
   finally {endOperation();await broadcast({type:'STATUS_CHANGED'});}
 }
 for(const [type,outcome] of [['backgroundfetchsuccess','success'],['backgroundfetchfail','fail'],['backgroundfetchabort','abort']]) {

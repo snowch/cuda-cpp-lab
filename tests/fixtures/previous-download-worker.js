@@ -1,0 +1,343 @@
+// Copyright © 2026 Christopher Snow.
+// Shared by the page, worker and build checks. Paths are always app-relative.
+function validateRelease(value) {
+  if (!value || value.schema !== 1 || !/^[a-f0-9]{64}$/.test(value.id) ||
+      !(value.commit === null || /^[a-f0-9]{40}$/.test(value.commit)) ||
+      !(value.date === null || /^\d{4}-\d{2}-\d{2}$/.test(value.date)) ||
+      !Array.isArray(value.files) || !value.files.length || value.files.length > 10000) throw new Error('Invalid release metadata');
+  const paths = new Set();
+  let total = 0;
+  for (const file of value.files) {
+    if (!file || !/^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+$/.test(file.path) ||
+        file.path.split('/').some(p => p === '.' || p === '..') ||
+        /^(releases\/|sw\.js$|release\.json$)/.test(file.path) || paths.has(file.path) ||
+        !Number.isSafeInteger(file.bytes) || file.bytes < 0 || !/^[a-f0-9]{64}$/.test(file.sha256)) throw new Error('Invalid release asset');
+    paths.add(file.path); total += file.bytes;
+  }
+  if (!paths.has('index.html') || total !== value.bytes || !Number.isSafeInteger(total)) throw new Error('Invalid release size');
+  return value;
+}
+async function digest(data) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', data)), n => n.toString(16).padStart(2, '0')).join('');
+}
+
+// Copyright © 2026 Christopher Snow.
+// Native media players seek with byte ranges, including while offline.
+async function mediaRangeResponse(range,response){
+  if(!range||response.status!==200)return response;
+  const match=range.trim().match(/^bytes=(\d*)-(\d*)$/);
+  // A server may ignore unsupported/multiple range units and send the full body.
+  if(!match||(!match[1]&&!match[2]))return response;
+  const body=await response.arrayBuffer(),length=body.byteLength;
+  let start=match[1]?Number(match[1]):Math.max(0,length-Number(match[2]));
+  let end=match[1]&&match[2]?Number(match[2]):length-1;
+  const headers=new Headers(response.headers);
+  headers.delete('Content-Encoding');headers.set('Accept-Ranges','bytes');
+  if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start>=length||start>end||(!match[1]&&Number(match[2])===0)){
+    headers.set('Content-Range',`bytes */${length}`);headers.set('Content-Length','0');
+    return new Response(null,{status:416,headers});
+  }
+  end=Math.min(end,length-1);
+  headers.set('Content-Range',`bytes ${start}-${end}/${length}`);
+  headers.set('Content-Length',String(end-start+1));
+  return new Response(body.slice(start,end+1),{status:206,headers});
+}
+
+// Copyright © 2026 Christopher Snow.
+// The build prepends the dependency-free release validator. No precache on install.
+const BASE = new URL(self.registration.scope);
+const PREFIX = `gpu-lab:${BASE.href}:`;
+const META = PREFIX + 'status-v1';
+const STATE = new URL('__app_status_state__', BASE).href;
+const MANIFEST = new URL('__release_manifest__', BASE).href;
+const cacheName = id => PREFIX + 'release-' + id;
+let operation = null, pruning = null;
+let restarting = false;
+let navigationGate, releaseNavigation;
+const seen = new Map();
+const verifying = new Map();
+async function readState() {
+  const cache = await caches.open(META);
+  return (await cache.match(STATE))?.json() ?? {};
+}
+async function writeState(state) {
+  await (await caches.open(META)).put(STATE, new Response(JSON.stringify(state)));
+}
+async function manifest(id) {
+  if (!id) return null;
+  const response = await (await caches.open(cacheName(id))).match(MANIFEST);
+  return response ? validateRelease(await response.json()) : null;
+}
+async function verified(response, file) {
+  if (!response?.ok) return false;
+  const data = await response.arrayBuffer();
+  return data.byteLength === file.bytes && await digest(data) === file.sha256;
+}
+async function complete(release, progress) {
+  if (!release) return false;
+  // Many open tabs request status together after a download. Share that scan,
+  // including its byte/hash checks, rather than rereading every video per tab.
+  // Retain no result after it finishes: the next check must detect eviction.
+  let scan = verifying.get(release.id);
+  if (!scan) {
+    scan = { listeners: new Set(), bytes: 0, work: null };
+    scan.work = Promise.resolve().then(async () => {
+      try {
+        const cache = await caches.open(cacheName(release.id));
+        // Bound memory while overlapping CacheStorage I/O for the complete book.
+        // Join failed batches before retries can start another scan.
+        for (let start = 0; start < release.files.length; start += 4) {
+          const batch = release.files.slice(start, start + 4);
+          const checks = await Promise.allSettled(batch.map(async file => verified(await cache.match(new URL(file.path, BASE)), file)));
+          for (const check of checks) {
+            if (check.status === 'rejected') throw check.reason;
+            if (!check.value) return false;
+          }
+          scan.bytes += batch.reduce((sum, file) => sum + file.bytes, 0);
+          // Each waiting RPC receives real verification progress, so cold disk
+          // reads reset its inactivity timer without extending stalled work.
+          for (const listener of scan.listeners) {
+            try { listener({ bytes: scan.bytes, total: release.bytes }); } catch { /* A closed tab cannot cancel another tab's scan. */ }
+          }
+        }
+        // A file checked early can be evicted while a later recording is hashed.
+        const present = new Set((await cache.keys()).map(request => request.url));
+        return release.files.every(file => present.has(new URL(file.path, BASE).href));
+      } finally {
+        if (verifying.get(release.id) === scan) verifying.delete(release.id);
+      }
+    });
+    verifying.set(release.id, scan);
+  }
+  if (progress) {
+    scan.listeners.add(progress);
+    if (scan.bytes) {
+      try { progress({ bytes: scan.bytes, total: release.bytes }); } catch { /* The requester may have closed. */ }
+    }
+  }
+  try { return await scan.work; }
+  finally { scan.listeners.delete(progress); }
+}
+async function broadcast(message) {
+  for (const client of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) {
+    if (client.url.startsWith(BASE.href)) client.postMessage(message);
+  }
+}
+function prune(progress) {
+  if (operation || restarting) return;
+  if (pruning) return pruning;
+  // Cleanup owns the cache list until it finishes. Mutating requests reserve
+  // their operation immediately, then wait before opening or deleting caches.
+  pruning = (async () => {
+    const state = await readState();
+    if (!state.active) return;
+    const release = await manifest(state.active);
+    if (!await complete(release, progress)) return;
+    const windows = await courseWindows(release);
+    if (windows.some(client => seen.get(client.id) !== state.active)) return;
+    const keep = new Set([META, ...[state.active, state.previous, state.pending, state.partial].filter(Boolean).map(cacheName)]);
+    for (const name of await caches.keys()) if (name.startsWith(PREFIX) && !keep.has(name)) await caches.delete(name);
+  })().finally(() => { pruning = null; });
+  return pruning;
+}
+async function status(running, justVerified, progress) {
+  const state = await readState();
+  const release = await manifest(state.active || running);
+  const pending = await manifest(state.pending);
+  const keys = await caches.keys();
+  // Old workers saved automatically. Keep their complete cache until the learner
+  // explicitly removes it; treat it as consent to preserve offline access on update.
+  const legacy = keys.some(k => k.startsWith(PREFIX) && !k.startsWith(PREFIX + 'release-') && k !== META);
+  return { ...state, runningRelease: await manifest(running), saved: Boolean(state.saved || legacy), legacy,
+    offlineReady: Boolean(state.saved && ((justVerified && release?.id === justVerified.id) || await complete(release, progress))),
+    pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending, progress))),
+    busy: Boolean(operation || restarting) };
+}
+async function rememberPage(release, paths) {
+  validateRelease(release);
+  const state = await readState();
+  if (state.active && state.active !== release.id) return;
+  const cache = await caches.open(cacheName(release.id));
+  await cache.put(MANIFEST, new Response(JSON.stringify(release)));
+  const requested = new Set(paths);
+  // These files have already been loaded by this document. This is a visited-page
+  // cache, not a background download of the rest of the app or offline consent.
+  for (const file of release.files.filter(f => requested.has(f.path))) {
+    const key = new URL(file.path, BASE);
+    if (await verified(await cache.match(key), file)) continue;
+    const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), { cache: 'no-cache', signal: AbortSignal.timeout(8000) });
+    if (!await verified(response.clone(), file)) throw new Error('The running page could not be retained. Keep this tab open until you restart to update.');
+    await cache.put(key, response);
+  }
+  // Re-read after I/O so a concurrent explicit download cannot lose its consent.
+  const latest = await readState();
+  if (!latest.active) { latest.active = release.id; await writeState(latest); }
+}
+async function prepare(release, save, port, signal) {
+  validateRelease(release);
+  const cache = await caches.open(cacheName(release.id));
+  await cache.put(MANIFEST, new Response(JSON.stringify(release)));
+  let bytes = 0;
+  for (const file of release.files) {
+    signal.throwIfAborted();
+    const key = new URL(file.path, BASE);
+    if (!await verified(await cache.match(key), file)) {
+      const timeout = AbortSignal.timeout(15000);
+      const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), {
+        cache: 'no-store', signal: AbortSignal.any([signal, timeout]), credentials: 'same-origin',
+      });
+      if (!await verified(response.clone(), file)) throw new Error('A downloaded file did not match the release. Retry after deployment finishes.');
+      signal.throwIfAborted();
+      await cache.put(key, response);
+    }
+    bytes += file.bytes;
+    port.postMessage({ progress: { bytes, total: release.bytes } });
+  }
+  signal.throwIfAborted();
+  if (!await complete(release, () => port.postMessage({ progress: { bytes, total: release.bytes } }))) throw new Error('The saved files could not be verified. Free storage and retry.');
+  signal.throwIfAborted();
+  const state = await readState();
+  if (save && (!state.active || state.active === release.id)) {
+    state.active = release.id; state.saved = true;
+  } else {
+    state.pending = release.id;
+    state.pendingSaved = Boolean(save || state.saved || (await status()).legacy);
+  }
+  state.partial = null;
+  await writeState(state);
+}
+async function courseWindows(release) {
+  const paths = new Set(release.files.filter(f => f.path.endsWith('.html')).map(f => new URL(f.path, BASE).pathname));
+  return (await self.clients.matchAll({ type: 'window', includeUncontrolled: true })).filter(client => {
+    const url = new URL(client.url);
+    return url.origin === BASE.origin && paths.has(url.pathname === BASE.pathname ? url.pathname + 'index.html' : url.pathname);
+  });
+}
+function ask(client, token) {
+  return new Promise((resolve, reject) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => { channel.port1.close(); reject(new Error('Another GPU Lab window did not respond. Open it and try again, or close it after saving your work.')); }, 5000);
+    channel.port1.onmessage = ({ data }) => {
+      clearTimeout(timer); channel.port1.close();
+      data?.ready ? resolve() : reject(new Error(data?.error || 'Another window cannot save its work yet.'));
+    };
+    client.postMessage({ type: 'PREPARE_RESTART', token }, [channel.port2]);
+  });
+}
+async function restart(progress) {
+  const state = await readState(), release = await manifest(state.pending);
+  if (!release || !await complete(release, progress)) throw new Error('The update is incomplete. Download it again before restarting.');
+  const token = crypto.randomUUID();
+  const windows = await courseWindows(release);
+  try {
+    // Every participant saves and locks its inputs. A missing or old client blocks
+    // the transaction; it is never silently navigated and stripped of its work.
+    await Promise.all(windows.map(client => ask(client, token)));
+    const current = await courseWindows(release);
+    if (current.length !== windows.length || current.some(c => !windows.some(w => w.id === c.id))) throw new Error('The open windows changed. Try restarting again.');
+    state.previous = state.active;
+    state.active = state.pending; state.saved = state.pendingSaved;
+    state.pending = null; state.pendingSaved = false;
+    await writeState(state);
+    for (const client of windows) client.postMessage({ type: 'COMMIT_RESTART', token });
+  } catch (error) {
+    for (const client of windows) client.postMessage({ type: 'ABORT_RESTART', token });
+    throw error;
+  }
+}
+self.addEventListener('install', () => {});
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('message', event => {
+  const port = event.ports[0];
+  if (!port || !event.source?.url.startsWith(BASE.href)) return;
+  event.waitUntil((async () => {
+    try {
+      const data = event.data;
+      let result;
+      const progress = value => port.postMessage({ progress: value });
+      if (data.type === 'STATUS') {
+        if (/^[a-f0-9]{64}$/.test(data.running)) seen.set(event.source.id, data.running);
+        result = await status(data.running, null, progress);
+        await prune(progress);
+      }
+      else if (data.type === 'REMEMBER_PAGE') {
+        if (operation || restarting) throw new Error('A download or restart is already in progress.');
+        operation = new AbortController();
+        try { await pruning; await rememberPage(data.release, data.paths); result = {}; } finally { operation = null; }
+      } else if (data.type === 'CANCEL') {
+        operation?.abort(); result = {};
+      } else if (data.type === 'PREPARE') {
+        if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
+        operation = new AbortController();
+        try {
+          await pruning; operation.signal.throwIfAborted();
+          validateRelease(data.release);
+          const state = await readState(); state.partial = data.release.id; await writeState(state);
+          await prepare(data.release, Boolean(data.save), port, operation.signal);
+          // prepare() has just verified every byte. Reuse that result for this
+          // response instead of scanning the new release again. Later STATUS
+          // requests still verify storage afresh to detect eviction.
+          result = await status(data.running, data.release, () => progress({ bytes: data.release.bytes, total: data.release.bytes }));
+        } finally { operation = null; await broadcast({ type: 'STATUS_CHANGED' }); }
+      } else if (data.type === 'RESTART') {
+        if (operation || restarting) throw new Error('Wait for the current operation to finish.');
+        restarting = true;
+        navigationGate = new Promise(resolve => { releaseNavigation = resolve; });
+        try { await pruning; await restart(progress); result = {}; } finally { restarting = false; releaseNavigation(); }
+      } else if (data.type === 'REMOVE') {
+        if (operation || restarting) throw new Error('Cancel the download or wait for the restart before removing files.');
+        operation = new AbortController();
+        try {
+          await pruning;
+          for (const name of await caches.keys()) if (name.startsWith(PREFIX)) await caches.delete(name);
+          await self.registration.unregister();
+          await broadcast({ type: 'OFFLINE_REMOVED' }); result = {};
+        } finally { operation = null; }
+      } else throw new Error('Unsupported App status request');
+      port.postMessage({ result });
+    } catch (error) { port.postMessage({ error: error.name === 'AbortError' ? 'Download cancelled. Verified files can be resumed.' : error.message }); }
+  })());
+});
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  if (url.origin !== BASE.origin || !url.pathname.startsWith(BASE.pathname)) return;
+  let path = url.pathname.slice(BASE.pathname.length) || 'index.html';
+  // Metadata is network-only, including requests from legacy cached documents.
+  if (path === 'release.json' || path.endsWith('/release.json')) {
+    event.respondWith(fetch(new Request(event.request, { cache: 'no-store' }))); return;
+  }
+  if (path === 'sw.js') return;
+  event.respondWith((async () => {
+    if (event.request.mode === 'navigate' && restarting) await navigationGate;
+    const pinned = path.match(/^releases\/([a-f0-9]{64})\/(.+)$/);
+    const state = await readState();
+    const id = pinned ? pinned[1] : state.active;
+    if (pinned) path = pinned[2];
+    if (id) {
+      const cache = await caches.open(cacheName(id));
+      const cached = await cache.match(new URL(path, BASE));
+      if (cached) return mediaRangeResponse(event.request.headers.get('Range'),cached);
+      // Missing assets from a selected release must never fall through to a
+      // different root deployment. The immutable release URL may repair them.
+      const response = await fetch(new URL(`releases/${id}/${path}`, BASE), { cache: 'no-store' });
+      const release = await manifest(id), file = release?.files.find(f => f.path === path);
+      if (file) {
+        if (!await verified(response.clone(), file)) return new Response('This release file could not be verified. Return to App status to repair or update.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        await cache.put(new URL(path, BASE), response.clone());
+      }
+      return mediaRangeResponse(event.request.headers.get('Range'),response);
+    }
+    try { return await fetch(event.request); }
+    catch (error) {
+      // Preserve old complete installations during the protocol migration.
+      for (const name of await caches.keys()) {
+        if (name.startsWith(PREFIX) && name !== META && !name.startsWith(PREFIX + 'release-')) {
+          const response = await (await caches.open(name)).match(new URL(path, BASE));
+          if (response) return response;
+        }
+      }
+      throw error;
+    }
+  })());
+});

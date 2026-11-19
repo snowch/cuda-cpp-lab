@@ -11,14 +11,20 @@ let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for upda
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
 let unavailable = !supported;
 let remembered = false, remembering, connected = false;
-let backgroundDownload,backgroundProgress,resumeWork,resumeTimer;
+let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
-function error(message = '',source='operation') { $('app-status-error').textContent = message;$('app-status-error').dataset.source=source; }
+const progressSize = n => `${(n / 1048576).toFixed(2)} MiB`;
+function error(message = '',source='operation') {
+  const element=$('app-status-error');
+  if(element.textContent!==message)element.textContent=message;
+  element.dataset.source=source;
+  if(source!=='download'&&element.parentElement!==dialog)dialog.append(element);
+}
 function render() {
   const job=snapshot.download;
   const active=downloading||Boolean(job?.busy);
   const requested=Boolean(job?.wanted&&job.state!=='ready');
-  if(job&&(job.wanted||job.state==='ready'))mode=job.mode;
+  if(job&&!downloading)mode=job.mode;
   const progress = $('download-progress');
   const feedback = $(mode === 'update' ? 'update-download-feedback' : 'offline-download-feedback');
   // Move the single progress/cancel group only when its owning action changes.
@@ -27,9 +33,10 @@ function render() {
   progress.hidden=!(downloading||requested);
   if(job&&!downloading)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
   const notice=$('download-behaviour');
-  notice.textContent=requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?'Downloading in the background. Return here to apply the update.':job?.state==='verifying'?'Checking the downloaded files before the course is ready.':'Completed files are kept. If your browser pauses the download, it resumes when you return.';
+  notice.textContent=requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?(mode==='update'?'Downloading in the background. Return here to apply the update.':'Downloading in the background. The course is available offline when all files are checked.'):job?.state==='verifying'?(mode==='update'?'Checking the downloaded files before the update is ready.':'Checking the saved files before marking the course available offline.'):'Completed files are kept. If your browser pauses the download, it resumes when you return.';
   if(job?.error&&!downloading)error(job.error,'download');
   else if($('app-status-error').dataset.source==='download')error('');
+  if($('app-status-error').dataset.source==='download'&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
   const pending = snapshot.pending && snapshot.pending !== running;
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
@@ -76,7 +83,8 @@ async function refresh() {
   if (!worker || removed) return;
   const generation = ++refreshGeneration;
   try {
-    const result = await rpc('STATUS');
+    let result = await rpc('STATUS');
+    if(!result.downloadVersion)result={...result,...await legacyInfo(result)};
     if (generation !== refreshGeneration) return;
     snapshot = result; unavailable = false;
     runningRelease ||= snapshot.runningRelease;
@@ -166,11 +174,58 @@ async function remember() {
   }).finally(() => { remembering = null; });
   return remembering;
 }
+// An already-installed worker can remain active until its last page closes.
+// New pages keep the same durable request in that worker's existing metadata
+// cache; the new worker can recover it when it activates naturally.
+let legacyWrites=Promise.resolve();
+async function legacyRequest(){
+  const cache=await caches.open(`gpu-lab:${base.href}:status-v1`);
+  const response=await cache.match(new URL('__download_request_v1__',base));
+  if(!response)return null;
+  try{const job=await response.json();return job&&typeof job.wanted==='boolean'&&['offline','update'].includes(job.mode)&&/^[a-f0-9]{64}$/.test(job.release)&&typeof job.id==='string'&&job.id.startsWith('gpu-lab-')?job:null;}catch{return null;}
+}
+function legacyChange(id,patch){
+  const work=legacyWrites.then(async()=>{
+    const cache=await caches.open(`gpu-lab:${base.href}:status-v1`),key=new URL('__download_request_v1__',base),current=await legacyRequest();
+    if(id&&current?.id!==id)return null;
+    const fields=typeof patch==='function'?patch(current):patch;
+    if(!fields)return current;
+    const next={...current,...fields};await cache.put(key,new Response(JSON.stringify(next)));return next;
+  });
+  legacyWrites=work.catch(()=>{});return work;
+}
+async function legacyStart(release,mode,id){
+  if(id){const job=await legacyRequest();if(!job?.wanted||job.id!==id)throw new Error('This download was cancelled or replaced.');return job;}
+  const cache=await caches.open(`gpu-lab:${base.href}:release-${release.id}`);
+  await cache.put(new URL('__release_manifest__',base),new Response(JSON.stringify(release)));
+  return legacyChange(null,{id:'gpu-lab-'+crypto.randomUUID(),release:release.id,mode,save:true,wanted:true,
+    state:'foreground',started:Date.now(),bytes:0,cachedBytes:0,total:release.bytes,error:null});
+}
+async function legacyStop(id){
+  try{await legacyChange(id,job=>job&&job.state!=='ready'?{wanted:false,state:'paused',error:null}:null);}
+  catch(failure){
+    const job=await legacyRequest();
+    if(!id||job?.id===id)await (await caches.open(`gpu-lab:${base.href}:status-v1`)).delete(new URL('__download_request_v1__',base));
+    else throw failure;
+  }
+}
+async function legacyInfo(status){
+  let job=await legacyRequest();
+  if(!job)return {downloadVersion:0,download:null};
+  const response=await (await caches.open(`gpu-lab:${base.href}:release-${job.release}`)).match(new URL('__release_manifest__',base));
+  const release=response?(await readReleaseMetadata(response,{immutable:true})).release:null;
+  if(job.wanted&&((status.pending===job.release&&status.pendingReady)||(status.active===job.release&&status.offlineReady)))
+    job=await legacyChange(job.id,{wanted:false,state:'ready',bytes:job.total,error:null});
+  return {downloadVersion:0,downloadRelease:release,download:{...job,busy:Boolean(job.wanted&&status.busy),
+    state:job.wanted?(status.busy?'foreground':'paused'):job.state,stage:job.wanted&&status.busy?'unknown':'verified'}};
+}
+
 function showProgress(value) {
   const stage=value.stage||'verified';
+  if(stage==='unknown'){$('asset-progress').removeAttribute('value');$('download-progress-label').textContent='Download in progress';$('progress-text').textContent='Waiting for download status. Completed files are kept.';return;}
   $('asset-progress').max=value.total;$('asset-progress').value=value.bytes;
   $('download-progress-label').textContent=stage==='downloaded'?'Downloaded files':stage==='checking'?'Checking saved files':'Verified download progress';
-  $('progress-text').textContent=`${bytes(value.bytes)} of ${bytes(value.total)} ${stage==='downloaded'?'downloaded; files are checked before the course is ready':'verified'}`;
+  $('progress-text').textContent=`${progressSize(value.bytes)} of ${progressSize(value.total)} ${stage==='downloaded'?'downloaded; files are checked before the course is ready':'verified'}`;
 }
 async function watchBackground(id) {
   if(!registration.backgroundFetch)return;
@@ -213,15 +268,18 @@ async function download(save, resume) {
   await remembering;
   if(save&&snapshot.offlineReady&&!resume)return;
   if(!worker||removed||unavailable)await connect();
-  downloading=true;mode=save?'offline':'update';error();render();
+  downloading=true;downloadCancelled=false;localDownloadId=undefined;mode=save?'offline':'update';error();render();
   showProgress({bytes:0,total:release.bytes});
   let handled=false,downloadId=resume?.id;
   const request={release,save:true,requestDownload:true,mode,downloadId};
   try {
+    if(snapshot.downloadVersion!==1){const job=await legacyStart(release,mode,downloadId);downloadId=job.id;localDownloadId=downloadId;}
+    if(downloadCancelled){if(snapshot.downloadVersion!==1)await legacyStop(downloadId);handled=true;return;}
     if(snapshot.downloadVersion===1&&registration.backgroundFetch){
       const plan=await rpc('DOWNLOAD_PLAN',request,showProgress);
       if(plan.ready){++refreshGeneration;snapshot=plan.status;unavailable=false;handled=true;return;}
-      downloadId=plan.backgroundId;
+      downloadId=plan.backgroundId;localDownloadId=downloadId;
+      if(downloadCancelled){await rpc('CANCEL',{id:downloadId});handled=true;return;}
       let native;
       try {
         native=await registration.backgroundFetch.get(downloadId);
@@ -245,9 +303,12 @@ async function download(save, resume) {
       }
     }
     const result=await rpc('PREPARE',{...request,downloadId},showProgress);
-    ++refreshGeneration;snapshot=result;unavailable=false;runningRelease||=snapshot.runningRelease;
+    if(!result.downloadVersion){await legacyChange(downloadId,{wanted:false,state:'ready',bytes:release.bytes,error:null});snapshot={...result,...await legacyInfo(result)};}
+    else snapshot=result;
+    ++refreshGeneration;unavailable=false;runningRelease||=snapshot.runningRelease;
     handled=true;error();
   } catch(failure) {
+    if(snapshot.downloadVersion!==1&&downloadId)await legacyChange(downloadId,job=>job?.wanted?{state:'paused',wanted:!downloadCancelled&&!/match the release|could not be verified/.test(failure.message),error:downloadCancelled?null:failure.message}:null).catch(()=>{});
     await refresh();
     if(snapshot.download?.wanted!==false)error(failure.message);
   } finally {
@@ -263,7 +324,11 @@ dialog.addEventListener('close', () => $('app-status-open').focus({ preventScrol
 $('check-update').addEventListener('click', () => { check(true); refresh(); });
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));
-$('cancel-download').addEventListener('click', () => {clearTimeout(resumeTimer);rpc('CANCEL',{id:downloading?undefined:snapshot.download?.id}).then(refresh).catch(f=>error(f.message));});
+$('cancel-download').addEventListener('click', async () => {
+  downloadCancelled=true;clearTimeout(resumeTimer);const id=downloading?localDownloadId:snapshot.download?.id;
+  try{try{if(snapshot.downloadVersion!==1)await legacyStop(id);}finally{await rpc('CANCEL',{id:downloading?undefined:id});}await refresh();}
+  catch(failure){error(failure.message);}
+});
 $('later-update').addEventListener('click', () => dialog.close());
 $('restart-update').addEventListener('click', async () => {
   error(); restarting = true; $('restart-update').disabled = true;
@@ -296,4 +361,7 @@ render(); check(); connect();
 // Running metadata is immutable and small; it is not a course download.
 metadata(new URL(`releases/${running}/release.json`, base), AbortSignal.timeout(8000),{immutable:true}).then(({release:r}) => { if (r.id === running) { runningRelease = r; render(); remember(); } }).catch(() => {});
 
-if(new URLSearchParams(location.search).has('download')){dialog.showModal();}
+const downloadLink=new URL(location.href);
+if(downloadLink.searchParams.get('download')==='1'){
+  dialog.showModal();downloadLink.searchParams.delete('download');history.replaceState(history.state,'',downloadLink);
+}

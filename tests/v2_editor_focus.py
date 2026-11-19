@@ -1,33 +1,42 @@
 # Copyright © 2026 Christopher Snow.
 """Lesson edit guidance follows source without changing the program."""
 import base64
+import json
+import subprocess
+import time
+from pathlib import Path
 from playwright.sync_api import expect
 
 
 def assert_source_ink(editor, fragment, colour):
-    # Inspect rendered glyph pixels, not just CSS: engines differ in how a
-    # textarea's text clip follows its native scroll position.
-    png=base64.b64encode(editor.screenshot()).decode()
-    pixels=editor.evaluate('''async (e,{png,fragment,colour})=>{
+    # Parent-page smooth scrolling and iframe resizing can invalidate an element
+    # screenshot crop. Wait for the visible position, then sample a page image.
+    editor.scroll_into_view_if_needed()
+    previous=None;stable=0
+    for _ in range(40):
+        box=editor.bounding_box()
+        stable=stable+1 if box==previous else 0;previous=box
+        if stable>=3:break
+        time.sleep(.025)
+    assert stable>=3,'The editor position must settle before its pixels are inspected.'
+    metrics=editor.evaluate("(e,fragment)=>{const s=getComputedStyle(e),h=parseFloat(s.lineHeight),index=e.value.indexOf(fragment);return {height:h,top:parseFloat(s.borderTopWidth)+parseFloat(s.paddingTop)+(e.value.slice(0,index).split(String.fromCharCode(10)).length-1)*h-e.scrollTop}}",fragment)
+    png=base64.b64encode(editor.page.screenshot(scale='css')).decode()
+    result=editor.evaluate('''async (e,{png,box,metrics,colour})=>{
         const image=new Image();image.src='data:image/png;base64,'+png;await image.decode();
-        const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
-        const context=canvas.getContext('2d');context.drawImage(image,0,0);
-        const style=getComputedStyle(e),h=parseFloat(style.lineHeight);
-        const line=e.value.slice(0,e.value.indexOf(fragment)).split('\\n').length-1;
-        const scale=image.width/e.getBoundingClientRect().width;
-        const top=(parseFloat(style.borderTopWidth)+parseFloat(style.paddingTop)+line*h-e.scrollTop)*scale;
-        let count=0;
-        const pixels=context.getImageData(0,0,image.width,image.height).data;
-        for(let y=Math.max(0,Math.floor(top));y<Math.min(image.height,Math.ceil(top+h*scale));y++){
-            for(let x=2;x<image.width-2;x++){
-                const at=(y*image.width+x)*4,r=pixels[at],g=pixels[at+1],b=pixels[at+2];
-                if(colour==='gold' ? r>220&&g>180&&b<190 : b>220&&g>160&&r<180)count++;
+        const canvas=document.createElement('canvas');canvas.width=Math.ceil(box.width);canvas.height=Math.ceil(box.height);
+        const context=canvas.getContext('2d');context.drawImage(image,box.x,box.y,box.width,box.height,0,0,box.width,box.height);
+        let count=0;const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+        for(let y=Math.max(0,Math.floor(metrics.top));y<Math.min(canvas.height,Math.ceil(metrics.top+metrics.height));y++){
+            for(let x=2;x<canvas.width-2;x++){
+                const at=(y*canvas.width+x)*4,r=pixels[at],g=pixels[at+1],b=pixels[at+2];
+                if(colour==='gold'?r>220&&g>180&&b<190:b>220&&g>160&&r<180)count++;
             }
         }
-        return count;
-    }''', {'png':png,'fragment':fragment,'colour':colour})
-    assert pixels>15, (fragment,colour,'The intended source line must have visible coloured glyphs.',pixels)
-
+        return {count,failure:count>15?null:canvas.toDataURL('image/png')};
+    }''',{'png':png,'box':box,'metrics':metrics,'colour':colour})
+    if result['failure']:
+        (Path(__file__).resolve().parents[1]/'test-results/editor-colour-failure.png').write_bytes(base64.b64decode(result['failure'].split(',')[1]))
+    assert result['count']>15,(fragment,colour,'The intended source line must have visible coloured glyphs.',result['count'],metrics)
 
 
 def check_v2_editor_focus(browser, url, root):
@@ -151,7 +160,7 @@ def check_v2_editor_focus(browser, url, root):
                 editor.fill(starter.replace('hello<<<1, 1>>>(output);', '// launch removed'))
                 expect(show_launch).to_be_disabled()
                 expect(show).to_be_enabled()
-                expect(frame.locator('#source-focus-missing')).to_contain_text('launch of hello')
+                expect(frame.locator('#source-focus-missing')).to_contain_text('kernel launch')
                 assert editor.evaluate('e => e.style.getPropertyValue("--launch-focus-top") === "0px" && e.style.getPropertyValue("--launch-focus-bottom") === "0px"')
 
                 # Reload restores edited source and refinds its line.
@@ -213,4 +222,35 @@ def check_v2_editor_focus(browser, url, root):
         }''')
         editor.screenshot(path=str(root/'test-results/v2-editor-font-selection.png'))
         assert editor.input_value()==edited
+        editor.evaluate("e=>{e.setSelectionRange(e.selectionStart,e.selectionStart);e.style.height='520px'}")
+        page.wait_for_function("()=>{const e=document.querySelector('#source'),p=e.parentElement.querySelector('.source-ink');return p.clientHeight===e.clientHeight}")
+        page.get_by_role('button',name='Show target line').click();assert_source_ink(editor,'output[0]','gold')
     print('PASS: first-kernel font colours, six layouts, native selection/scrolling, forced colours, edits, export, reset and restart restoration')
+    check_all_lesson_focus(browser,url,root)
+
+
+def check_all_lesson_focus(browser, url, root):
+    lessons=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {v2Course} from './content/v2-course.mjs';console.log(JSON.stringify(v2Course.filter(l=>!l.practical||l.program).map(l=>l.slug)))"],cwd=root,text=True))
+    assert len(lessons)==25
+    for width,theme in [(390,'dark'),(1440,'light')]:
+        for slug in lessons:
+            with browser.new_context(viewport={'width':width,'height':1000},color_scheme=theme) as context:
+                page=context.new_page();page.goto(url+'v2/'+slug+'.html')
+                frame=page.frame_locator('[data-kernel-workbench]');editor=frame.get_by_role('textbox',name='CUDA source')
+                expect(editor).to_have_class('has-source-focus');source=editor.input_value()
+                frame.get_by_role('button',name='Show target line').press('Enter')
+                target=editor.evaluate("e=>e.value.slice(e.selectionStart).split(String.fromCharCode(10))[0].trim()")
+                assert_source_ink(editor,target,'gold')
+                kernel=frame.locator('.source-lesson-ink').first.text_content().strip().split('\n')[0]
+                editor.evaluate("(e,text)=>{const line=e.value.slice(0,e.value.indexOf(text)).split('\\n').length-1;e.scrollTop=Math.max(0,line*parseFloat(getComputedStyle(e).lineHeight)-30);e.scrollLeft=0}",kernel)
+                assert_source_ink(editor,kernel,'blue')
+                assert editor.evaluate("e=>e.parentElement.querySelector('.source-ink').textContent.slice(0,-1)===e.value")
+                assert editor.input_value()==source
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        print(f'PASS: all 25 editable lesson focus targets and visible code colours: {width}px/{theme}',flush=True)
+    for slug in ['first-kernel','one-thread-one-element','from-cpu-array-to-gpu-result','matmul','histograms','softmax-capstone']:
+        with browser.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True,device_scale_factor=2.75) as context:
+            page=context.new_page();page.goto(url+'v2/'+slug+'.html');frame=page.frame_locator('[data-kernel-workbench]');editor=frame.get_by_role('textbox',name='CUDA source')
+            frame.get_by_role('button',name='Show target line').click();target=editor.evaluate("e=>e.value.slice(e.selectionStart).split(String.fromCharCode(10))[0].trim()");assert_source_ink(editor,target,'gold')
+            editor.screenshot(path=str(root/f'test-results/editor-touch-{slug}.png'))
+    print('PASS: six touch/mobile/DPR rendering checks (Chromium emulation, not a physical Android device)',flush=True)

@@ -45,7 +45,7 @@ export function sourceFocusRanges(source, mode) {
   const start=owner?.body??0, text=config.kernel?(owner?code.slice(start,owner.end-1):''):code;
   const patterns=config.targets??(config.names??[]).map(name=>'^[\\t ]*[^\\n]*\\b'+name+'\\s*(?:\\[[^\\]]*\\])?\\s*=[^;]*;');
   const targets=patterns.map(pattern=>new RegExp(pattern,'m').exec(text)).filter(Boolean).map(m=>({index:start+m.index,end:start+m.index+m[0].length}));
-  if(config.body){const kernel=kernels.find(k=>k.name===config.body);if(kernel)targets.push({index:kernel.body,end:kernel.end-1});}
+  if(config.body){const kernel=kernels.find(k=>k.name===config.body);if(kernel){const line=code.indexOf('\n',kernel.body);targets.push({index:line>=0&&line<kernel.end-1?line+1:kernel.body,end:kernel.end-1});}}
   return {kernels,launches,targets,label:config.label};
 }
 
@@ -79,7 +79,7 @@ export function mountLessonFocus(editor, reset, mode) {
       editor.style.setProperty('--'+name+'-focus-top',(range?padding+(editor.value.slice(0,range.index).split('\n').length-1)*height:0)+'px');
       editor.style.setProperty('--'+name+'-focus-bottom',(range?padding+editor.value.slice(0,range.end).split('\n').length*height:0)+'px');
     }
-    const fullLine=r=>({...r,index:editor.value.lastIndexOf('\n',r.index-1)+1,end:editor.value.indexOf('\n',r.end)<0?editor.value.length:editor.value.indexOf('\n',r.end)});
+    const fullLine=r=>{const end=editor.value.indexOf('\n',r.end-1);return {...r,index:editor.value.lastIndexOf('\n',r.index-1)+1,end:end<0?editor.value.length:end};};
     const bands=[...ranges.kernels,...ranges.launches].map(r=>({...fullLine(r),kind:'lesson'})).concat(ranges.targets.map(r=>({...fullLine(r),kind:'target'})));
     const boundaries=[...new Set([0,editor.value.length,...bands.flatMap(r=>[r.index,r.end])])].sort((a,b)=>a-b);
     const nodes=[];
@@ -99,6 +99,7 @@ export function mountLessonFocus(editor, reset, mode) {
     editor.setSelectionRange(range.index,range.index);
     const top=parseFloat(editor.style.getPropertyValue('--'+section+'-focus-top'));
     editor.scrollTop=Math.max(0,top-position.height*2);editor.scrollLeft=0;syncScroll();
+    if(focus)editor.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
   }
   show.addEventListener('click',()=>reveal(true));showLaunch.addEventListener('click',()=>reveal(true,'launch'));
   editor.addEventListener('input',update);editor.addEventListener('scroll',syncScroll);
