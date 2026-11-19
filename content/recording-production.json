@@ -17,11 +17,11 @@
     {
       "key": "first-kernel",
       "video": "assets/media/first-kernel/first-kernel.mp4",
-      "sha256": "12f5030cb5a81edd91bfaf1e37e55a6b1c5c05ee464320bfbb980714dc101e0e",
-      "previousSha256": "596af8f76d2159eb98e1806ec463ec73d7e5415b08b273f89e78ee45dec39b1e",
-      "captionSha256": "9af99d688578dd15d972b5d631dbafdf9c4f980ce1dc463bdb6bdbad6cc0b740",
-      "posterSha256": "7e061764e250f9a7e3bd81cd51c85e16bda0490ccc72406c12827ed799664fd6",
-      "bytes": 6520336,
+      "sha256": "51f04f9755dfa0dfce1ecd8be5eb8a5c0b24d73646dccf912170794b3392dbcd",
+      "previousSha256": "12f5030cb5a81edd91bfaf1e37e55a6b1c5c05ee464320bfbb980714dc101e0e",
+      "captionSha256": "50f2a9effc1d7f1f18c3e5cf25a056cd8a97df8bd9a3700fa4326ded08d3840e",
+      "posterSha256": "00b096c6b5fc9ed4238d31a1985b479900f912f2554b0efae39c7c9c8679a7a0",
+      "bytes": 6156463,
       "durationSeconds": 136,
       "cueCount": 16,
       "sceneCount": 16,
@@ -30,17 +30,17 @@
       "height": 2160,
       "fps": 30,
       "measuredLUFS": -16.55,
-      "measuredTruePeakDB": -1.37,
-      "minSceneSSIM": 0.998176
+      "measuredTruePeakDB": -1.44,
+      "minSceneSSIM": 0.998358
     },
     {
       "key": "v2-one-thread-one-element",
       "video": "assets/media/v2/one-thread-one-element/recap.mp4",
-      "sha256": "5da97f4409fa8b07a62224304bc044bf9a17e3aec1d64d23f681132a7e05f02b",
-      "previousSha256": "ce1ff18ce4e8b6e0a038d26ce5e1a9188a393e62bcd26bb53bafafa5cc88120d",
+      "sha256": "3a72c1955abbe742dbc31af8e6f72b550b3585f79a82bb86ebe25c6c45c07b24",
+      "previousSha256": "5da97f4409fa8b07a62224304bc044bf9a17e3aec1d64d23f681132a7e05f02b",
       "captionSha256": "f4dbb35af873e7071d5368190d0e2e9b0254078eb55f03a2a1a4952aab18ab3c",
-      "posterSha256": "7fec0fade26e4c2a7d4a71c258b5757c2a851d99a9783a8451b245f12d5b7254",
-      "bytes": 6622059,
+      "posterSha256": "c75cc1cd12190c82cc0f8ee2f6854e80e6663e18cf3bc32e7e8bbb00e43f2979",
+      "bytes": 6319324,
       "durationSeconds": 128,
       "cueCount": 24,
       "sceneCount": 12,
@@ -49,8 +49,8 @@
       "height": 2160,
       "fps": 30,
       "measuredLUFS": -16.56,
-      "measuredTruePeakDB": -1.43,
-      "minSceneSSIM": 0.997946
+      "measuredTruePeakDB": -1.37,
+      "minSceneSSIM": 0.998106
     },
     {
       "key": "v2-more-threads-than-elements",
