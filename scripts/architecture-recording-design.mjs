@@ -17,14 +17,14 @@ export const array=(label,items,options={})=>svg(values(label,items,options));
 export function compare(left,right,{question=false}={}){
  return svg([left,right].map((card,i)=>{const x=24+i*610;return rect(x,30,560,230,i?'active':'box')+text(x+30,78,card[0],'label')+text(x+280,166,card[1],'big','middle')+text(x+30,224,card[2]||'','small');}).join('')+(question?text(600,295,'Pause before continuing','small','middle'):''));
 }
-export function flow(nodes,{active=-1,notes=[]}={}){
+export function flow(nodes,{active=-1,notes=[],directions=[]}={}){
  const width=1140/nodes.length;
  return svg(nodes.map((node,i)=>{
   const x=25+i*width;
   return rect(x,45,width-42,175,i===active?'active':node.kind||'box')+
    (node.title instanceof Array?node.title:[node.title]).map((v,j)=>text(x+20,93+j*42,v,'label')).join('')+
    (String(node.value||'').length<=10?text(x+20,190,node.value||'','value'):
-    text(x+20,190,node.value||'','node-detail'))+(i<nodes.length-1?arrow(x+width-40,135,x+width-7,135):'');
+    text(x+20,190,node.value||'','node-detail'))+(i<nodes.length-1&&directions[i]!==false?(directions[i]==='left'?arrow(x+width-7,135,x+width-40,135):arrow(x+width-40,135,x+width-7,135)):'');
  }).join('')+notes.map((v,i)=>text(35,263+i*32,v,'small')).join(''));
 }
 export function captionCode(code,note='CUDA C++'){
@@ -72,21 +72,21 @@ export function masks(model,path='all'){
 export function bankView(model){
  return svg(text(30,40,'SM shared memory · bank = word index modulo 32','label')+
   model.lanes.slice(0,3).map((l,i)=>{const x=30+i*255;return rect(x,80,230,145,'box')+text(x+18,121,`Lane ${i}`,'label')+text(x+18,171,`word ${l.word}`,'value')+text(x+18,211,`bank ${l.bank}`,'small');}).join('')+
-  rect(845,75,325,155,'active')+text(1005,145,model.rounds,'big','middle')+text(1005,201,'model service rounds','small','middle')+
-  text(30,278,`${model.distinctWords} distinct words · ${model.banksUsed} banks used`,'small'));
+  rect(845,75,325,155,'active')+text(1005,145,model.rounds,'big','middle')+text(1005,201,`model service round${model.rounds===1?'':'s'}`,'small','middle')+
+  text(30,278,`${model.distinctWords} distinct word${model.distinctWords===1?'':'s'} · ${model.banksUsed} bank${model.banksUsed===1?'':'s'} used`,'small'));
 }
 export function gate({arrivals=8,readers=4,phase='ready'}={}){
  return svg(rect(12,6,1176,287,'chip')+text(32,46,'One block on an SM','label')+
-  rect(40,80,330,155,'box')+text(60,122,'Shared values','label')+text(205,191,'Published','value','middle')+
+  rect(40,80,330,155,'box')+text(60,122,'Shared values','label')+text(205,191,phase==='bad'?'Unordered':'Published','value','middle')+
   rect(462,65,280,185,phase==='bad'?'guard':'active')+text(602,130,arrivals,'big','middle')+text(602,190,'barrier arrivals','small','middle')+
-  rect(835,80,320,155,'box')+text(855,122,'Next operation','label')+text(995,191,`${readers} readers`,'value','middle')+
-  arrow(374,160,457,160)+arrow(747,160,830,160)+text(40,277,'Shared-memory ownership and barrier participation belong to the block.','small'));
+  rect(835,80,320,155,'box')+text(855,122,'Next operation','label')+text(995,191,phase==='bad'?'Not valid':`${readers} reader${readers===1?'':'s'}`,'value','middle')+
+  arrow(374,160,457,160)+(phase==='bad'?'':arrow(747,160,830,160))+text(40,277,phase==='bad'?'Invalid participation: no valid result is defined.':'Shared-memory ownership and barrier participation belong to the block.','small'));
 }
 export function tileView(example,phase=0){
  const p=example.phases[phase];
  return svg(rect(12,4,1176,290,'chip')+text(32,40,'SM · one block’s tile and private working sums','label')+
-  matrixGrid(p.left.map((row,r)=>row.map((_,c)=>`a${r}${c}`)),35,105,{size:72,kind:'active',label:'Shared A'})+matrixGrid(p.right.map((row,r)=>row.map((_,c)=>`b${r}${c}`)),245,105,{size:72,kind:'active',label:'Shared B'})+
-  arrow(417,175,590,175)+matrixGrid(p.sums.map((row,r)=>row.map((_,c)=>`C${r}${c}`)),650,92,{size:86,label:'Private sums'})+
+  matrixGrid(p.left,35,96,{size:96,kind:'active',label:'Shared A tile'})+matrixGrid(p.right,285,96,{size:96,kind:'active',label:'Shared B tile'})+
+  arrow(510,175,650,175)+matrixGrid(p.sums,680,92,{size:86,label:'Private sums'})+
   text(900,112,`K ${p.begin}–${p.begin+example.tile-1}`,'label')+text(900,164,'C00 so far','small')+text(900,220,fp(p.sums[0][0]),'value')+text(35,280,'All block threads arrive before reading and before reusing the tiles.','small'));
 }
 export function cacheView(example,{append=false}={}){

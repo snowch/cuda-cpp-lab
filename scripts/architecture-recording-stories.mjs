@@ -258,7 +258,7 @@ P('matmul',10,'See which values a shared tile reuses',
  predict('Can another block use this shared tile?',[
   'Suppose two blocks are resident on the same SM. Pause and predict whether the second block’s shared array is the same workspace as the first block’s.',
   'Does sharing an SM make block-scoped arrays shared between blocks?'],
-  ()=>flow([{title:['Block A','Shared tiles'],value:'A workspace',kind:'chip'},{title:'Same SM',value:'Shared hardware'},{title:['Block B','Shared tiles'],value:'B workspace',kind:'chip'}])),
+  ()=>flow([{title:['Block A','Shared tiles'],value:'A workspace',kind:'chip'},{title:'Same SM',value:'Shared hardware'},{title:['Block B','Shared tiles'],value:'B workspace',kind:'chip'}],{directions:[false,false]})),
  S('Shared-memory ownership stays per block',[
   'Each block has its own shared workspace, even when both use the same SM. One block cannot use the other block’s shared array as its tile.',
   'Reuse in this kernel comes from cooperating threads within a block, while each thread retains a private output sum.'],
@@ -432,7 +432,7 @@ P('histograms',16,'Follow local counts into global counters',
  S('Local contributions are combined before merging',[
   'Threads make their atomic contributions to the block’s shared counters. A following block barrier completes this counting phase before the merge.',
   'Only nonzero partial counters need a global atomic merge in this example.'],
-  ()=>flow([{title:['SM','Block 0 partials'],value:'Own workspace',kind:'chip'},{title:['GPU memory','Global counters'],value:words(e.histogram.counts)},{title:['SM','Block 1 partials'],value:'Own workspace',kind:'chip'}],{active:1})),
+  ()=>flow([{title:['SM','Block 0 partials'],value:'Own workspace',kind:'chip'},{title:['GPU memory','Global counters'],value:words(e.histogram.counts)},{title:['SM','Block 1 partials'],value:'Own workspace',kind:'chip'}],{active:1,directions:['right','left']})),
  S('Read both kinds of operation count',[
   'Direct global counting makes eight global atomic additions. Local aggregation makes eight shared atomic additions and six global merges for these inputs.',
   'That changes where operations occur. Extra local work and synchronisation still matter, so these counts are not a speed measurement.'],
@@ -536,10 +536,10 @@ P('progress',19,'Separate consumers from barrier participants',
 
 const slotView=stage=>svg(
  text(30,42,'GPU input copy and SM execution use different resources','label')+
- rect(30,78,325,150,stage==='copy'?'active':'box')+text(50,122,'Copy engine','label')+text(50,187,'Next input','value')+
- rect(438,78,325,150,stage==='waiting'?'guard':'box')+text(458,122,'GPU buffer A','label')+text(458,187,stage==='released'?'Released':'Still in use','value')+
- rect(845,78,325,150,'chip')+text(865,122,'SM execution','label')+text(865,187,'Process A','value')+
- arrow(360,156,433,156)+arrow(768,156,840,156)+text(30,280,stage==='released'?'used[0] follows the result copy; the next input can now reuse A.':'Wait for the previous consumer and result copy before overwriting A.','small'));
+ rect(30,78,325,150,stage==='copy'?'active':'box')+text(50,122,'Copy engine','label')+text(50,187,stage==='released'?'Next input':'Free','value')+
+ rect(438,78,325,150,stage==='waiting'?'guard':'box')+text(458,122,'GPU buffer A','label')+text(458,187,stage==='released'?'Reusable':'Still in use','value')+
+ rect(845,78,325,150,'chip')+text(865,122,'SM execution','label')+text(865,187,stage==='released'?'Finished A':'Process A','value')+
+ (stage==='released'?arrow(360,156,433,156):'')+text(30,280,stage==='released'?'used[0] follows the result copy; the next input can now reuse A.':'Wait for the previous consumer and result copy before overwriting A.','small'));
 P('pipelines',20,'Follow readiness and buffer reuse between engines',
  'Explain event dependencies and safe slot reuse independently of an overlap timing claim.',
  'Four chunks · two GPU buffer slots · dependency diagram, not a measured timeline',[
