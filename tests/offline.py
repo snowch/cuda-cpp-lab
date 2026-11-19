@@ -314,7 +314,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                     video=tab.locator('video');expect(tab.locator('#v2-video')).to_have_attribute('open','')
                     expect(video).to_have_js_property('paused',True)
                     expect(video).to_have_js_property('playbackRate',1.25)
-                    assert abs(video.evaluate('v=>v.currentTime')-5)<.4
+                    tab.wait_for_function('()=>{const v=document.querySelector("video");return !v.seeking&&v.readyState>=1&&Math.abs(v.currentTime-5)<.4}',timeout=30000)
                     expect(tab.locator('.sm-transcript')).to_have_attribute('open','')
                 panel(page);ready(page)
                 active=f"gpu-lab:{url}:release-{releases['two']['id']}"
