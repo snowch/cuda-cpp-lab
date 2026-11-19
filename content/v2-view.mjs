@@ -95,15 +95,15 @@ function renderFirstKernel(workbenchHref, program, href) {
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
     <h2 id="v2-first-kernel">Which value does the CPU print?</h2>
     <p>A kernel is a function that runs on the GPU. A GPU thread is one execution of its instructions. In CUDA C++, <code>__global__</code> declares a kernel. Each thread launched for <code>hello</code> runs its body once. The body stores a value at <code>output[0]</code> in GPU memory.</p>
-    ${codePanel({id: 'v2-first-source', label: 'Read-only CUDA C++ · Kernel definition', source: kernel, explainedLocally: true})}
+    ${codePanel({id: 'v2-first-source', editorExcerpt: true, label: 'Read-only CUDA C++ · Kernel definition', source: kernel, explainedLocally: true})}
     <p>In <code>float* output</code>, <code>output</code> holds the address of the GPU storage to write. The <code>f</code> in <code>42.0f</code> marks a <code>float</code> constant.</p>
     <h3>Launch the kernel from main()</h3>
     <p>The CPU code in <code>main()</code> reserves space for one <code>float</code> in GPU memory. It launches <code>hello</code> and passes the address of that space as <code>output</code>.</p>
-    ${codePanel({id: 'v2-first-launch', label: 'Read-only CUDA C++ · Launch inside main()', source: launch, explainedLocally: true})}
+    ${codePanel({id: 'v2-first-launch', editorExcerpt: true, label: 'Read-only CUDA C++ · Launch inside main()', source: launch, explainedLocally: true})}
     <p>The first <code>1</code> asks for one block, a group of GPU threads. The second <code>1</code> asks for one thread in that block.</p>
     <h3>Copy the result back before printing</h3>
     <p>The kernel writes <code>output[0]</code> in GPU memory. The CPU has a separate variable, <code>value</code>, initially set to <code>0.0f</code>. Writing the GPU result does not change that CPU variable. The supplied <code>cudaMemcpy</code> call copies the result into <code>value</code>.</p>
-    ${codePanel({id: 'v2-first-readback', label: 'Read-only CUDA C++ · Copy and print inside main() (error checks omitted)', source: readback, explainedLocally: true})}
+    ${codePanel({id: 'v2-first-readback', editorExcerpt: true, label: 'Read-only CUDA C++ · Copy and print inside main() (error checks omitted)', source: readback, explainedLocally: true})}
     <div class="code-explanations"><ul>
       <li><code>&amp;value</code> supplies the address of the CPU destination. <code>output</code> supplies the address of the GPU source.</li>
       <li><code>sizeof(value)</code> gives the number of bytes for this one <code>float</code>. <code>cudaMemcpyDeviceToHost</code> selects a copy from GPU memory to CPU memory.</li>
@@ -127,10 +127,10 @@ function renderFirstKernel(workbenchHref, program, href) {
 function renderStarter(slug, workbenchHref) {
   const context = lessonContexts[slug];
   return `<h3>Read the starter excerpts</h3>
-    ${codePanel({id: 'v2-starter-source', label: context.label, source: context.code, explainedLocally: true})}
+    ${codePanel({id: 'v2-starter-source', editorExcerpt: true, label: context.label, source: context.code, explainedLocally: true})}
     <p>${escape(context.readingExplanation ?? context.explanation)}</p>
     ${(context.preparation ?? []).map(text => `<p>${escape(text)}</p>`).join('')}
-    ${codePanel({id: 'v2-starter-launch', label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
+    ${codePanel({id: 'v2-starter-launch', editorExcerpt: true, label: 'CUDA C++ · launch inside main()', source: context.launches, explainedLocally: true})}
     <p>The settings inside <code>&lt;&lt;&lt; &gt;&gt;&gt;</code> give the block count and threads per block. Parentheses pass the arguments to the kernel. These read-only excerpts show the starter. The ${workbenchHref ? 'CUDA source editor' : 'complete program'} contains the storage and launch settings.</p>
     ${!workbenchHref ? `<details class="more-settings"><summary>Read the complete CUDA starter</summary>${codePanel({id:'v2-fixed-program',label:'CUDA C++ · complete starter program',source:starterFor(slug),explainedLocally:true})}</details>` : ''}`;
 }
