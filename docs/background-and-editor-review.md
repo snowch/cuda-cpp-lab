@@ -125,3 +125,19 @@ selection, export, restore/undo, reload, snapshot restoration, compiler messages
 valid edited output and separately reported nonzero program exit. Phone, tablet,
 desktop, both themes, forced colours and mobile/touch/DPR emulation are included.
 Physical Android background execution is not claimed from these checks.
+
+## Installation guidance
+
+The header keeps App status and the theme control. Browser installation guidance
+is a native disclosure labelled “Add GPU Lab to your apps” at the end of App
+status. Its closed default keeps the download and update controls prominent;
+opening it explains the browser menu choices and distinguishes an app icon from
+the saved offline files. The old installation modal and its script are removed.
+The app manifest, icons and browser-managed installation remain available.
+
+The same design and instructional reviews favour one status dialog with optional
+help over another header action and nested modal. The built header, preceding
+offline controls and expanded guidance were checked at 390px, 820px and 1440px in
+both themes, including keyboard expansion, Escape, focus return and overflow.
+All six contexts, the manifest check, unit/build checks and the nine download
+lifecycle cases pass. Saved lesson source and inputs are unchanged.
