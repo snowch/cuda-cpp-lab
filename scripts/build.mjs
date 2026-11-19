@@ -5,6 +5,7 @@ import {v2Course} from '../content/v2-course.mjs';
 import {renderV2Page} from '../content/v2-view.mjs';
 import {renderCurrentDesktop} from '../content/v2-appendices.mjs';
 import {renderProfiling} from '../content/profiling.mjs';
+import {practicalPython} from '../src/v2-practical-python.mjs';
 import {practicalSource} from '../content/v2-practical-source.mjs';
 import {workbenchFrame} from '../content/v2-workbench-frame.mjs';
 import {insertProgramStarters} from '../content/v2-programs.mjs';
@@ -19,6 +20,9 @@ await cp('manifest.webmanifest','dist/manifest.webmanifest');
 for(const path of ['first-kernel.cu','profile-pytorch.py','inspect-pytorch-trace.py','v2-programs','v2-practical'])
  await cp('examples/'+path,'dist/examples/'+path,{recursive:true});
 await writeFile('dist/examples/v2-practical/softmax-capstone.cu',practicalSource('softmax-capstone'));
+await mkdir('dist/examples/desktop',{recursive:true});
+for(const [slug,source] of Object.entries(practicalPython))
+ await writeFile(`dist/examples/desktop/${slug}.py`,'# Copyright © 2026 Christopher Snow.\n# This displayed PyTorch example checks values on the CPU; it does not measure GPU time.\n'+source+'\n');
 // Stamp the checked-out source revision before fingerprinting the offline files.
 // The commit date is stable across rebuilds of the same revision.
 let identity = { commit: null, date: null };
