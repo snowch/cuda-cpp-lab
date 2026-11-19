@@ -431,9 +431,16 @@ def no_completed_cache_downgrade(browser,url):
             before=payload_requests();manual_check(page)
             expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
             expect(page.locator('#restart-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
+            expect(page.locator('#save-offline')).to_have_text('Download for offline use')
+            expect(page.locator('#save-offline')).to_be_visible()
+            expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
             assert rpc(page,'STATUS').get('pending') is None
             assert payload_requests()==before
             assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
+            page.locator('#save-offline').click()
+            expect(page.locator('#version-status')).to_have_text('Up to date. Downloaded and ready to use offline.',timeout=30000)
+            assert rpc(page,'STATUS')['active']==running
+            expect(page.locator('#restart-update')).to_be_hidden()
     print('PASS a completed offline copy or unrelated older update never restarts the currently published page into that cached release',flush=True)
 
 def dialog_states(browser,url):

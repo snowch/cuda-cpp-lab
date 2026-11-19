@@ -14,6 +14,7 @@ let remembered = false, remembering, connected = false;
 let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId,downloadWork,preparingRestart;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
 const progressSize = n => `${(n / 1000000).toFixed(1)} MB`;
+const currentCourseDownloaded = () => Boolean(snapshot.offlineReady && (!snapshot.active || snapshot.active === running));
 function error(message = '',source='operation') {
   const element=$('app-status-error');
   if(element.textContent!==message)element.textContent=message;
@@ -46,22 +47,24 @@ function render() {
   const ready = pending && snapshot.pendingReady;
   const incomplete=available&&snapshot.partial===latest.id;
   const transferring=active||requested||cancelling;
+  const downloaded=currentCourseDownloaded();
+  const otherCourseDownloaded=snapshot.offlineReady&&!downloaded;
   const failedCheck=['Cannot check for updates','Couldn’t check for updates'].includes(version);
   const offlineTransfer=transferring&&mode==='offline';
   const verifying=Boolean(preparingRestart)||job?.state==='verifying';
   let status=stopping?'Stopping download':active?verifying?(mode==='update'?'Checking update':'Checking download'):(mode==='update'?'Downloading update':'Downloading course'):requested?(mode==='update'?'Update download paused':'Download paused'):ready?'Update downloaded and checked':incomplete?'Update download incomplete':version;
   if(!transferring&&!ready&&!available){
-    if(snapshot.offlineReady)status=version==='Up to date'?'Up to date. Downloaded and ready to use offline.':'Downloaded and ready to use offline.';
-    else if(snapshot.saved||snapshot.partial)status=version==='Up to date'?'Up to date. Offline download incomplete.':'Offline download incomplete';
+    if(downloaded)status=version==='Up to date'?'Up to date. Downloaded and ready to use offline.':'Downloaded and ready to use offline.';
+    else if(!otherCourseDownloaded&&(snapshot.saved||snapshot.partial))status=version==='Up to date'?'Up to date. Offline download incomplete.':'Offline download incomplete';
   }
   // Keep the existing update/offline status slots for older pinned clients,
   // but expose one message under Course status in the current interface.
   $('version-status').textContent=status;
-  $('offline-status').textContent=offlineTransfer?status:unavailable?'Offline downloads are unavailable':snapshot.offlineReady?'Downloaded and ready to use offline.':ready?'Downloaded update is ready after restarting.':snapshot.saved||snapshot.partial?'Offline download incomplete':'Not downloaded for offline use';
-  $('offline-status').dataset.state=snapshot.offlineReady?'ready':'unavailable';
+  $('offline-status').textContent=offlineTransfer?status:unavailable?'Offline downloads are unavailable':downloaded?'Downloaded and ready to use offline.':ready?'Downloaded update is ready after restarting.':!otherCourseDownloaded&&(snapshot.saved||snapshot.partial)?'Offline download incomplete':'Not downloaded for offline use';
+  $('offline-status').dataset.state=downloaded?'ready':'unavailable';
   $('update-section').hidden=offlineTransfer;
   $('offline-section').hidden=!offlineTransfer;
-  $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||pending?'Update available':version==='Up to date'?'Up to date':snapshot.offlineReady?'Downloaded':'Check version';
+  $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||pending?'Update available':version==='Up to date'?'Up to date':downloaded?'Downloaded':'Check version';
   $('app-status-details').hidden=transferring;
   $('install-help').hidden=transferring;
   $('download-update').hidden=locked||!available||Boolean(ready&&snapshot.pending===latest.id);
@@ -78,12 +81,12 @@ function render() {
   $('retry-update').disabled=Boolean(checking)||retryingCheck;
   $('retry-update').textContent=retryingCheck?'Checking…':'Retry';
   const release=runningRelease;
-  $('save-offline').hidden=locked||Boolean(snapshot.offlineReady||ready||available)||!supported;
+  $('save-offline').hidden=locked||Boolean(downloaded||ready||available)||!supported;
   $('save-offline').disabled=locked||!release;
-  $('save-offline').textContent=unavailable?'Retry offline access':snapshot.partial===running?'Resume download':snapshot.saved?'Repair offline copy':'Download for offline use';
+  $('save-offline').textContent=unavailable?'Retry offline access':snapshot.partial===running?'Resume download':snapshot.saved&&!otherCourseDownloaded?'Repair offline copy':'Download for offline use';
   $('retry-update').classList.toggle('primary',$('save-offline').hidden&&$('download-update').hidden&&$('restart-update').hidden);
   $('offline-size').textContent=release?`${progressSize(release.bytes)} for the complete course, including recordings.`:'Connect to check the download size.';
-  $('offline-size').hidden=transferring||Boolean(snapshot.offlineReady||ready||available)||$('save-offline').hidden;
+  $('offline-size').hidden=transferring||Boolean(downloaded||ready||available)||$('save-offline').hidden;
   $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
   $('remove-offline').disabled=locked;
   const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
@@ -364,7 +367,7 @@ async function performDownload(save, resume) {
   await runningMetadata;
   await remember();
   if(downloadCancelled)return;
-  if(save&&snapshot.offlineReady&&!resume)return;
+  if(save&&currentCourseDownloaded()&&!resume)return;
   if(!worker||removed||unavailable)await connect();
   downloading=true;error();render();
   showProgress({bytes:0,total:release.bytes});
