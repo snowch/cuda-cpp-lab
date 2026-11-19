@@ -324,9 +324,16 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 # than below the separate offline-access explanation.
                 CourseHandler.slow=True
                 CourseHandler.pause=(f"releases/{releases['two']['id']}/{releases['two']['files'][0]['path']}", Event())
+                request_start=len(CourseHandler.requests)
                 page.locator('#download-update').click()
                 progress=page.locator('#download-progress')
                 expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
+                # Cancel is available during startup too. This case specifically
+                # exercises an incomplete transfer, so wait for the real worker
+                # request rather than treating visible progress as network I/O.
+                deadline=time.monotonic()+30
+                while CourseHandler.pause[0] not in CourseHandler.requests[request_start:] and time.monotonic()<deadline:time.sleep(.05)
+                assert CourseHandler.pause[0] in CourseHandler.requests[request_start:],'The candidate transfer did not start.'
                 # Read both rectangles in one task; separate browser calls can
                 # straddle a progress render or a completed download.
                 geometry=page.wait_for_function('''() => {

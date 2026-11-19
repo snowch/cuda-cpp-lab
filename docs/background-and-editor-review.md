@@ -160,6 +160,10 @@ is reproduced, the normal older upgrade works, and the new worker fixes the
 missing-state case without changing the open page or losing its saved draft.
 An already verified candidate with the old incorrect active selection also
 recovers Restart through the native planning path without another payload transfer.
+Immediate cancellation before startup also keeps Update usable without starting
+a transfer. The full offline cancellation case waits for the server's first
+candidate request before asserting an incomplete download; visible startup
+progress alone does not establish that any transfer has started.
 Foreground downloads also announce the final verification phase separately from
 transfer. No forced activation, automatic reload or storage clearing is added.
 

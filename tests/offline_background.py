@@ -339,6 +339,20 @@ def dialog_states(browser,url):
                 page.keyboard.press('Escape');expect(dialog).to_be_hidden();expect(page.locator('#app-status-open')).to_be_focused()
     print('PASS dialog idle, downloading, cancelled/incomplete and verified-ready states in six width/theme layouts; Cancel and modal close remain keyboard accessible',flush=True)
 
+def early_cancel(browser,url):
+    Handler.revision='one';Handler.pause=None
+    with browser.new_context() as c:
+        page=open_page(c,url);Handler.revision='two';page.locator('#check-update').click()
+        expect(page.locator('#download-update')).to_be_visible()
+        before=payload_requests()
+        # Both clicks in one task cancel before the first awaited startup step.
+        page.evaluate("()=>{document.getElementById('download-update').click();document.getElementById('cancel-download').click()}")
+        expect(page.locator('#download-update')).to_be_visible();expect(page.locator('#download-update')).to_be_enabled()
+        expect(page.locator('#download-progress')).to_be_hidden();expect(page.locator('#restart-update')).to_be_hidden()
+        expect(page.locator('#version-status')).to_have_text('Update available')
+        assert payload_requests()==before
+    print('PASS cancelling during startup keeps Update usable and offers no Restart or unsolicited transfer',flush=True)
+
 def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
@@ -350,6 +364,7 @@ def main():
                 try:
                     native_closed_page(browser,url);fallback_resume(browser,url)
                     cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
+                    early_cancel(browser,url)
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
                     quota_startup_error(browser,url)
                     previous_client_upgrade(browser,url,old_root);missing_state_native(browser,url)
