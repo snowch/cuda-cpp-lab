@@ -438,6 +438,14 @@ def no_completed_cache_downgrade(browser,url):
             assert payload_requests()==before
             assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
             page.locator('#save-offline').click()
+            # Saving the open version prepares it for every window when an old
+            # complete course is still selected. Keep the coordinated restart.
+            expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
+            expect(page.locator('#restart-update')).to_be_visible()
+            assert rpc(page,'STATUS')['pending']==running
+            page.locator('#restart-update').click()
+            expect(page.locator('#app-status-dialog')).to_be_hidden(timeout=30000)
+            page.locator('#app-status-open').click()
             expect(page.locator('#version-status')).to_have_text('Up to date. Downloaded and ready to use offline.',timeout=30000)
             assert rpc(page,'STATUS')['active']==running
             expect(page.locator('#restart-update')).to_be_hidden()
@@ -473,6 +481,7 @@ def dialog_states(browser,url):
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloaded.png'))
                 Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible()
                 expect(page.locator('#download-update')).to_have_text('Download update')
+                expect(page.locator('#version-detail')).to_contain_text('complete course for offline use')
                 before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
                 expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()
                 for control in ['check-update','download-update','offline-section','app-status-details','install-help']:expect(page.locator('#'+control)).to_be_hidden()

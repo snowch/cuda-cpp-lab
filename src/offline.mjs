@@ -42,7 +42,7 @@ function render() {
   if(job?.error&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')error(job.error,'download');
   else if($('app-status-error').dataset.source==='download')error('');
   if($('app-status-error').dataset.source?.startsWith('download')&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
-  const pending = snapshot.pending && snapshot.pending !== running;
+  const pending = snapshot.pending && (snapshot.pending !== running || snapshot.active !== running);
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
   const incomplete=available&&snapshot.partial===latest.id;
@@ -90,7 +90,7 @@ function render() {
   $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
   $('remove-offline').disabled=locked;
   const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
-  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Resume to finish the download.':available?`${progressSize(latest.bytes)} download. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
+  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Resume to finish the download.':available?`${progressSize(latest.bytes)} download. Includes the complete course for offline use. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
   $('release-detail').textContent=latest?`Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}`:'';
   // State changes hide the previous action. Keep keyboard users at the next
   // useful control rather than dropping focus behind the modal.
