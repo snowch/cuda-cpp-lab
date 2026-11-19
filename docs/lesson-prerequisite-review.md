@@ -32,10 +32,13 @@ every recording is free of further gaps.
 - [Frontend Design](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md): reuse the existing code panels, Plex typography and code-explanation styles. Add essential explanations in reading order without new controls or disclosures.
 - [Instructional Design](https://github.com/joelrkohlman/instructional-design/blob/main/SKILL.md): prepare the exact interpretation or action requested next. Keep introductory readback separate from the later array-management exercise. Explain only the CUDA helpers and arguments needed here.
 
-The L1 excerpt is extracted from `examples/first-kernel.cu`, which also supplies
-the editor; line breaks change only for reading width. The lesson uses its normal
+The L1 kernel and launch are extracted from `examples/first-kernel.cu`, which also
+supplies the editor. The readback view selects the copy and print operations and
+labels omitted error checks. The later helper removal and editor cues are reviewed
+in `docs/background-and-editor-review.md`. The lesson uses its normal
 link builder so the lesson-4 link also works in assembled book exports. Saved
-source, storage keys, starter values and execution code are untouched.
+source and storage keys are kept; the prerequisite explanations retain the same
+starter values. Later source changes are recorded in the review linked above.
 
 Additional reading preparation is separate from the recorded talk-track fields.
 Existing tests verify that all published captions still match their visible

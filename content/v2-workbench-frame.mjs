@@ -1,5 +1,4 @@
 // Copyright © 2026 Christopher Snow.
-import { mountFirstKernelFocus } from '../src/v2-editor-focus.mjs';
 import { practicalRuntime } from './v2-practical-source.mjs';
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html, {compilerBase, compilerParts} = {}) {
@@ -59,44 +58,25 @@ html[data-inline] .source-focus code { font-family:var(--mono); }
 html[data-inline="hello"] textarea { font-size:16px; }
 html[data-inline] .source-focus button { margin-top:8px; min-height:44px; }
 html[data-inline] #source-focus-missing { margin-top:8px; color:#b8cdc4; }
-html[data-inline] .source-editor { background:#0f211d; border-radius:7px; }
-html[data-inline] .source-editor textarea {
-  --source-neutral-ink:#edf8f1;
-  --source-lesson-ink:#8fcbff;
-  --source-target-ink:#ffe09a;
+html[data-inline] .source-editor { position:relative; background:#0f211d; border-radius:7px; }
+html[data-inline] .source-editor > .source-ink {
+  position:absolute; inset:0; width:100%; height:100%; max-height:none; margin:0;
+  border:1px solid transparent; border-radius:7px; background:transparent;
+  overflow:hidden; white-space:pre; pointer-events:none; color:#edf8f1;
 }
-@supports ((background-clip:text) or (-webkit-background-clip:text)) {
-  html[data-inline] textarea.has-source-focus {
-    background-image:var(--source-focus-ink);
-    background-color:transparent;
-    background-clip:text;
-    -webkit-background-clip:text;
-    color:transparent;
-    caret-color:var(--source-neutral-ink);
-    background-size:100% var(--source-focus-height);
-    background-attachment:local;
-    background-position:0 0;
-    background-repeat:no-repeat;
-  }
-  /* Firefox scrolls the text mask but needs an explicit ink offset. */
-  @supports (-moz-appearance:none) {
-    html[data-inline] textarea.has-source-focus {
-      background-position:0 var(--source-focus-scroll-top, 0px);
-    }
-  }
-  html[data-inline] textarea.has-source-focus::selection {
-    color:#edf8f1;
-    background-color:#355b50;
-  }
+html[data-inline] .source-lesson-ink { color:#8fcbff; }
+html[data-inline] .source-target-ink { color:#ffe09a; }
+html[data-inline] .source-editor textarea.has-source-focus {
+  position:relative; background:transparent; color:transparent;
+  -webkit-text-fill-color:transparent; caret-color:#edf8f1;
+}
+html[data-inline] textarea.has-source-focus::selection {
+  color:#edf8f1; -webkit-text-fill-color:#edf8f1; background-color:#355b50;
 }
 @media(forced-colors:active) {
-  html[data-inline] textarea.has-source-focus {
-    background-image:none;
-    background-clip:border-box;
-    -webkit-background-clip:border-box;
-    background-color:Canvas;
-    color:CanvasText;
-    caret-color:CanvasText;
+  html[data-inline] .source-editor > .source-ink { display:none; }
+  html[data-inline] .source-editor textarea.has-source-focus {
+    background:Canvas; color:CanvasText; -webkit-text-fill-color:CanvasText; caret-color:CanvasText;
   }
   html[data-inline] .source-editor { background:Canvas; }
 }
@@ -110,10 +90,8 @@ if (inlineMode && /^[a-z0-9-]+$/.test(inlineMode)) {
   document.documentElement.dataset.program = 'true';
 }
 </script></head>`)
-    .replace('</body>', `<script>
+    .replace('</body>', `<script type="module" src="../src/v2-editor-focus.mjs"></script><script>
 if (document.documentElement.dataset.inline) {
-  ${mountFirstKernelFocus.toString()}
-  if (inlineMode === 'hello') mountFirstKernelFocus(editor, reset);
   const label = document.querySelector('.editor-label');
   label.querySelector('label').textContent = filename;
   editor.setAttribute('aria-label', 'CUDA source');

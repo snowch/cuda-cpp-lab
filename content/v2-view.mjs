@@ -86,10 +86,10 @@ function cudaStarter(evidence) {
 function renderFirstKernel(workbenchHref, program, href) {
   const kernel = program.match(/^__global__[^]*?^}/m)?.[0];
   const launch = program.match(/^\s*(hello<<<[^\n]+;)$/m)?.[1];
-  const readback = program.match(/    float value =[^]*?std::printf\([^\n]+;/)?.[0]
-    .replace(/^    /gm, '')
-    .replace('check(cudaMemcpy(&value, output, sizeof(value), cudaMemcpyDeviceToHost));',
-      'check(cudaMemcpy(\n    &value, output, sizeof(value),\n    cudaMemcpyDeviceToHost));');
+  const initial = program.match(/float value =[^;]+;/)?.[0];
+  const copy = program.match(/cudaMemcpy\(&value, output, sizeof\(value\), cudaMemcpyDeviceToHost\)/)?.[0];
+  const print = program.match(/std::printf\([^\n]+;/)?.[0];
+  const readback = initial && copy && print && `${initial}\n${copy.replace(', sizeof(value), ', ', sizeof(value),\n           ')};\n${print}`;
   if (!kernel || !launch || !readback) throw new Error('Lesson 1 needs its kernel, launch and result copy in the starter.');
 
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
@@ -103,12 +103,12 @@ function renderFirstKernel(workbenchHref, program, href) {
     <p>The first <code>1</code> asks for one block, a group of GPU threads. The second <code>1</code> asks for one thread in that block.</p>
     <h3>Copy the result back before printing</h3>
     <p>The kernel writes <code>output[0]</code> in GPU memory. The CPU has a separate variable, <code>value</code>, initially set to <code>0.0f</code>. Writing the GPU result does not change that CPU variable. The supplied <code>cudaMemcpy</code> call copies the result into <code>value</code>.</p>
-    ${codePanel({id: 'v2-first-readback', label: 'Read-only CUDA C++ · Result copy and print inside main()', source: readback, explainedLocally: true})}
+    ${codePanel({id: 'v2-first-readback', label: 'Read-only CUDA C++ · Copy and print inside main() (error checks omitted)', source: readback, explainedLocally: true})}
     <div class="code-explanations"><ul>
       <li><code>&amp;value</code> supplies the address of the CPU destination. <code>output</code> supplies the address of the GPU source.</li>
       <li><code>sizeof(value)</code> gives the number of bytes for this one <code>float</code>. <code>cudaMemcpyDeviceToHost</code> selects a copy from GPU memory to CPU memory.</li>
     </ul></div>
-    <p>For this copy, <code>main()</code> waits until the result is available in <code>value</code>, then <code>std::printf</code> prints it in Console. The supplied <code>check(...)</code> helper reports CUDA errors. Leave the allocation, copy and error checks unchanged for this experiment. <a href="${href('from-cpu-array-to-gpu-result')}">Lesson 4: From CPU array to GPU result</a> explains allocation and copies for arrays.</p>
+    <p>For this copy, <code>main()</code> waits until the result is available in <code>value</code>, then <code>std::printf</code> prints it in Console. The complete program tests the status returned by allocation, launch and copy calls and reports any CUDA error. Leave those checks unchanged for this experiment. <a href="${href('from-cpu-array-to-gpu-result')}">Lesson 4: From CPU array to GPU result</a> explains allocation and copies for arrays.</p>
     ${workbenchHref ? cudaStarter('Find 42.0 in Console.') + readerTask('In hello in the CUDA source editor, change output[0] = 42.0f to output[0] = 7.0f. Predict the value in Console and click Compile and run again. Can the launch still use one thread?', 'Change the value') : ''}
     ${workbenchHref ? workbenchEditor('hello', workbenchHref, 'Editable CUDA program with one kernel and its launch') : `<details class="more-settings">
       <summary>Show complete program</summary>

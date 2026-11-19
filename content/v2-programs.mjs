@@ -59,5 +59,12 @@ export async function insertProgramStarters(html) {
       slug, await readFile(new URL('../examples/v2-programs/' + slug + '.cu', import.meta.url), 'utf8'),
     ]));
   starters.push(...practicalLessons.filter(lesson=>lesson.program).map(lesson=>[lesson.slug,practicalSource(lesson.slug)]));
-  return html.replace(marker, () => JSON.stringify(Object.fromEntries(starters)).replaceAll('<', '\\u003c'));
+  // The lesson and executable editor must use the same L1 starter.
+  const prefix='<script>const lab = ';
+  const payload=html.split('\n').find(line=>line.startsWith(prefix));
+  if(!payload)throw new Error('Missing CUDA workbench payload');
+  const lab=JSON.parse(payload.slice(prefix.length).replace(/;$/,''));
+  lab.firstProgram=await readFile(new URL('../examples/first-kernel.cu',import.meta.url),'utf8');
+  return html.replace(payload,()=>prefix+JSON.stringify(lab).replaceAll('<','\\u003c')+';')
+    .replace(marker, () => JSON.stringify(Object.fromEntries(starters)).replaceAll('<', '\\u003c'));
 }

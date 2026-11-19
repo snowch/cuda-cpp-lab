@@ -6,7 +6,15 @@ const META = PREFIX + 'status-v1';
 const STATE = new URL('__app_status_state__', BASE).href;
 const MANIFEST = new URL('__release_manifest__', BASE).href;
 const cacheName = id => PREFIX + 'release-' + id;
-let operation = null, pruning = null;
+let operation = null, pruning = null, operationDownload = null;
+let operationFinished = Promise.resolve(), finishOperation;
+function beginOperation() {
+  operation = new AbortController();
+  operationFinished = new Promise(resolve => { finishOperation = resolve; });
+}
+function endOperation() {
+  operation = null; operationDownload = null; finishOperation?.();
+}
 let restarting = false;
 let navigationGate, releaseNavigation;
 const seen = new Map();
@@ -103,10 +111,11 @@ async function status(running, justVerified, progress) {
   // Old workers saved automatically. Keep their complete cache until the learner
   // explicitly removes it; treat it as consent to preserve offline access on update.
   const legacy = keys.some(k => k.startsWith(PREFIX) && !k.startsWith(PREFIX + 'release-') && k !== META);
-  return { ...state, runningRelease: await manifest(running), saved: Boolean(state.saved || legacy), legacy,
+  const transfer=await downloadInfo();
+  return { ...state, ...transfer, runningRelease: await manifest(running), saved: Boolean(state.saved || legacy), legacy,
     offlineReady: Boolean(state.saved && ((justVerified && release?.id === justVerified.id) || await complete(release, progress))),
     pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending, progress))),
-    busy: Boolean(operation || restarting) };
+    busy: Boolean(operation || restarting || transfer.download?.busy) };
 }
 async function rememberPage(release, paths) {
   validateRelease(release);
@@ -128,7 +137,7 @@ async function rememberPage(release, paths) {
   const latest = await readState();
   if (!latest.active) { latest.active = release.id; await writeState(latest); }
 }
-async function prepare(release, save, port, signal) {
+async function prepare(release, save, port, signal, downloadId) {
   validateRelease(release);
   const cache = await caches.open(cacheName(release.id));
   await cache.put(MANIFEST, new Response(JSON.stringify(release)));
@@ -141,15 +150,20 @@ async function prepare(release, save, port, signal) {
       const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), {
         cache: 'no-store', signal: AbortSignal.any([signal, timeout]), credentials: 'same-origin',
       });
+      if(!response.ok)throw new Error('Download paused because a file is unavailable. Completed files are kept; it will resume when you return.');
       if (!await verified(response.clone(), file)) throw new Error('A downloaded file did not match the release. Retry after deployment finishes.');
       signal.throwIfAborted();
       await cache.put(key, response);
     }
     bytes += file.bytes;
     port.postMessage({ progress: { bytes, total: release.bytes } });
+    if (downloadId) await reportDownload(downloadId, {bytes,total:release.bytes,stage:'verified'});
   }
+  await markPrepared(release, save, signal, () => port.postMessage({progress:{bytes:release.bytes,total:release.bytes}}));
+}
+async function markPrepared(release, save, signal, progress) {
   signal.throwIfAborted();
-  if (!await complete(release, () => port.postMessage({ progress: { bytes, total: release.bytes } }))) throw new Error('The saved files could not be verified. Free storage and retry.');
+  if (!await complete(release, progress)) throw new Error('The saved files could not be verified. Free storage and retry.');
   signal.throwIfAborted();
   const state = await readState();
   if (save && (!state.active || state.active === release.id)) {
@@ -161,6 +175,190 @@ async function prepare(release, save, port, signal) {
   state.partial = null;
   await writeState(state);
 }
+// Download consent is separate from the active-release state. In particular,
+// cancelling a transfer must not replace a completed course or an editor draft.
+const DOWNLOAD_REQUEST = new URL('__download_request_v1__', BASE).href;
+let downloadWrites = Promise.resolve();
+async function readDownload() {
+  const response = await (await caches.open(META)).match(DOWNLOAD_REQUEST);
+  if (!response) return null;
+  try {
+    const job=await response.json();
+    return job&&typeof job.wanted==='boolean'&&['offline','update'].includes(job.mode)&&/^[a-f0-9]{64}$/.test(job.release)&&typeof job.id==='string'&&job.id.startsWith('gpu-lab-')?job:null;
+  } catch {return null;}
+}
+function writeDownload(job) {
+  const work = downloadWrites.then(async () => {
+    await (await caches.open(META)).put(DOWNLOAD_REQUEST, new Response(JSON.stringify(job)));
+    return job;
+  });
+  downloadWrites = work.catch(() => {});
+  return work;
+}
+function changeDownload(id, patch) {
+  const work = downloadWrites.then(async () => {
+    const job = await readDownload();
+    if (!job || job.id !== id) return null;
+    const fields=typeof patch==='function'?patch(job):patch;
+    if(!fields)return job;
+    const next = {...job,...fields};
+    await (await caches.open(META)).put(DOWNLOAD_REQUEST, new Response(JSON.stringify(next)));
+    return next;
+  });
+  downloadWrites = work.catch(() => {});
+  return work;
+}
+async function nativeDownload(job) {
+  if (!job || !self.registration.backgroundFetch) return null;
+  try { return await self.registration.backgroundFetch.get(job.id); }
+  catch { return null; }
+}
+async function downloadInfo() {
+  const job = await readDownload();
+  if (!job) return {downloadVersion:1,download:null};
+  const native = await nativeDownload(job);
+  const busy = job.state !== 'ready' && (operationDownload === job.id || Boolean(job.wanted && native) ||
+    Boolean(job.wanted && job.state === 'planning' && Date.now()-job.started < 30000));
+  const state = native && job.wanted ? (native.result ? 'verifying' : 'background')
+    : job.wanted && !busy && job.state !== 'ready' ? 'paused' : job.state;
+  const bytes = native && !native.result ? Math.min(job.total,job.cachedBytes+native.downloaded) : job.bytes;
+  return {downloadVersion:1,downloadRelease:await manifest(job.release),download:{...job,state,busy,bytes,
+    stage:native&&!native.result?'downloaded':'verified'}};
+}
+async function newDownload(release, data) {
+  const previous = await readDownload();
+  if (data.downloadId) {
+    if (!previous || previous.id !== data.downloadId || !previous.wanted || previous.release !== release.id)
+      throw new Error('This download was cancelled or replaced. Choose the download again to start it.');
+    return previous;
+  }
+  if(previous?.wanted && previous.state==='planning' && Date.now()-previous.started<30000)
+    throw new Error('Another window is preparing this download. Wait for it to finish.');
+  return writeDownload({id:'gpu-lab-'+crypto.randomUUID(),release:release.id,
+    mode:data.mode==='offline'?'offline':'update',save:Boolean(data.save),wanted:true,
+    state:'planning',started:Date.now(),bytes:0,cachedBytes:0,total:release.bytes,error:null});
+}
+async function reportDownload(id, progress) {
+  const job = await changeDownload(id,{bytes:progress.bytes});
+  if (job) await broadcast({type:'DOWNLOAD_PROGRESS',id,progress});
+}
+async function failDownload(id, failure) {
+  const message = failure.name==='QuotaExceededError'?'Browser storage is full. Free space and resume the download.':['TimeoutError','TypeError'].includes(failure.name)?'Download paused. Completed files are kept. Reconnect or return to resume.':failure.message || String(failure);
+  const retry = !['AbortError','QuotaExceededError'].includes(failure.name) && !/match the release|could not be verified/.test(message);
+  await changeDownload(id,job=>job.wanted?{state:'paused',wanted:retry,error:failure.name==='AbortError'?null:message}:null);
+}
+async function planDownload(data, port) {
+  if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
+  beginOperation();
+  let job;
+  try {
+    await pruning; operation.signal.throwIfAborted();
+    validateRelease(data.release);
+    const existing = await readDownload(), native = await nativeDownload(existing);
+    if (existing?.wanted && native) return {backgroundId:existing.id,existing:true};
+    if (existing?.wanted && existing.state==='planning' && Date.now()-existing.started<30000 && !data.downloadId)
+      throw new Error('Another window is preparing this download. Wait for it to finish.');
+    job = await newDownload(data.release,data); operationDownload=job.id;
+    const cache = await caches.open(cacheName(data.release.id));
+    await cache.put(MANIFEST,new Response(JSON.stringify(data.release)));
+    const state=await readState();state.partial=data.release.id;await writeState(state);
+    const requests=[];let bytes=0,total=0;
+    for (const file of data.release.files) {
+      operation.signal.throwIfAborted();
+      if (await verified(await cache.match(new URL(file.path,BASE)),file)) bytes+=file.bytes;
+      else {requests.push(new URL(`releases/${data.release.id}/${file.path}`,BASE).href);total+=file.bytes;}
+      port.postMessage({progress:{bytes,total:data.release.bytes,stage:'checking'}});
+    }
+    operation.signal.throwIfAborted();
+    if (!requests.length) {
+      await markPrepared(data.release,Boolean(data.save),operation.signal,value=>port.postMessage({progress:value}));
+      await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
+      return {ready:true,status:await status(data.running,data.release)};
+    }
+    await changeDownload(job.id,{state:'planning',started:Date.now(),cachedBytes:bytes,bytes,error:null});
+    return {backgroundId:job.id,requests,downloadTotal:total,cachedBytes:bytes,total:data.release.bytes};
+  } catch (failure) {if(job)await failDownload(job.id,failure);throw failure;}
+  finally {endOperation();await broadcast({type:'STATUS_CHANGED'});}
+}
+async function cancelDownload(id) {
+  const job=await readDownload();
+  if (id && job?.id!==id) return;
+  try {if(job&&job.state!=='ready')await stopDownloadRequest(job.id);}
+  finally {
+    operation?.abort();
+    const native=await nativeDownload(job);
+    if(native)await native.abort();
+  }
+  await broadcast({type:'STATUS_CHANGED'});
+}
+async function stopDownloadRequest(id) {
+  try {await changeDownload(id,{wanted:false,state:'paused',error:null});}
+  catch(failure) {
+    // Storage pressure must not preserve consent for an automatic retry.
+    // Remove only the request; the verified course and learner work are kept.
+    const job=await readDownload();
+    if(job?.id===id)await (await caches.open(META)).delete(DOWNLOAD_REQUEST);
+    else throw failure;
+  }
+}
+async function receiveBackground(event, outcome) {
+  let job=await readDownload();
+  if (!job || job.id!==event.registration.id) return;
+  if (outcome==='abort') await stopDownloadRequest(job.id);
+  // A short page-cache operation may already own CacheStorage. Let it finish
+  // before importing the browser's responses, including when no page is open.
+  while (operation) await operationFinished;
+  beginOperation();operationDownload=job.id;
+  try {
+    await pruning;
+    job=await readDownload();
+    if (!job || job.id!==event.registration.id) return;
+    const release=await manifest(job.release);
+    if(!release)throw new Error('The download metadata is missing. Choose the download again.');
+    await changeDownload(job.id,{state:'verifying'});
+    const expected=new Map(release.files.map(file=>[new URL(`releases/${release.id}/${file.path}`,BASE).href,file]));
+    const cache=await caches.open(cacheName(release.id));let bytes=job.cachedBytes,validationFailure;
+    if(event.registration.recordsAvailable)for(const record of await event.registration.matchAll()) {
+      operation.signal.throwIfAborted();
+      const file=expected.get(record.request.url);
+      if(!file){validationFailure=new Error('A downloaded file did not match the release. Retry after deployment finishes.');continue;}
+      let response;
+      try {response=await record.responseReady;} catch {if(outcome==='success')validationFailure=new Error('A download response is missing. Retry the download.');continue;}
+      if(!await verified(response.clone(),file)) {
+        if(outcome!=='success')continue;
+        validationFailure=new Error('A downloaded file did not match the release. Retry after deployment finishes.');continue;
+      }
+      await cache.put(new URL(file.path,BASE),response);bytes+=file.bytes;
+      await reportDownload(job.id,{bytes,total:release.bytes,stage:'verified'});
+    }
+    if(validationFailure)throw validationFailure;
+    const current=await readDownload();
+    if(outcome==='success'&&current?.id===job.id&&current.wanted) {
+      await markPrepared(release,job.save,operation.signal);
+      await changeDownload(job.id,{state:'ready',wanted:false,bytes:release.bytes,error:null});
+      await event.updateUI?.({title:job.mode==='update'?'GPU Lab update ready':'GPU Lab available offline'});
+    } else {
+      const failed=outcome==='fail',reason=event.registration.failureReason;
+      const retry=failed&&!['aborted','quota-exceeded','download-total-exceeded'].includes(reason);
+      const error=!failed?null:reason==='quota-exceeded'?'Browser storage is full. Free space and resume the download.':reason==='download-total-exceeded'?'The download size changed. Retry after deployment finishes.':'Download interrupted. Completed files are kept; it will resume when you return.';
+      await changeDownload(job.id,current=>({state:'paused',wanted:Boolean(current.wanted&&retry),error:current.wanted?error:null}));
+    }
+  } catch (failure) {
+    await failDownload(job.id,failure);
+    try{await event.updateUI?.({title:'GPU Lab download needs attention'});}catch{/* The in-app status retains the failure. */}
+  }
+  finally {endOperation();await broadcast({type:'STATUS_CHANGED'});}
+}
+for(const [type,outcome] of [['backgroundfetchsuccess','success'],['backgroundfetchfail','fail'],['backgroundfetchabort','abort']]) {
+  self.addEventListener(type,event=>event.waitUntil(receiveBackground(event,outcome)));
+}
+self.addEventListener('backgroundfetchclick',event=>event.waitUntil((async()=>{
+  const windows=(await self.clients.matchAll({type:'window',includeUncontrolled:true})).filter(client=>client.url.startsWith(BASE.href));
+  const window=windows.find(client=>client.frameType!=='nested')??windows[0];
+  if(window){await window.focus();window.postMessage({type:'OPEN_APP_STATUS'});}
+  else await self.clients.openWindow(new URL('?download=1',BASE).href);
+})()));
+
 async function courseWindows(release) {
   const paths = new Set(release.files.filter(f => f.path.endsWith('.html')).map(f => new URL(f.path, BASE).pathname));
   return (await self.clients.matchAll({ type: 'window', includeUncontrolled: true })).filter(client => {
@@ -217,37 +415,49 @@ self.addEventListener('message', event => {
       }
       else if (data.type === 'REMEMBER_PAGE') {
         if (operation || restarting) throw new Error('A download or restart is already in progress.');
-        operation = new AbortController();
-        try { await pruning; await rememberPage(data.release, data.paths); result = {}; } finally { operation = null; }
+        beginOperation();
+        try { await pruning; await rememberPage(data.release, data.paths); result = {}; } finally { endOperation(); }
+      } else if (data.type === 'DOWNLOAD_PLAN') {
+        result=await planDownload(data,port);
+      } else if (data.type === 'BACKGROUND_STARTED') {
+        const job=await readDownload();
+        if(!job || job.id!==data.id || !job.wanted) throw new Error('This download was cancelled or replaced.');
+        await changeDownload(job.id,{state:'background',error:null});result={};
       } else if (data.type === 'CANCEL') {
-        operation?.abort(); result = {};
+        await cancelDownload(data.id); result = {};
       } else if (data.type === 'PREPARE') {
         if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
-        operation = new AbortController();
+        beginOperation();
+        let job;
         try {
           await pruning; operation.signal.throwIfAborted();
           validateRelease(data.release);
+          const existing=await readDownload();
+          if(existing?.wanted && await nativeDownload(existing))throw new Error('The browser is already downloading this course.');
+          if(data.requestDownload || data.downloadId){job=await newDownload(data.release,data);operationDownload=job.id;await changeDownload(job.id,{state:'foreground',error:null});}
           const state = await readState(); state.partial = data.release.id; await writeState(state);
-          await prepare(data.release, Boolean(data.save), port, operation.signal);
+          await prepare(data.release, Boolean(data.save), port, operation.signal, job?.id);
+          if(job)await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
           // prepare() has just verified every byte. Reuse that result for this
           // response instead of scanning the new release again. Later STATUS
           // requests still verify storage afresh to detect eviction.
           result = await status(data.running, data.release, () => progress({ bytes: data.release.bytes, total: data.release.bytes }));
-        } finally { operation = null; await broadcast({ type: 'STATUS_CHANGED' }); }
+        } catch(failure) {if(job)await failDownload(job.id,failure);throw failure;}
+        finally { endOperation(); await broadcast({ type: 'STATUS_CHANGED' }); }
       } else if (data.type === 'RESTART') {
-        if (operation || restarting) throw new Error('Wait for the current operation to finish.');
+        if (operation || restarting || (await downloadInfo()).download?.busy) throw new Error('Wait for the current operation to finish.');
         restarting = true;
         navigationGate = new Promise(resolve => { releaseNavigation = resolve; });
         try { await pruning; await restart(progress); result = {}; } finally { restarting = false; releaseNavigation(); }
       } else if (data.type === 'REMOVE') {
-        if (operation || restarting) throw new Error('Cancel the download or wait for the restart before removing files.');
-        operation = new AbortController();
+        if (operation || restarting || (await downloadInfo()).download?.busy) throw new Error('Cancel the download or wait for the restart before removing files.');
+        beginOperation();
         try {
           await pruning;
           for (const name of await caches.keys()) if (name.startsWith(PREFIX)) await caches.delete(name);
           await self.registration.unregister();
           await broadcast({ type: 'OFFLINE_REMOVED' }); result = {};
-        } finally { operation = null; }
+        } finally { endOperation(); }
       } else throw new Error('Unsupported App status request');
       port.postMessage({ result });
     } catch (error) { port.postMessage({ error: error.name === 'AbortError' ? 'Download cancelled. Verified files can be resumed.' : error.message }); }
