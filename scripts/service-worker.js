@@ -438,16 +438,25 @@ self.addEventListener('message', event => {
         try {
           await pruning; operation.signal.throwIfAborted();
           validateRelease(data.release);
-          const existing=await readDownload();
-          if(existing?.wanted && await nativeDownload(existing))throw new Error('The browser is already downloading this course.');
-          if(data.requestDownload || data.downloadId){job=await newDownload(data.release,data);operationDownload=job.id;await changeDownload(job.id,{state:'foreground',error:null});}
-          const state = await readState(); state.partial = data.release.id; await writeState(state);
-          await prepare(data.release, Boolean(data.save), port, operation.signal, job?.id, data.running);
-          if(job)await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
-          // prepare() has just verified every byte. Reuse that result for this
-          // response instead of scanning the new release again. Later STATUS
-          // requests still verify storage afresh to detect eviction.
-          result = await status(data.running, data.release, () => progress({ bytes: data.release.bytes, total: data.release.bytes }));
+          const existing=await readDownload(),state=await readState();
+          const retaining=!data.requestDownload&&!data.downloadId&&data.save&&data.release.id===data.running;
+          // Older pages recognise complete running copies through PREPARE. That
+          // best-effort promotion must not replace another update's selection,
+          // even if the page checked status before a competing request began.
+          if(retaining&&(state.pending||(state.partial&&state.partial!==data.release.id)||
+              (existing?.wanted&&existing.release!==data.release.id))){
+            result=await status(data.running,null,progress);
+          }else{
+            if(existing?.wanted && await nativeDownload(existing))throw new Error('The browser is already downloading this course.');
+            if(data.requestDownload || data.downloadId){job=await newDownload(data.release,data);operationDownload=job.id;await changeDownload(job.id,{state:'foreground',error:null});}
+            state.partial = data.release.id; await writeState(state);
+            await prepare(data.release, Boolean(data.save), port, operation.signal, job?.id, data.running);
+            if(job)await changeDownload(job.id,{state:'ready',wanted:false,bytes:data.release.bytes,error:null});
+            // prepare() has just verified every byte. Reuse that result for this
+            // response instead of scanning the new release again. Later STATUS
+            // requests still verify storage afresh to detect eviction.
+            result = await status(data.running, data.release, () => progress({ bytes: data.release.bytes, total: data.release.bytes }));
+          }
         } catch(failure) {if(job)await failDownload(job.id,failure);throw failure;}
         finally { endOperation(); await broadcast({ type: 'STATUS_CHANGED' }); }
       } else if (data.type === 'RESTART') {

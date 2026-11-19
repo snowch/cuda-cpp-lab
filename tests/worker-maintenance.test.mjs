@@ -144,3 +144,43 @@ test('readiness verification bounds parallel I/O and still rejects missing bytes
   missing=null;denied='file-1.bin';await assert.rejects(check(),/Temporary read failure/);assert.equal(active,0,'Failed batches must settle before the next scan');
   denied=null;assert.equal(await check(),true,'Repair/retry must perform a new complete scan');
 });
+
+test('late recognition of a saved running copy cannot discard another resumable update',async()=>{
+  const base='https://example.test/gpu-lab/',prefix=`gpu-lab:${base}:`,stores=new Map(),handlers=new Map();
+  const file=(path,body)=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
+  const old={schema:1,id:'5'.repeat(64),commit:null,date:null,files:[file('index.html','old page')],bytes:8};
+  const next={schema:1,id:'6'.repeat(64),commit:null,date:null,files:[file('index.html','new page'),file('payload.bin','new data')],bytes:16};
+  const caches={async open(name){
+    if(!stores.has(name))stores.set(name,new Map());const entries=stores.get(name);
+    return {async match(url){return entries.get(String(url))?.clone();},async put(url,response){entries.set(String(url),response.clone());},async keys(){return [...entries.keys()].map(url=>new Request(url));}};
+  },async keys(){return [...stores.keys()];},async delete(name){return stores.delete(name);}};
+  const meta=await caches.open(prefix+'status-v1');
+  await meta.put(base+'__app_status_state__',new Response(JSON.stringify({active:old.id,saved:true,partial:next.id})));
+  await meta.put(base+'__download_request_v1__',new Response(JSON.stringify({id:'gpu-lab-paused',release:next.id,running:old.id,mode:'update',save:true,wanted:true,state:'paused',bytes:8,total:16})));
+  for(const release of [old,next]){
+    const cache=await caches.open(prefix+'release-'+release.id);
+    await cache.put(base+'__release_manifest__',new Response(JSON.stringify(release)));
+    await cache.put(base+'index.html',new Response(release===old?'old page':'new page'));
+  }
+  const client={id:'reopened-lesson',url:base+'index.html',postMessage(){}};
+  const context=vm.createContext({URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,caches,
+    self:{registration:{scope:base},clients:{async matchAll(){return [client];}},addEventListener(type,fn){handlers.set(type,fn);}},
+    async fetch(){throw new Error('Recognising a saved copy must not download files.');},
+  });
+  const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
+  vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);
+  async function rpc(type,data={}){
+    let work;const messages=[];
+    handlers.get('message')({source:client,ports:[{postMessage(message){messages.push(message);}}],data:{type,running:old.id,...data},waitUntil(promise){work=promise;}});
+    await work;assert.ok(!messages.some(m=>m.error),JSON.stringify(messages));return messages.at(-1).result;
+  }
+  await rpc('STATUS');
+  // A reopened older page can issue this best-effort promotion from a stale
+  // UI snapshot even though the installed worker has a different paused update.
+  await rpc('PREPARE',{release:old,save:true});
+  const state=await rpc('STATUS');
+  assert.equal(state.partial,next.id,'Promoting the running copy must not clear another update selection');
+  assert.equal(state.download.id,'gpu-lab-paused');assert.equal(state.download.wanted,true);
+  assert.ok(stores.has(prefix+'release-'+next.id),'Cleanup must retain the resumable update');
+  assert.equal(await (await caches.open(prefix+'release-'+next.id)).match(base+'index.html').then(r=>r?.text()),'new page');
+});

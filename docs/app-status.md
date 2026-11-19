@@ -174,3 +174,12 @@ opens the downloaded copy. Keep the scoped caches and learner storage intact.
 `ace5867` client and compiled `7ee4913` worker, checks that one-time recovery, and
 checks the new client against that installed worker in six layouts/themes and
 both native and foreground paths, including offline and two-tab guarded restarts.
+
+Automatic recognition of a complete running cache reads worker status afresh.
+The worker protects a different pending/resumable update from unlabelled
+running-copy PREPARE requests, including older clients using a stale startup
+snapshot. The deterministic worker test covers preservation of the paused
+selection, request and verified files through subsequent cleanup. Recovery of
+Restart requires a completed update associated with this build/current action
+or the published manifest; it never treats an ordinary offline save or unrelated
+older update as permission to restart the current page into that cache.

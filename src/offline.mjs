@@ -117,9 +117,11 @@ async function refresh() {
 function completedUpdateNeedsRestart(state) {
   // Older installed workers can select a completed update before this pinned
   // page restarts. A finished, consented request identifies that exact release.
+  const job=state.download;
   return window===window.top&&!removed&&!restarting&&state.offlineReady&&
-    state.active!==running&&!state.pending&&state.download?.state==='ready'&&
-    !state.download.wanted&&state.downloadRelease?.id===state.active;
+    state.active!==running&&!state.pending&&job?.state==='ready'&&job.mode==='update'&&
+    !job.wanted&&state.downloadRelease?.id===state.active&&
+    (job.running===running||(localDownloadId&&job.id===localDownloadId)||latest?.id===state.active);
 }
 async function recoverCompletedUpdate(state) {
   if(preparingRestart)return preparingRestart;
@@ -173,7 +175,7 @@ async function check(force = false) {
         }
       }
     }
-    finally { clearTimeout(timer); checking = null; render(); }
+    finally { clearTimeout(timer); checking = null; render(); if(completedUpdateNeedsRestart(snapshot))refresh(); }
   })();
   render(); return checking;
 }
@@ -225,8 +227,15 @@ async function remember() {
         const cache = await caches.open(name);
         const present = new Set((await cache.keys()).map(request => request.url));
         if (runningRelease.files.every(file => present.has(new URL(file.path, base).href))) {
-          const result = await rpc('PREPARE', { release: runningRelease, save: true });
-          ++refreshGeneration; snapshot = result; render();
+          // Overlapping startup refreshes can leave the UI snapshot empty. Ask
+          // the installed worker before promoting an old complete cache; never
+          // overwrite an update that is already saved, pending or resumable.
+          const current=await rpc('STATUS');
+          if(!current.saved&&!current.offlineReady&&!current.busy&&!current.partial&&!current.pending&&
+              !current.download?.wanted&&(!current.active||current.active===running)){
+            const result = await rpc('PREPARE', { release: runningRelease, save: true });
+            ++refreshGeneration; snapshot = result; render();
+          }
         }
       }
     }
@@ -352,7 +361,7 @@ async function performDownload(save, resume) {
     if(downloadCancelled){if(snapshot.downloadVersion!==1)await legacyStop(downloadId);handled=true;return;}
     if(snapshot.downloadVersion===1&&registration.backgroundFetch){
       const plan=await rpc('DOWNLOAD_PLAN',request,showProgress);
-      if(plan.ready){++refreshGeneration;snapshot=plan.status;unavailable=false;handled=true;return;}
+      if(plan.ready){localDownloadId=plan.status.download?.id;++refreshGeneration;snapshot=plan.status;unavailable=false;handled=true;return;}
       downloadId=plan.backgroundId;localDownloadId=downloadId;
       if(downloadCancelled){await rpc('CANCEL',{id:downloadId});handled=true;return;}
       let native;
@@ -380,6 +389,7 @@ async function performDownload(save, resume) {
     const result=await rpc('PREPARE',{...request,downloadId},showProgress);
     if(!result.downloadVersion){await legacyChange(downloadId,{wanted:false,state:'ready',bytes:release.bytes,error:null});snapshot={...result,...await legacyInfo(result)};}
     else snapshot=result;
+    localDownloadId||=snapshot.download?.id;
     ++refreshGeneration;unavailable=false;runningRelease||=snapshot.runningRelease;
     handled=true;error();
   } catch(failure) {

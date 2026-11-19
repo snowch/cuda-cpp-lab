@@ -242,7 +242,10 @@ worker and the actual `ace5867` client, alongside the existing pre-background
 worker/client fixtures. Both native and foreground downloads reproduce the loop.
 
 The page now recognises a completed, consented download whose verified active
-release differs from its running build and has no pending restart. It asks the
+release differs from its running build and has no pending restart. It requires an
+update request originating from this build/operation or matching the verified
+published release; an ordinary offline save or unrelated older update cannot
+restart the currently published page into an older cache. It asks the
 installed worker to prepare that exact cached manifest with `save: false`, which
 both protocols interpret as an explicit pending update. Existing offline consent
 is retained. No newer release is downloaded, no cache metadata is edited by the
@@ -268,3 +271,24 @@ Focused lifecycle checks pass both download paths, the exact original loop,
 close/reopen recovery, no repeated payload transfer, offline keyboard Restart,
 and two-tab guard/snapshot restoration. These establish functional behaviour in
 Chromium, not physical Android execution or learning effectiveness.
+
+The pinned Chromium run also exposed a separate reopen race. Two startup status
+requests can complete out of order, leaving the UI snapshot empty while connection
+continues. Automatic recognition of the complete running copy then issued PREPARE
+from that stale snapshot. Worker tracing showed this replaced the paused update's
+`partial` selection with the running release and cleared it; pruning subsequently
+deleted the verified candidate cache. This explained an intermittent failed reuse
+assertion and real repeat transfers. The assertion now names the exact candidate
+stylesheet and verifies its cached SHA before termination, rather than grouping
+all stylesheet requests together.
+
+The page now checks authoritative worker status before automatic promotion. The
+worker also atomically refuses that best-effort running-copy promotion when a
+separate update is pending or resumable, including requests from older clients.
+A deterministic worker regression fails on the old implementation (partial becomes
+null and cleanup deletes the candidate) and passes with the guard. Explicit update
+and offline-download requests retain their normal paths. Completed-update recovery
+also requires an update request originating from the running build/current action
+or matching the published manifest; ordinary offline saves and unrelated older
+updates cannot offer a downgrade. Focused real-worker regressions cover these
+negative cases alongside cancellation and multi-window restart.

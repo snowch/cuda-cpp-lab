@@ -337,7 +337,7 @@ def completed_native_update_recovery(browser,url,old_root):
                 page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).delete(new URL('__app_status_state__',location.href))}")
                 Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
                 candidate=json.loads((Handler.roots['two']/'release.json').read_text())
-                until(lambda:rpc(page,'STATUS').get('download',{}).get('state')=='ready',30)
+                until(lambda:(rpc(page,'STATUS').get('download') or {}).get('state')=='ready',30)
                 if old_client:
                     # Exact ace5867 client + old native worker: finishing the
                     # transfer, and pressing Update again, never offers Restart.
@@ -415,6 +415,26 @@ def cancel_completed_update_recovery(browser,url):
         print('PASS Cancel stops completed-update recovery, keeps Update usable, and an explicit retry recovers Restart without another payload',flush=True)
     finally:Handler.previous_native_worker=False
 
+def no_completed_cache_downgrade(browser,url):
+    for mode in ['offline','update']:
+        Handler.revision='one';Handler.pause=None;Handler.requests=[]
+        with browser.new_context(viewport={'width':390,'height':844}) as c:
+            page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active') is not None and not s['busy'])
+            running=page.locator('meta[name="gpu-release"]').get_attribute('content')
+            candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+            # A verified older save/update can remain selected when a hard
+            # refresh opens the currently published page. It is no new consent
+            # to restart that page into the different cached release.
+            rpc(page,'PREPARE',release=candidate,save=True,requestDownload=True,mode=mode,running=running if mode=='offline' else '0'*64)
+            page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
+            before=payload_requests();page.locator('#check-update').click()
+            expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
+            expect(page.locator('#restart-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
+            assert rpc(page,'STATUS').get('pending') is None
+            assert payload_requests()==before
+            assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
+    print('PASS a completed offline copy or unrelated older update never restarts the currently published page into that cached release',flush=True)
+
 def dialog_states(browser,url):
     for width in [390,820,1440]:
         for theme in ['light','dark']:
@@ -481,6 +501,7 @@ def main():
                     previous_client_upgrade(browser,url,old_root);missing_state_native(browser,url)
                     completed_native_update_recovery(browser,url,native_old_root)
                     cancel_completed_update_recovery(browser,url)
+                    no_completed_cache_downgrade(browser,url)
                     dialog_states(browser,url)
                     full_course_native(browser,Handler.roots['two'])
                 finally:browser.close()
