@@ -92,28 +92,20 @@ def capture(recordings):
                 folder = Path(r['work'])
                 slides = folder/'slides'
                 slides.mkdir(exist_ok=True)
-                if r['slug'] == 'inside-sm':
-                    command(['pdftoppm', '-png', '-scale-to-x', '3840', '-scale-to-y', '2160',
-                             str(ROOT/'assets/media/inside-sm/slides.pdf'), str(slides/'pdf')])
-                    pages = sorted(slides.glob('pdf-*.png'))
-                    assert len(pages) == len(r['scenes'])
-                    for scene, page in zip(r['scenes'], pages):
-                        shutil.copyfile(page, slides/(scene['id']+'.png'))
-                else:
-                    v2 = r['kind'] == 'v2'
-                    page = browser.new_page(viewport={'width': 1600 if v2 else 1280, 'height': 900 if v2 else 720},
-                                            device_scale_factor=2.4 if v2 else 3)
-                    for i, scene in enumerate(r['scenes']):
-                        path = folder/(f'{i}.html' if v2 else 'deck.html')
-                        page.goto(f'http://127.0.0.1:{server.server_port}/'+str(path.relative_to(ROOT)))
-                        page.evaluate('document.fonts.ready')
-                        element = page.locator('.slide' if v2 else '#'+scene['id'])
-                        assert element.evaluate('el=>el.scrollHeight<=el.clientHeight && el.scrollWidth<=el.clientWidth'), (r['key'], scene['id'])
-                        element.screenshot(path=str(slides/(scene['id']+'.png')), animations='disabled')
-                    if not v2:
-                        page.pdf(path=str(ROOT/f'assets/media/{r["slug"]}/slides.pdf'),
-                                 print_background=True, prefer_css_page_size=True)
-                    page.close()
+                v2 = r['kind'] == 'v2'
+                page = browser.new_page(viewport={'width': 1600 if v2 else 1280, 'height': 900 if v2 else 720},
+                                        device_scale_factor=2.4 if v2 else 3)
+                for i, scene in enumerate(r['scenes']):
+                    path = folder/(f'{i}.html' if v2 else 'deck.html')
+                    page.goto(f'http://127.0.0.1:{server.server_port}/'+str(path.relative_to(ROOT)))
+                    page.evaluate('document.fonts.ready')
+                    element = page.locator('.slide' if v2 else '#'+scene['id'])
+                    assert element.evaluate('el=>el.scrollHeight<=el.clientHeight && el.scrollWidth<=el.clientWidth'), (r['key'], scene['id'])
+                    element.screenshot(path=str(slides/(scene['id']+'.png')), animations='disabled')
+                if not v2:
+                    page.pdf(path=str(ROOT/f'assets/media/{r["slug"]}/slides.pdf'),
+                             print_background=True, prefer_css_page_size=True)
+                page.close()
                 for scene in r['scenes']:
                     data = (slides/(scene['id']+'.png')).read_bytes()
                     assert struct.unpack('>II', data[16:24]) == (3840, 2160), (r['key'], scene['id'])

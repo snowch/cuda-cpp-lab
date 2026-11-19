@@ -24,31 +24,6 @@ test('intro diagram and outputs derive from thread indices and selected multipli
  assert.match(kernelSource(3),/input\[i\] \* 3.0f/);
 });
 
-import {renderIntroSections,renderSmExplanation} from '../src/hello-view.mjs';
-test('compact introduction keeps source, static diagrams and unique control IDs',()=>{
- const html=renderIntroSections();
- assert.equal(pythonSource(),'import torch\nx = torch.tensor(\n    [1.0, 2.0, 3.0, 4.0, 5.0],\n    device="cuda",\n)\ny = x * 2');
- assert.equal((html.match(/import torch\nx = /g)||[]).length,1);
- assert.ok(html.indexOf('import torch')<html.indexOf('id="hello-map-0"'));
- const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
- assert.equal(new Set(ids).size,ids.length);
- assert.match(html,/One input and one output per thread/);
- assert.match(html,/Array index rule/);
- assert.equal((html.match(/id="hello-run-/g)||[]).length,1);
- assert.equal((html.match(/__global__ void runKernel/g)||[]).length,1);
- assert.doesNotMatch(html,/hello-next|hello-back|id="hello-map-4"|id="hello-map-1"/);
-});
-
-test('chapter 1 keeps the SM distinction and links the optional hardware appendix',()=>{
- const html=renderSmExplanation();
- assert.doesNotMatch(html,/hello-thread|hello-sm-details|type="radio"/);
- assert.match(html,/does not own a separate arithmetic unit/);
- assert.match(html,/data-reading-link href="inside-sm.html\?from=hello"/);
- const chapter=renderIntroSections();
- assert.ok(chapter.indexOf('id="hello-map-2"')<chapter.indexOf('id="hello-sm-title"'));
- assert.ok(chapter.indexOf('id="hello-sm-title"')<chapter.indexOf('id="idea-4"'));
-});
-
 test('new-case launch plans cover each input and identify only surplus threads',()=>{
   for(let count=1;count<=32;count++){
     const p=launchPlan(count);
@@ -59,28 +34,6 @@ test('new-case launch plans cover each input and identify only surplus threads',
   }
   for(const count of [0,33,1.5,NaN])assert.throws(()=>launchPlan(count));
 });
-test('CUDA bridges stay with their diagrams and provide a local complete function',()=>{
-  const html=renderIntroSections();
-  const blocks=html.split('id="idea-3"')[1].split('id="idea-4"')[0];
-  const bounds=html.split('id="idea-4"')[1].split('id="idea-5"')[0];
-  assert.ok(html.indexOf('data-language="cuda"')>html.indexOf('id="idea-3"'));
-  assert.ok(blocks.indexOf('id="hello-map-2"')<blocks.indexOf('id="hello-bridge-launch-2"'));
-  assert.match(blocks,/Complete CUDA kernel for this example/);
-  assert.match(blocks,/__global__ void runKernel/);
-  assert.match(bounds,/body excerpt from runKernel/);
-  assert.match(bounds,/if \(i &lt; n\)/);
-  assert.doesNotMatch(html,/role="tablist"|The final CUDA section shows/);
-  // Review the launch in isolation, with optional details closed and without
-  // borrowing the following guard section to supply its setup.
-  const launch=html.split('id="idea-5"')[1].split('id="idea-4"')[0];
-  const visible=launch.replace(/<details\b[\s\S]*?<\/details>/g,'');
-  const introduction=visible.indexOf('n = 5');
-  assert.ok(introduction>=0&&introduction<visible.indexOf('id="hello-bridge-launch-2"'));
-  assert.match(visible,/d_input, d_output, n/);
-  assert.match(visible,/__global__ void runKernel/);
-  assert.match(visible,/A launch queues GPU work/);
-  assert.doesNotMatch(bounds,/In the launch above/);
-});
 
 test('bounds excerpts match the guarded function and expose only the diagnostic body without a check',()=>{
   for(const factor of [-0.5,2,3.25]) {
@@ -90,24 +43,6 @@ test('bounds excerpts match the guarded function and expose only the diagnostic 
     assert.doesNotMatch(boundsSource(factor,false),/if/);
     assert.ok(guarded.includes(boundsSource(factor,false)));
   }
-});
-
-
-test('initial compact table withholds output before scripts run',()=>{
- const html=renderIntroSections();
- assert.equal((html.match(/class="hello-result">\?/g)||[]).length,5);
- assert.match(html,/Run to inspect the calculation/);
- assert.doesNotMatch(html,/Example output:/);
- const first=html.split('id="hello-map-0"')[1].split('</table>')[0];
- assert.doesNotMatch(first,/class="hello-result">[0-9]/);
-});
-
-test('the single guided demo can change multiplier without pretending to assess arithmetic',()=>{
- const html=renderIntroSections();
- assert.match(html,/id="hello-factor-0"[^>]*value="2"/);
- assert.match(html,/Change the multiplier to inspect another calculation/);
- assert.notDeepEqual(simulateIntro(0,3).output,simulateIntro(0,2).output);
- assert.ok(introPrompt(0).startsWith('Run'));
 });
 
 test('regrouping preserves outputs and array indices while changing block membership',()=>{

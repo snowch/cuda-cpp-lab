@@ -1,10 +1,10 @@
-import {readingReturn} from '../src/reading-return.mjs';
+
 // Copyright © 2026 Christopher Snow.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {histogram,categories,scan,compaction,philosophers,barrier,pipeline,routing} from '../src/parallel-models.mjs';
 import {parallelChapters} from '../src/parallel-chapters.mjs';
-import {renderParallel} from '../content/parallel.mjs';
+
 test('histogram conserves inputs, private merge equals independent category counts',()=>{
  for(const distribution of Object.keys(categories))for(const strategy of ['global','private']){
   const r=histogram({distribution,strategy});
@@ -15,9 +15,6 @@ test('histogram conserves inputs, private merge equals independent category coun
   assert.equal(r.globalUpdates,strategy==='global'?8:distribution==='hot'?2:6);
  }
  assert.throws(()=>histogram({distribution:'unknown'}),RangeError);
-});
-test('new chapters keep model results hidden until Run and offer static comparisons',()=>{
- for(const c of parallelChapters){const html=renderParallel(c);assert.match(html,/data-result hidden/);assert.match(html,/data-run disabled/);assert.match(html,/<noscript>/);assert.match(html,/Compare your answer/);assert.match(html,/import torch/);}
 });
 
 test('scan matches independent prefixes for every supported size and convention',()=>{
@@ -41,16 +38,6 @@ test('compaction preserves stable identities with unique destinations for all/no
   assert.deepEqual([...r.writes].sort((a,b)=>a-b),Array.from({length:r.count},(_,i)=>i));
  }
  assert.throws(()=>compaction({order:'unknown'}),RangeError);
-});
-
-test('optional appendix returns accept Part II chapters without accepting arbitrary routes',()=>{
- for(const c of parallelChapters){
-  const page=`https://example.org/gpu-lab/lessons/inside-sm.html?from=${c.slug}`;
-  const path=`/gpu-lab/lessons/${c.slug}.html?inspect=1#main`;
-  assert.deepEqual(readingReturn(page+'&return='+encodeURIComponent(path)),{href:'https://example.org'+path,chapter:c.number,label:`Return to Chapter ${c.number}`});
-  assert.equal(readingReturn(page+'&return=https://evil.example/').href,readingReturn(page).href);
- }
- assert.equal(readingReturn('https://example.org/gpu-lab/lessons/inside-sm.html?from=unknown'),null);
 });
 
 test('resource order finishes while own-fork-first exposes an actual ownership cycle',()=>{

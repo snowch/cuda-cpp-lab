@@ -300,11 +300,11 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
 }
 
 export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css'];
-export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '' } = {}) {
+export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '', appendix } = {}) {
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
   const legacy = slug => `${base}lessons/${slug}.html`;
-  const title = lesson ? lesson.title + ' · GPU Lab' : 'GPU Lab';
+  const title = (lesson?.title||appendix?.title) ? (lesson?.title||appendix.title) + ' · GPU Lab' : 'GPU Lab';
   const styles = v2Styles.map(name => `<link rel="stylesheet" href="${base}src/${name}">`).join('');
   return `<!doctype html>
 <!-- Copyright © 2026 Christopher Snow. -->
@@ -314,12 +314,12 @@ export function renderV2Page(lesson, versionMarkup = '', { home = false, firstPr
 <link rel="icon" type="image/svg+xml" href="${base}assets/icon.svg">
 <script type="module" src="${base}src/theme.mjs"></script>
 ${lesson ? `<script type="module" src="${base}src/v2.mjs"></script><script type="module" src="${base}src/recording.mjs"></script>` : ''}
-${home ? '<script type="module" src="./src/v2-legacy-links.mjs"></script>' : ''}</head>
+</head>
 <body class="book-chapter v2-book">
 <a class="skip" href="#main">Skip to content</a>
 <header class="topbar v2-topbar">${renderV2Brand(base, base + 'assets/icon.svg')}
 <div class="top-actions">
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${appendix ? `<header class="intro"><nav aria-label="Breadcrumb"><a href="../index.html">Course overview</a> / <span aria-current="page">${escape(appendix.title)}</span></nav><h1>${escape(appendix.title)}</h1><p class="lead">${escape(appendix.lead)}</p></header>${appendix.body}<nav class="v2-pager" aria-label="Appendix navigation"><a href="../index.html">Course overview</a><a href="${appendix.otherHref}">${escape(appendix.otherTitle)}</a></nav>` : lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
 </body></html>`;
 }

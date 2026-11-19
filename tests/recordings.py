@@ -46,7 +46,7 @@ try:
         if os.environ.get('CHROMIUM_PATH'):
             options['executable_path'] = os.environ['CHROMIUM_PATH']
         browser = p.chromium.launch(**options)
-        representative={'first-kernel','inside-sm','reduction','matmul','v2-reduction',
+        representative={'first-kernel','v2-reduction',
                         'v2-matmul','v2-tensor-cores','v2-token-routing'}
         for width, theme in [(390, 'light'), (390, 'dark'), (820, 'light'),
                              (820, 'dark'), (1440, 'light'), (1440, 'dark')]:
@@ -59,7 +59,8 @@ try:
                 key = item['key']
                 current = key.startswith('v2-') or key == 'first-kernel'
                 slug = key[3:] if key.startswith('v2-') else key
-                route = f'v2/{slug}.html' if current else f'lessons/{slug}{"" if slug=="inside-sm" else "-video"}.html'
+                assert current, 'Only current-course recordings should be published'
+                route = f'v2/{slug}.html'
                 page.goto(URL + route)
                 page.wait_for_load_state('load')
                 video = page.locator('video')
@@ -106,7 +107,7 @@ try:
                 page.evaluate('()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))')
                 assert video.evaluate('v=>v.paused&&v.playbackRate===1.25'), key
                 expect(page.locator('.sm-transcript')).to_have_attribute('open', '')
-                if key in ['first-kernel','inside-sm','v2-reduction','v2-matmul','v2-tensor-cores','v2-token-routing']:
+                if key in ['first-kernel','v2-reduction','v2-matmul','v2-tensor-cores','v2-token-routing']:
                     video.screenshot(path=str(ROOT/f'test-results/recording-{key}-{width}-{theme}.png'))
                 if theme=='light' and width in [390,1440]:
                     page.locator('.sm-transcript > summary').press('Enter')

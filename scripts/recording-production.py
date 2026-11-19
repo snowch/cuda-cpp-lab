@@ -101,16 +101,9 @@ def prepare(workers, only=None):
             continue
         folder = ROOT/f'test-results/{slug}-recording'
         source_scenes = read(source)
-        if slug == 'inside-sm':
-            folder.mkdir(parents=True, exist_ok=True)
-            source_scenes = [{**s, 'captions': sentences(s['text'])} for s in source_scenes]
-            cues = [{'id': f'{s["id"]}-c{i+1}', 'step': s['title'], 'text': text, 'say': spoken(text)}
-                    for s in source_scenes for i, text in enumerate(s['captions'])]
-            write(folder/'scenes.json', cues)
-        else:
-            subprocess.run(['node', f'scripts/render-{slug}-recording.mjs', str(folder)], cwd=ROOT, check=True)
-            cues = [{**cue, 'say': spoken(cue.get('say', cue['text']))} for cue in read(folder/'scenes.json')]
-            write(folder/'scenes.json', cues)
+        subprocess.run(['node', f'scripts/render-{slug}-recording.mjs', str(folder)], cwd=ROOT, check=True)
+        cues = [{**cue, 'say': spoken(cue.get('say', cue['text']))} for cue in read(folder/'scenes.json')]
+        write(folder/'scenes.json', cues)
         recordings.append({'key': slug, 'slug': slug, 'kind': 'deck', 'work': str(folder),
                            'scenes': source_scenes, 'cues': cues, 'video': str(target.relative_to(ROOT))})
     for item in read(ROOT/'test-results/v2-recordings/inputs.json'):
@@ -310,9 +303,7 @@ def main():
         return
     if args.stage == 'build':
         from recording_export import export
-        from recording_catalog import refresh_duration_catalog
         export(plan['recordings'])
-        refresh_duration_catalog()
         return
     with ThreadPoolExecutor(max_workers=plan['workers']) as pool:
         list(pool.map(lambda i: original_script(skill, args.stage, i), range(plan['workers'])))
