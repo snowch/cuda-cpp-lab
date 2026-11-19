@@ -57,9 +57,10 @@ export function mountLessonFocus(editor, reset, mode) {
   const excerpts=[...page.querySelectorAll('[data-editor-excerpt] code')].map(code=>code.textContent);
   const guidance=document.createElement('div');guidance.className='source-focus';
   guidance.innerHTML='<p id="source-focus-help"></p><button type="button">Show target line</button> <button type="button" data-show-launch>Show launch</button><p id="source-focus-missing" hidden></p>';
-  guidance.querySelector('p').textContent=mode==='hello'
+  guidance.querySelector('p').textContent=mode==='hello'&&excerpts.length
     ? 'The lesson’s CUDA excerpts, including the copy and print calls, use blue text. Change the gold value assigned to output[0]. The remaining setup and error checks can stay unchanged for now.'
-    : 'The lesson’s CUDA excerpts, kernels and launches use blue text. Gold marks the '+lessonSourceFocus[mode].label+'. Follow the experiment above; the remaining setup can stay unchanged for now.';
+    : (excerpts.length?'The lesson’s CUDA excerpts, kernels and launches use blue text. ':'The kernels and their launches use blue text. ')+
+      'Gold marks the '+lessonSourceFocus[mode].label+'. Follow the experiment above; the remaining setup can stay unchanged for now.';
   editor.before(guidance);
   const surface=document.createElement('div');surface.className='source-editor';editor.before(surface);
   const ink=document.createElement('pre');ink.className='source-ink';ink.setAttribute('aria-hidden','true');surface.append(ink,editor);

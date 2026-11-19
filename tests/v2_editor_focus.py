@@ -53,6 +53,7 @@ def check_v2_editor_focus(browser, url, root):
                 show_launch = frame.get_by_role('button', name='Show launch', exact=True)
                 expect(editor).to_have_class('has-source-focus')
                 expect(frame.locator('#source-focus-help')).to_contain_text('stay unchanged for now')
+                expect(frame.locator('#source-focus-help')).to_contain_text('copy and print calls')
                 expect(editor).to_have_attribute('aria-describedby', 'source-focus-help source-focus-missing')
                 starter = editor.input_value()
                 assert editor.evaluate('''e => {
@@ -192,6 +193,7 @@ def check_v2_editor_focus(browser, url, root):
     with browser.new_context(viewport={'width':390,'height':1000}, forced_colors='active') as context:
         page=context.new_page()
         page.goto(url+'v2/cuda-source-workbench.html?embed=hello')
+        expect(page.locator('#source-focus-help')).not_to_contain_text('copy and print calls')
         editor=page.get_by_role('textbox',name='CUDA source')
         expect(editor).to_have_class('has-source-focus')
         assert editor.evaluate('''e=>{
