@@ -114,7 +114,9 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
         if native and not browser_cancel:page.screenshot(path=str(RESULTS/'update-downloading.png'))
         if browser_cancel:
             current=job(page);page.evaluate('async id=>(await (await navigator.serviceWorker.ready).backgroundFetch.get(id)).abort()',current['id'])
-        else:page.locator('#cancel-download').focus();page.locator('#cancel-download').press('Enter')
+        else:
+            page.locator('#cancel-download').focus();page.locator('#cancel-download').press('Enter')
+            expect(page.locator('#download-progress')).to_be_hidden()
         Handler.pause.set();Handler.pause=None
         until(lambda:not job(page)['wanted'] and not job(page)['busy'])
         count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(300)
@@ -149,8 +151,12 @@ def previous_worker_recovery(browser,url):
         page=open_page(c,url);assert rpc(page,'STATUS').get('downloadVersion') is None
         page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
-        page.locator('#cancel-download').click();Handler.pause.set();Handler.pause=None
+        page.locator('#cancel-download').click()
+        # Keep the body gated until the older worker has acknowledged Cancel.
+        # Otherwise the server can win the abort race and legitimately leave a
+        # complete cached file, so the next transfer would have nothing to fetch.
         until(lambda:not rpc(page,'STATUS')['busy'])
+        Handler.pause.set();Handler.pause=None
         count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(200);assert payload_requests()==count
         Handler.pause=Event();page.locator('#download-update').click();until(lambda:payload_requests()>=count+1)
         Handler.previous_worker=False
@@ -174,17 +180,30 @@ def full_course_native(browser):
     try:
         with browser.new_context(viewport={'width':390,'height':1000},color_scheme='dark') as c:
             page=c.new_page();page.goto(url)
+            page.wait_for_function('''async()=>{
+                const base=new URL('../',location.href),id=document.querySelector('meta[name="gpu-release"]').content;
+                const name=`gpu-lab:${base.href}:release-${id}`;
+                if(!await caches.has(name))return false;
+                const cache=await caches.open(name);
+                return await cache.match(new URL('src/v2-editor-focus.mjs',base)) && await cache.match(new URL('v2/cuda-source-workbench.html',base));
+            }''')
+            assert not any(path.endswith('examples/gather.cu') for path in Handler.requests),'Retaining the visited editor must not download the rest of the course.'
             page.locator('#app-status-open').click()
             # Click as soon as the control allows it: startup retention and the
             # explicit download must share connection work without racing.
-            page.locator('#save-offline').click()
-            page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
+            page.locator('#save-offline').dblclick()
+            try:page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
+            except Exception:
+                print('Full native startup diagnostics:',page.locator('#app-status-dialog').inner_text(),flush=True)
+                print('Full native job:',job(page),flush=True)
+                raise
             page.locator('#app-status-close').click()
             editor=page.frame_locator('[data-kernel-workbench="hello"]').locator('#source')
             draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
             page.close()
             page=c.new_page();page.goto(url);page.locator('#app-status-open').click()
             expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=120000)
+            expect(page.locator('#app-status-error')).to_be_empty()
             assert job(page)['state']=='ready'
             assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
             page.screenshot(path=str(RESULTS/'full-course-native-ready.png'))
@@ -193,6 +212,29 @@ def full_course_native(browser):
             assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
     finally:server.shutdown()
     print('PASS the complete production course downloads natively across page closure and reopens offline with the saved CUDA draft',flush=True)
+
+def quota_startup_error(browser,url):
+    Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
+    with browser.new_context() as c:
+        c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        page=open_page(c,url);page.locator('#save-offline').click()
+        expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+        assert job(page)['state']=='ready'
+        Handler.revision='two';page.locator('#check-update').click()
+        expect(page.locator('#download-update')).to_be_visible()
+        cdp=c.new_cdp_session(page)
+        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/'),'quotaSize':1})
+        page.locator('#download-update').click()
+        expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
+        assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
+        assert page.locator('html').get_attribute('data-test-release')=='one'
+        expect(page.locator('#offline-status')).to_have_text('Available offline')
+        expect(page.locator('#restart-update')).to_be_hidden()
+        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/')});cdp.detach()
+        page.locator('#download-update').click()
+        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        expect(page.locator('#app-status-error')).to_be_empty()
+    print('PASS a new request reports real quota failure beside Update despite a previous completed job; the old course remains available and retry succeeds',flush=True)
 
 def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
@@ -205,6 +247,7 @@ def main():
                     native_closed_page(browser,url);fallback_resume(browser,url)
                     cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
+                    quota_startup_error(browser,url)
                     full_course_native(browser)
                 finally:browser.close()
         finally:

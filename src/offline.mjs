@@ -5,62 +5,65 @@ const $ = id => document.getElementById(id);
 const base = new URL(document.querySelector('meta[name="gpu-base"]').content, location.href);
 const running = document.querySelector('meta[name="gpu-release"]').content;
 const dialog = $('app-status-dialog');
-let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort, connecting;
-let downloading = false, restarting = false, mode, removed = false, refreshGeneration = 0, cacheLifetime = 0;
+let registration, worker, latest, runningRelease, snapshot = {}, checking, lastCheck = 0, checkingAbort, connecting, runningMetadata;
+let downloading = false, cancelling = false, restarting = false, mode, removed = false, refreshGeneration = 0, cacheLifetime = 0;
 let version = navigator.onLine ? 'Checking for updates' : 'Cannot check for updates';
 const supported = 'serviceWorker' in navigator && isSecureContext && 'caches' in self;
 let unavailable = !supported;
 let remembered = false, remembering, connected = false;
-let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId;
+let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId,downloadWork;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
 const progressSize = n => `${(n / 1048576).toFixed(2)} MiB`;
 function error(message = '',source='operation') {
   const element=$('app-status-error');
   if(element.textContent!==message)element.textContent=message;
   element.dataset.source=source;
-  if(source!=='download'&&element.parentElement!==dialog)dialog.append(element);
+  const owner=source.startsWith('download')?$(mode==='update'?'update-download-feedback':'offline-download-feedback'):dialog;
+  if(element.parentElement!==owner)owner.append(element);
 }
 function render() {
   const job=snapshot.download;
-  const active=downloading||Boolean(job?.busy);
+  const locked=Boolean(downloadWork)||downloading||Boolean(job?.busy);
+  const active=(downloading&&!downloadCancelled)||Boolean(job?.busy);
+  const stopping=cancelling&&active;
   const requested=Boolean(job?.wanted&&job.state!=='ready');
-  if(job&&!downloading)mode=job.mode;
+  if(job&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')mode=job.mode;
   const progress = $('download-progress');
   const feedback = $(mode === 'update' ? 'update-download-feedback' : 'offline-download-feedback');
   // Move the single progress/cancel group only when its owning action changes.
   // Repeated status refreshes must preserve focus inside the group.
   if (progress.parentElement !== feedback) feedback.append(progress);
-  progress.hidden=!(downloading||requested);
+  progress.hidden=cancelling||!((downloading&&!downloadCancelled)||requested);
   if(job&&!downloading)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
   const notice=$('download-behaviour');
   notice.textContent=requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?(mode==='update'?'Downloading in the background. Return here to apply the update.':'Downloading in the background. The course is available offline when all files are checked.'):job?.state==='verifying'?(mode==='update'?'Checking the downloaded files before the update is ready.':'Checking the saved files before marking the course available offline.'):'Completed files are kept. If your browser pauses the download, it resumes when you return.';
-  if(job?.error&&!downloading)error(job.error,'download');
+  if(job?.error&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')error(job.error,'download');
   else if($('app-status-error').dataset.source==='download')error('');
-  if($('app-status-error').dataset.source==='download'&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
+  if($('app-status-error').dataset.source?.startsWith('download')&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
   const pending = snapshot.pending && snapshot.pending !== running;
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
-  $('version-status').textContent = active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : version;
+  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : version;
   $('app-status-summary').textContent = `${document.querySelector('.build-info a')?.textContent || running.slice(0, 7)} · ${ready ? 'Update ready' : available || pending ? 'Update available' : version === 'Up to date' ? 'Up to date' : 'Check version'}`;
   $('download-update').hidden = !available || Boolean(ready && snapshot.pending === latest.id);
-  $('download-update').disabled = active || !supported;
+  $('download-update').disabled = locked || !supported;
   $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Update';
   $('restart-update').hidden = !ready; $('later-update').hidden = !ready;
   $('restart-note').hidden = !ready;
-  $('restart-update').disabled=restarting||active;
+  $('restart-update').disabled=restarting||locked;
   $('check-update').disabled = Boolean(checking);
   $('check-update').textContent = version === 'Couldn’t check for updates' ? 'Retry' : 'Check for updates';
-  let offline = unavailable ? 'Offline access unavailable' : active && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
+  let offline = unavailable ? 'Offline access unavailable' : stopping&&mode==='offline'?'Stopping download':active && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
   $('offline-status').textContent = offline;
   $('offline-status').dataset.state = snapshot.offlineReady ? 'ready' : 'unavailable';
   const release = runningRelease;
   $('offline-size').textContent = release ? `Complete app: ${bytes(release.bytes)}. Includes all required files; browser storage overhead is additional.` : 'The download size is unavailable. Connect to the internet and retry.';
   $('offline-size').hidden = Boolean(ready && !snapshot.offlineReady);
   $('save-offline').hidden = Boolean(snapshot.offlineReady || ready) || !supported;
-  $('save-offline').disabled = active || !release;
+  $('save-offline').disabled = locked || !release;
   $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
   $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
-  $('remove-offline').disabled = active;
+  $('remove-offline').disabled = locked;
   const cacheNote = cacheLifetime ? ` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.` : '';
   $('version-detail').textContent = !supported ? 'This browser cannot save or prepare updates here. You can keep using GPU Lab online.' : latest && available ? `Deployed release ${latest.commit?.slice(0, 7) || latest.id.slice(0, 7)}${latest.date ? ' · ' + latest.date : ''}. Download: ${bytes(latest.bytes)}.${cacheNote}` : latest && cacheLifetime ? 'The published release matches this app.'+cacheNote : version === 'Cannot check for updates' ? 'You are offline. Saved files remain usable; the published version cannot be checked.' : version === 'Couldn’t check for updates' ? 'The deployed release could not be verified. Try again when connected.' : '';
 }
@@ -150,10 +153,23 @@ function connect() {
   return connecting;
 }
 async function remember() {
-  if (remembered || remembering || downloading || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
+  if (window!==window.top || remembered || remembering || downloading || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
   const prefix = new URL(`releases/${running}/`, base).href;
-  const paths = performance.getEntriesByType('resource').map(entry => entry.name).filter(url => url.startsWith(prefix)).map(url => url.slice(prefix.length).split('?')[0]);
-  paths.push(location.pathname.slice(base.pathname.length) || 'index.html');
+  const visited=new Set();
+  // The lesson owns retention for its embedded editors too. Separate frame
+  // requests can otherwise race the parent's explicit download operation.
+  function collect(target){
+    try{
+      const url=new URL(target.location.href);
+      if(!url.href.startsWith(base.href))return;
+      visited.add(url.href.startsWith(prefix)?url.href.slice(prefix.length).split(/[?#]/)[0]:url.pathname.slice(base.pathname.length)||'index.html');
+      for(const entry of target.performance.getEntriesByType('resource'))
+        if(entry.name.startsWith(prefix))visited.add(entry.name.slice(prefix.length).split(/[?#]/)[0]);
+      for(let index=0;index<target.frames.length;index++)collect(target.frames[index]);
+    }catch{/* Optional cross-origin frames cannot be retained by this course. */}
+  }
+  collect(window);
+  const paths=[...visited];
   remembering = (async () => {
     if (snapshot.active !== running) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
     // Earlier updates cached the whole release without marking it available
@@ -266,15 +282,25 @@ async function resumeDownloads() {
   })().catch(failure=>error(failure.message)).finally(()=>{resumeWork=null;});
   return resumeWork;
 }
-async function download(save, resume) {
+function download(save,resume){
+  // Automatic resume and a button press can meet while metadata or retention
+  // is pending. They must join one request rather than start competing jobs.
+  if(downloadWork)return downloadWork;
+  downloadCancelled=false;localDownloadId=undefined;mode=save?'offline':'update';error();
+  downloadWork=performDownload(save,resume).finally(()=>{downloadWork=null;render();});
+  render();return downloadWork;
+}
+async function performDownload(save, resume) {
   const release=resume?.release||(save?runningRelease:latest);
   if(!release||downloading)return;
   if(connecting)await connecting;
   if(!connected)await connect();
-  await remembering;
+  await runningMetadata;
+  await remember();
+  if(downloadCancelled)return;
   if(save&&snapshot.offlineReady&&!resume)return;
   if(!worker||removed||unavailable)await connect();
-  downloading=true;downloadCancelled=false;localDownloadId=undefined;mode=save?'offline':'update';error();render();
+  downloading=true;error();render();
   showProgress({bytes:0,total:release.bytes});
   let handled=false,downloadId=resume?.id;
   const request={release,save:true,requestDownload:true,mode,downloadId};
@@ -316,7 +342,7 @@ async function download(save, resume) {
   } catch(failure) {
     if(snapshot.downloadVersion!==1&&downloadId)await legacyChange(downloadId,job=>job?.wanted?{state:'paused',wanted:!downloadCancelled&&!/match the release|could not be verified/.test(failure.message),error:downloadCancelled?null:failure.message}:null).catch(()=>{});
     await refresh();
-    if(snapshot.download?.wanted!==false)error(failure.message);
+    if(!downloadCancelled&&!(snapshot.download?.wanted===false&&/abort/i.test(failure.message)))error(failure.message,'download-start');
   } finally {
     downloading=false;
     if(!handled)await refresh();
@@ -331,9 +357,11 @@ $('check-update').addEventListener('click', () => { check(true); refresh(); });
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));
 $('cancel-download').addEventListener('click', async () => {
-  downloadCancelled=true;clearTimeout(resumeTimer);const id=downloading?localDownloadId:snapshot.download?.id;
+  downloadCancelled=true;cancelling=true;clearTimeout(resumeTimer);const id=downloading?localDownloadId:snapshot.download?.id;
+  render();
   try{try{if(snapshot.downloadVersion!==1)await legacyStop(id);}finally{await rpc('CANCEL',{id:downloading?undefined:id});}await refresh();}
   catch(failure){error(failure.message);}
+  finally{cancelling=false;render();}
 });
 $('later-update').addEventListener('click', () => dialog.close());
 $('restart-update').addEventListener('click', async () => {
@@ -365,7 +393,7 @@ setInterval(() => { if (document.visibilityState === 'visible' && navigator.onLi
 addEventListener('load', remember, { once: true });
 render(); check(); connect();
 // Running metadata is immutable and small; it is not a course download.
-metadata(new URL(`releases/${running}/release.json`, base), AbortSignal.timeout(8000),{immutable:true}).then(({release:r}) => { if (r.id === running) { runningRelease = r; render(); remember(); } }).catch(() => {});
+runningMetadata=metadata(new URL(`releases/${running}/release.json`, base), AbortSignal.timeout(8000),{immutable:true}).then(({release:r}) => { if (r.id === running) { runningRelease = r; render(); remember(); } }).catch(() => {});
 
 const downloadLink=new URL(location.href);
 if(downloadLink.searchParams.get('download')==='1'){

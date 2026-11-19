@@ -85,7 +85,7 @@ establish learning effectiveness; no learner study is claimed.
 ## Verification record
 
 `npm run check` passes all 204 unit checks and builds the production course. The
-focused browser runs pass eight download lifecycle cases, all 25 editors at
+focused browser runs pass nine download lifecycle cases, all 25 editors at
 390px/dark and 1440px/light, six additional touch/DPR cases, L1's detailed native
 editing checks and both introductory starter/edit exercises. The built App status
 dialog and L1 reading sequence were reviewed at 390px, 820px and 1440px in both
@@ -99,6 +99,14 @@ Playwright's minimal headless shell advertises Background Fetch but accepts jobs
 without transferring bytes. Native checks use full Chromium. An immediate
 download waits for shared startup retention, avoiding concurrent initialisation
 and download operations.
+The lesson retains its visited same-origin embedded documents and resources in
+one operation, preventing a hidden editor frame from competing with the update.
+Automatic resume and a button press share one in-flight request, including while
+metadata is loading. A new request's storage error remains visible beside its
+own action even when the last recorded job completed successfully.
+Cancel hides transfer progress immediately and shows a stopping state while the
+worker finishes its cancellation and cache-status check, rather than leaving a
+large completed cache's verification looking like an active transfer.
 
 The focused lifecycle checks use the production builder, actual workers,
 CacheStorage, network responses and native Chromium Background Fetch. They cover
