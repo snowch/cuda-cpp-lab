@@ -114,7 +114,7 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
         if native and not browser_cancel:page.screenshot(path=str(RESULTS/'update-downloading.png'))
         if browser_cancel:
             current=job(page);page.evaluate('async id=>(await (await navigator.serviceWorker.ready).backgroundFetch.get(id)).abort()',current['id'])
-        else:page.locator('#cancel-download').click()
+        else:page.locator('#cancel-download').focus();page.locator('#cancel-download').press('Enter')
         Handler.pause.set();Handler.pause=None
         until(lambda:not job(page)['wanted'] and not job(page)['busy'])
         count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(300)
