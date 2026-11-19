@@ -107,6 +107,10 @@ own action even when the last recorded job completed successfully.
 Cancel hides transfer progress immediately and shows a stopping state while the
 worker finishes its cancellation and cache-status check, rather than leaving a
 large completed cache's verification looking like an active transfer.
+The cancelled page request joins the Cancel handler's single status refresh;
+it does not repeat full-course hash scans before releasing its control lock.
+The complete-course browser case also checks that Update becomes usable after
+cancelling a replacement while the large verified course remains available.
 
 The focused lifecycle checks use the production builder, actual workers,
 CacheStorage, network responses and native Chromium Background Fetch. They cover

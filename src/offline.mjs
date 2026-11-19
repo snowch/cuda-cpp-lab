@@ -340,12 +340,15 @@ async function performDownload(save, resume) {
     ++refreshGeneration;unavailable=false;runningRelease||=snapshot.runningRelease;
     handled=true;error();
   } catch(failure) {
+    // The Cancel handler owns its status refresh. Repeating full-course hash
+    // scans here keeps the request lock alive after transfer has already stopped.
+    if(downloadCancelled)return;
     if(snapshot.downloadVersion!==1&&downloadId)await legacyChange(downloadId,job=>job?.wanted?{state:'paused',wanted:!downloadCancelled&&!/match the release|could not be verified/.test(failure.message),error:downloadCancelled?null:failure.message}:null).catch(()=>{});
     await refresh();
     if(!downloadCancelled&&!(snapshot.download?.wanted===false&&/abort/i.test(failure.message)))error(failure.message,'download-start');
   } finally {
     downloading=false;
-    if(!handled)await refresh();
+    if(!handled&&!downloadCancelled)await refresh();
     render();
   }
 }

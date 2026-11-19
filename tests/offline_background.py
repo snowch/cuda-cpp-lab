@@ -85,7 +85,7 @@ def native_closed_page(browser,url):
 def fallback_resume(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None
     with browser.new_context(viewport={'width':390,'height':844}) as c:
-        c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
@@ -106,7 +106,7 @@ def fallback_resume(browser,url):
 def cancelled_request(browser,url,native=True,browser_cancel=False):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':390,'height':844}) as c:
-        if not native:c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        if not native:c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
         expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
@@ -147,7 +147,7 @@ def rejected_response(browser,url):
 def previous_worker_recovery(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False;Handler.previous_worker=True
     with browser.new_context(viewport={'width':390,'height':844}) as c:
-        c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);assert rpc(page,'STATUS').get('downloadVersion') is None
         page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
@@ -169,10 +169,10 @@ def previous_worker_recovery(browser,url):
     Handler.previous_worker=False
     print('PASS an actual previous-production worker honours Cancel and hands a durable partial request to the naturally activated new worker',flush=True)
 
-def full_course_native(browser):
+def full_course_native(browser,update_root):
     """Exercise the real production download, not only small lifecycle fixtures."""
     assert (ROOT/'dist/release.json').is_file(),'Build the course before this check.'
-    Handler.roots={'one':ROOT/'dist'};Handler.revision='one';Handler.requests=[]
+    Handler.roots={'one':ROOT/'dist','two':update_root};Handler.revision='one';Handler.requests=[]
     Handler.pause=None;Handler.corrupt=False;Handler.previous_worker=False
     server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
     Thread(target=server.serve_forever,daemon=True).start()
@@ -210,13 +210,27 @@ def full_course_native(browser):
             c.set_offline(True);page.reload();page.locator('#app-status-open').click()
             expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
             assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
+            # Cancellation must also release the page's request lock when its
+            # existing complete cache contains every recording/compiler asset.
+            c.set_offline(False);Handler.revision='two';Handler.pause=Event()
+            page.evaluate("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+            page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+            before=payload_requests();page.locator('#download-update').click()
+            until(lambda:payload_requests()>before)
+            page.locator('#cancel-download').focus();page.locator('#cancel-download').press('Enter')
+            expect(page.locator('#download-progress')).to_be_hidden()
+            page.screenshot(path=str(RESULTS/'full-course-stopping.png'))
+            until(lambda:not job(page)['wanted'] and not job(page)['busy'],timeout=30)
+            Handler.pause.set();Handler.pause=None
+            expect(page.locator('#download-update')).to_be_enabled(timeout=30000)
+            expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
     finally:server.shutdown()
-    print('PASS the complete production course downloads natively across page closure and reopens offline with the saved CUDA draft',flush=True)
+    print('PASS the complete production course downloads across page closure, reopens offline with its CUDA draft, and releases Update after cancelling a replacement',flush=True)
 
 def quota_startup_error(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context() as c:
-        c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);page.locator('#save-offline').click()
         expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
         assert job(page)['state']=='ready'
@@ -248,7 +262,7 @@ def main():
                     cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
                     quota_startup_error(browser,url)
-                    full_course_native(browser)
+                    full_course_native(browser,Handler.roots['two'])
                 finally:browser.close()
         finally:
             if Handler.pause:Handler.pause.set()

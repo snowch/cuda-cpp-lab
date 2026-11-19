@@ -70,7 +70,7 @@ def foreground(context):
     # minimal headless shell advertises Background Fetch but never transfers its
     # jobs. offline_background.py uses full Chromium for real native downloads,
     # including the complete production course.
-    context.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+    context.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
     return context
 
 def panel(page):
