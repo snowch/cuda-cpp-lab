@@ -1,34 +1,109 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:05.443
-Inside histogram, partial holds four counters shared by one four-thread block.
+00:00:00.600 --> 00:00:03.636 position:50% size:92% align:center
+The eight token categories include four zeros.
 
-00:00:05.663 --> 00:00:09.716
-Each thread clears one counter; a barrier precedes atomic updates.
+00:00:03.636 --> 00:00:06.011 position:50% size:92% align:center
+Several threads therefore update the
 
-00:00:09.936 --> 00:00:18.832
-A second barrier completes those updates before nonzero partials are added to the global counts. main initialises global counts to zero.
+00:00:06.011 --> 00:00:07.661 position:50% size:92% align:center
+same category-zero count.
 
-00:00:20.852 --> 00:00:22.281
-Initialise counters.
+00:00:07.881 --> 00:00:10.645 position:50% size:92% align:center
+An atomic addition makes one supported update
 
-00:00:22.501 --> 00:00:24.357
-Clear shared and global counts.
+00:00:10.645 --> 00:00:13.532 position:50% size:92% align:center
+indivisible. It does not make the block’s other
 
-00:00:24.577 --> 00:00:25.751
-Count atomically.
+00:00:13.532 --> 00:00:15.497 position:50% size:92% align:center
+operations a collective barrier.
 
-00:00:25.971 --> 00:00:28.595
-Several threads may target the same category.
+00:00:17.517 --> 00:00:20.318 position:50% size:92% align:center
+With local aggregation, each block clears its
 
-00:00:28.815 --> 00:00:30.031
-Merge partials.
+00:00:20.318 --> 00:00:22.808 position:50% size:92% align:center
+own four-counter shared array on its SM.
 
-00:00:30.251 --> 00:00:32.533
-Add completed per-block counts globally.
+00:00:23.028 --> 00:00:25.477 position:50% size:92% align:center
+All four threads arrive at a barrier before
 
-00:00:34.553 --> 00:00:40.676
-Per-block shared counters combine local contributions before a merge to device-memory counters.
+00:00:25.477 --> 00:00:27.527 position:50% size:92% align:center
+those counters are used. The blocks’
 
-00:00:40.896 --> 00:00:48.341
-An atomic update protects one supported update; it does not replace the block barriers around initialisation and merging.
+00:00:27.527 --> 00:00:29.236 position:50% size:92% align:center
+shared arrays remain separate.
+
+00:00:31.256 --> 00:00:33.979 position:50% size:92% align:center
+Threads make their atomic contributions to the
+
+00:00:33.979 --> 00:00:36.465 position:50% size:92% align:center
+block’s shared counters. A following block
+
+00:00:36.465 --> 00:00:38.300 position:50% size:92% align:center
+barrier completes this counting
+
+00:00:38.300 --> 00:00:39.661 position:50% size:92% align:center
+phase before the merge.
+
+00:00:39.881 --> 00:00:42.875 position:50% size:92% align:center
+Only nonzero partial counters need a global
+
+00:00:42.875 --> 00:00:44.895 position:50% size:92% align:center
+atomic merge in this example.
+
+00:00:46.915 --> 00:00:50.205 position:50% size:92% align:center
+Direct global counting makes eight global atomic
+
+00:00:50.205 --> 00:00:53.427 position:50% size:92% align:center
+additions. Local aggregation makes eight shared
+
+00:00:53.427 --> 00:00:55.552 position:50% size:92% align:center
+atomic additions and six global
+
+00:00:55.552 --> 00:00:57.197 position:50% size:92% align:center
+merges for these inputs.
+
+00:00:57.417 --> 00:01:00.285 position:50% size:92% align:center
+That changes where operations occur. Extra local
+
+00:01:00.285 --> 00:01:03.092 position:50% size:92% align:center
+work and synchronisation still matter, so these
+
+00:01:03.092 --> 00:01:05.183 position:50% size:92% align:center
+counts are not a speed measurement.
+
+00:01:07.203 --> 00:01:10.237 position:50% size:92% align:center
+Now consider a hot category: all eight tokens
+
+00:01:10.237 --> 00:01:13.204 position:50% size:92% align:center
+choose zero. Pause and predict the number of
+
+00:01:13.204 --> 00:01:16.440 position:50% size:92% align:center
+nonzero block partials that must merge globally.
+
+00:01:16.660 --> 00:01:18.677 position:50% size:92% align:center
+Each of the two blocks still has
+
+00:01:18.677 --> 00:01:20.253 position:50% size:92% align:center
+its own shared workspace.
+
+00:01:26.073 --> 00:01:29.291 position:50% size:92% align:center
+Each block contributes one nonzero category-zero
+
+00:01:29.291 --> 00:01:32.375 position:50% size:92% align:center
+partial, so the model needs two global merges.
+
+00:01:32.375 --> 00:01:34.051 position:50% size:92% align:center
+The final count is eight.
+
+00:01:34.271 --> 00:01:37.416 position:50% size:92% align:center
+Shared aggregation combines local contributions;
+
+00:01:37.416 --> 00:01:40.232 position:50% size:92% align:center
+atomic operations protect updates; barriers
+
+00:01:40.232 --> 00:01:42.787 position:50% size:92% align:center
+protect the phase boundaries. Those are
+
+00:01:42.787 --> 00:01:44.490 position:50% size:92% align:center
+separate responsibilities.

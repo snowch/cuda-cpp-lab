@@ -1,40 +1,94 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:05.763
-readWords cooperatively initialises shared words, then all threads reach a barrier.
+00:00:00.600 --> 00:00:03.447 position:50% size:92% align:center
+On this teaching model, the SM’s shared memory
 
-00:00:05.983 --> 00:00:08.564
-Each lane reads words[lane * stride].
+00:00:03.447 --> 00:00:06.295 position:50% size:92% align:center
+has thirty-two banks, and successive four-byte
 
-00:00:08.784 --> 00:00:11.835
-The returned integers identify word addresses.
+00:00:06.295 --> 00:00:08.152 position:50% size:92% align:center
+words select successive banks.
 
-00:00:12.055 --> 00:00:18.049
-The host calculates service rounds for the stated bank model; the console is not a hardware timer.
+00:00:08.372 --> 00:00:11.156 position:50% size:92% align:center
+For a word index, taking the remainder after
 
-00:00:20.069 --> 00:00:21.627
-Initialise shared words.
+00:00:11.156 --> 00:00:13.876 position:50% size:92% align:center
+division by thirty-two identifies its bank.
 
-00:00:21.847 --> 00:00:23.980
-Complete the block barrier before reads.
+00:00:15.896 --> 00:00:19.016 position:50% size:92% align:center
+With stride thirty-two, lane zero requests word
 
-00:00:24.200 --> 00:00:25.395
-Select words.
+00:00:19.016 --> 00:00:21.340 position:50% size:92% align:center
+zero, lane one word thirty-two, and
 
-00:00:25.615 --> 00:00:27.727
-Each lane forms lane × stride.
+00:00:21.340 --> 00:00:23.000 position:50% size:92% align:center
+lane two word sixty-four.
 
-00:00:27.947 --> 00:00:29.077
-Group by bank.
+00:00:23.220 --> 00:00:24.949 position:50% size:92% align:center
+Those are different addresses,
 
-00:00:29.297 --> 00:00:32.156
-Distinguish broadcasts from different-word conflicts.
+00:00:24.949 --> 00:00:26.505 position:50% size:92% align:center
+but each maps to bank zero.
 
-00:00:34.176 --> 00:00:38.784
-Shared memory is organised into banks that can serve requests in parallel.
+00:00:28.525 --> 00:00:31.460 position:50% size:92% align:center
+Across the warp, bank zero receives thirty-two
 
-00:00:39.004 --> 00:00:42.844
-In this model, word index modulo 32 selects a bank.
+00:00:31.460 --> 00:00:33.949 position:50% size:92% align:center
+distinct-word requests. The model needs
 
-00:00:43.064 --> 00:00:48.675
-Repeated requests for one word can broadcast; different words in one bank need separate rounds.
+00:00:33.949 --> 00:00:35.608 position:50% size:92% align:center
+thirty-two service rounds.
+
+00:00:35.828 --> 00:00:38.931 position:50% size:92% align:center
+Shared memory is on the SM, but being local does
+
+00:00:38.931 --> 00:00:40.871 position:50% size:92% align:center
+not make every address pattern
+
+00:00:40.871 --> 00:00:42.164 position:50% size:92% align:center
+equally serviceable.
+
+00:00:44.184 --> 00:00:47.042 position:50% size:92% align:center
+Stride thirty-three changes the bank remainder
+
+00:00:47.042 --> 00:00:49.713 position:50% size:92% align:center
+for successive lanes. This warp’s words now
+
+00:00:49.713 --> 00:00:51.267 position:50% size:92% align:center
+use all thirty-two banks.
+
+00:00:51.487 --> 00:00:53.332 position:50% size:92% align:center
+The model can serve the distinct
+
+00:00:53.332 --> 00:00:54.601 position:50% size:92% align:center
+requests in one round.
+
+00:00:56.621 --> 00:00:59.653 position:50% size:92% align:center
+Consider a third case: every lane requests word
+
+00:00:59.653 --> 00:01:02.104 position:50% size:92% align:center
+zero. They all select bank zero again.
+
+00:01:02.324 --> 00:01:05.175 position:50% size:92% align:center
+Pause and predict whether that necessarily means
+
+00:01:05.175 --> 00:01:07.551 position:50% size:92% align:center
+thirty-two distinct-word service rounds.
+
+00:01:13.371 --> 00:01:16.025 position:50% size:92% align:center
+There is only one distinct word to supply, so
+
+00:01:16.025 --> 00:01:17.558 position:50% size:92% align:center
+the model broadcasts it to
+
+00:01:17.558 --> 00:01:19.033 position:50% size:92% align:center
+the readers in one round.
+
+00:01:19.253 --> 00:01:21.998 position:50% size:92% align:center
+Count distinct words within each bank. The
+
+00:01:21.998 --> 00:01:24.417 position:50% size:92% align:center
+starter’s reported service rounds are
+
+00:01:24.417 --> 00:01:27.359 position:50% size:92% align:center
+address-model results, not measured GPU time.

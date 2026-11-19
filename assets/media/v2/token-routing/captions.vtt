@@ -1,37 +1,124 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:04.781
-route first completes shared-memory scans of the four category masks.
+00:00:00.600 --> 00:00:03.270 position:50% size:92% align:center
+The eight tokens choose four categories. The
 
-00:00:05.001 --> 00:00:17.375
-In this final body excerpt, subtracting one from the token’s inclusive category prefix gives its stable rank. start sums earlier category counts; start plus rank gives a unique destination.
+00:00:03.270 --> 00:00:06.061 position:50% size:92% align:center
+counts tell us the size of each output region.
 
-00:00:17.595 --> 00:00:23.355
-All threads finish the scan barriers before reading prefix, and count precedes route in the same stream.
+00:00:06.281 --> 00:00:09.187 position:50% size:92% align:center
+They do not by themselves say where each token
 
-00:00:25.375 --> 00:00:26.591
-Count categories.
+00:00:09.187 --> 00:00:11.145 position:50% size:92% align:center
+ID belongs within its category.
 
-00:00:26.811 --> 00:00:28.837
-Build counts before routing starts.
+00:00:13.165 --> 00:00:15.817 position:50% size:92% align:center
+The count kernel finishes before the route
 
-00:00:29.057 --> 00:00:30.465
-Find start and rank.
+00:00:15.817 --> 00:00:18.783 position:50% size:92% align:center
+kernel begins in the same stream. Device-memory
 
-00:00:30.685 --> 00:00:33.373
-Combine the category region and local order.
+00:00:18.783 --> 00:00:20.488 position:50% size:92% align:center
+counts therefore supply the
 
-00:00:33.593 --> 00:00:34.895
-Write token ID.
+00:00:20.488 --> 00:00:22.381 position:50% size:92% align:center
+region sizes before placement.
 
-00:00:35.115 --> 00:00:37.397
-Give each token a unique stable slot.
+00:00:22.601 --> 00:00:25.581 position:50% size:92% align:center
+Exclusive category starts identify where each
 
-00:00:39.417 --> 00:00:42.895
-Device-memory phase results connect counting to placement.
+00:00:25.581 --> 00:00:27.700 position:50% size:92% align:center
+category’s output region begins.
 
-00:00:43.115 --> 00:00:49.301
-Atomics can count safely, but the order of atomic arrivals alone does not preserve token order.
+00:00:29.720 --> 00:00:32.914 position:50% size:92% align:center
+Token five belongs to category zero. Two earlier
 
-00:00:49.521 --> 00:00:52.551
-The explicit earlier-token rank supplies stability.
+00:00:32.914 --> 00:00:35.110 position:50% size:92% align:center
+tokens have that category, so its
+
+00:00:35.110 --> 00:00:36.973 position:50% size:92% align:center
+within-category rank is two.
+
+00:00:37.193 --> 00:00:39.613 position:50% size:92% align:center
+The route kernel’s completed shared prefix
+
+00:00:39.613 --> 00:00:41.341 position:50% size:92% align:center
+stages supply this rank before
+
+00:00:41.341 --> 00:00:42.377 position:50% size:92% align:center
+the scatter write.
+
+00:00:44.397 --> 00:00:46.692 position:50% size:92% align:center
+A category’s start plus the token’s
+
+00:00:46.692 --> 00:00:49.772 position:50% size:92% align:center
+earlier-match rank gives the destination. Token
+
+00:00:49.772 --> 00:00:52.525 position:50% size:92% align:center
+five therefore writes output position two.
+
+00:00:52.745 --> 00:00:56.293 position:50% size:92% align:center
+The SM performs this address calculation; GPU
+
+00:00:56.293 --> 00:00:58.894 position:50% size:92% align:center
+memory holds the category regions
+
+00:00:58.894 --> 00:01:01.023 position:50% size:92% align:center
+and their stored token IDs.
+
+00:01:03.043 --> 00:01:06.032 position:50% size:92% align:center
+Token seven also belongs to category zero.
+
+00:01:06.032 --> 00:01:08.950 position:50% size:92% align:center
+Suppose its write is inspected before the
+
+00:01:08.950 --> 00:01:10.872 position:50% size:92% align:center
+other category-zero writes.
+
+00:01:11.092 --> 00:01:13.505 position:50% size:92% align:center
+Pause and predict whether it should take
+
+00:01:13.505 --> 00:01:15.857 position:50% size:92% align:center
+position zero or retain the destination
+
+00:01:15.857 --> 00:01:18.089 position:50% size:92% align:center
+determined by its earlier-match rank.
+
+00:01:23.909 --> 00:01:26.789 position:50% size:92% align:center
+Token seven has three earlier matching tokens,
+
+00:01:26.789 --> 00:01:29.042 position:50% size:92% align:center
+so it retains position three even if
+
+00:01:29.042 --> 00:01:30.544 position:50% size:92% align:center
+its write happens first.
+
+00:01:30.764 --> 00:01:33.803 position:50% size:92% align:center
+Atomic arrival tickets can make updates unique
+
+00:01:33.803 --> 00:01:36.908 position:50% size:92% align:center
+without preserving input order. Stable grouping
+
+00:01:36.908 --> 00:01:39.617 position:50% size:92% align:center
+needs the explicit prefix rank used here.
+
+00:01:41.637 --> 00:01:44.494 position:50% size:92% align:center
+The completed grouping places zero, two, five
+
+00:01:44.494 --> 00:01:47.414 position:50% size:92% align:center
+and seven in the first region, followed by one
+
+00:01:47.414 --> 00:01:49.381 position:50% size:92% align:center
+and four, then three, then six.
+
+00:01:49.601 --> 00:01:52.442 position:50% size:92% align:center
+Choose the required output contract first:
+
+00:01:52.442 --> 00:01:55.147 position:50% size:92% align:center
+counts need safe additions; stable token
+
+00:01:55.147 --> 00:01:57.379 position:50% size:92% align:center
+grouping also needs ordered ranks
+
+00:01:57.379 --> 00:01:59.137 position:50% size:92% align:center
+and distinct destinations.

@@ -1,34 +1,94 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:13.997
-flag marks selected categories. scanFlags forms exclusive offsets using staged shared-memory scans and collective barriers. scatter writes original token IDs at those unique offsets.
+00:00:00.600 --> 00:00:04.090 position:50% size:92% align:center
+For category zero, the selected input token IDs
 
-00:00:14.217 --> 00:00:19.551
-All three kernels are ordered in one stream; main verifies the complete stable result.
+00:00:04.090 --> 00:00:06.317 position:50% size:92% align:center
+are zero, two, five and seven.
 
-00:00:21.571 --> 00:00:22.787
-Flag tokens.
+00:00:06.537 --> 00:00:09.545 position:50% size:92% align:center
+Their threads need unique output positions even
 
-00:00:23.007 --> 00:00:25.119
-Record whether each token survives.
+00:00:09.545 --> 00:00:11.273 position:50% size:92% align:center
+if the GPU does not execute
 
-00:00:25.339 --> 00:00:26.491
-Scan flags.
+00:00:11.273 --> 00:00:13.129 position:50% size:92% align:center
+those threads in input order.
 
-00:00:26.711 --> 00:00:29.399
-Form exclusive offsets with shared stages.
+00:00:15.149 --> 00:00:18.300 position:50% size:92% align:center
+The flag kernel writes selection flags. The scan
 
-00:00:29.619 --> 00:00:31.091
-Scatter IDs.
+00:00:18.300 --> 00:00:21.385 position:50% size:92% align:center
+kernel uses completed flags to produce offsets,
 
-00:00:31.311 --> 00:00:33.295
-Write each selected token once.
+00:00:21.385 --> 00:00:23.683 position:50% size:92% align:center
+and scatter uses completed offsets.
 
-00:00:35.315 --> 00:00:39.923
-Flags produced in device memory must be ready before scatter consumes them.
+00:00:23.903 --> 00:00:26.719 position:50% size:92% align:center
+The launches use one ordered stream. A block
 
-00:00:40.143 --> 00:00:43.940
-Unique offsets give selected threads distinct destinations.
+00:00:26.719 --> 00:00:29.279 position:50% size:92% align:center
+barrier is not the mechanism that orders
 
-00:00:44.160 --> 00:00:49.088
-Stable output order follows the offsets, not the order in which warps happen to run.
+00:00:29.279 --> 00:00:31.135 position:50% size:92% align:center
+these separate kernel phases.
+
+00:00:33.155 --> 00:00:36.258 position:50% size:92% align:center
+Token five has two earlier selected tokens, so
+
+00:00:36.258 --> 00:00:38.147 position:50% size:92% align:center
+its exclusive offset is two.
+
+00:00:38.367 --> 00:00:41.190 position:50% size:92% align:center
+Its scatter writes token ID five into output
+
+00:00:41.190 --> 00:00:43.757 position:50% size:92% align:center
+position two. The address comes from the
+
+00:00:43.757 --> 00:00:46.388 position:50% size:92% align:center
+completed prefix, not from arrival order.
+
+00:00:48.408 --> 00:00:51.237 position:50% size:92% align:center
+Pause and predict the destination if token
+
+00:00:51.237 --> 00:00:54.403 position:50% size:92% align:center
+seven’s write is inspected before token zero’s.
+
+00:00:54.623 --> 00:00:56.534 position:50% size:92% align:center
+Does writing first give token
+
+00:00:56.534 --> 00:00:58.313 position:50% size:92% align:center
+seven output position zero?
+
+00:01:04.133 --> 00:01:07.038 position:50% size:92% align:center
+Token seven writes position three because three
+
+00:01:07.038 --> 00:01:09.509 position:50% size:92% align:center
+selected tokens precede it in the input.
+
+00:01:09.729 --> 00:01:13.000 position:50% size:92% align:center
+The model inspects writes in reverse order and
+
+00:01:13.000 --> 00:01:16.129 position:50% size:92% align:center
+still produces token IDs zero, two, five and
+
+00:01:16.129 --> 00:01:18.263 position:50% size:92% align:center
+seven in the completed output.
+
+00:01:20.283 --> 00:01:23.475 position:50% size:92% align:center
+Stream dependencies make flags and offsets ready
+
+00:01:23.475 --> 00:01:26.401 position:50% size:92% align:center
+before scatter. Prefix offsets determine the
+
+00:01:26.401 --> 00:01:28.795 position:50% size:92% align:center
+stable destination of each survivor.
+
+00:01:29.015 --> 00:01:31.925 position:50% size:92% align:center
+The SMs may execute independent writes in
+
+00:01:31.925 --> 00:01:35.191 position:50% size:92% align:center
+different orders; the completed output’s order
+
+00:01:35.191 --> 00:01:37.463 position:50% size:92% align:center
+follows the address calculation.

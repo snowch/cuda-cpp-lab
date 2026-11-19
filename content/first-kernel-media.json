@@ -1,6 +1,6 @@
 {
   "durationSeconds": 136,
-  "bytes": 6520336,
+  "bytes": 6156463,
   "scenes": [
     {
       "id": "s01",
@@ -47,55 +47,55 @@
     {
       "id": "s08",
       "start": 56.728,
-      "end": 64.512,
+      "end": 64.533,
       "title": "The CPU has a separate variable"
     },
     {
       "id": "s09",
-      "start": 64.512,
-      "end": 72.104,
+      "start": 64.533,
+      "end": 72.125,
       "title": "Pause before the copy"
     },
     {
       "id": "s10",
-      "start": 72.104,
-      "end": 86.244,
+      "start": 72.125,
+      "end": 86.265,
       "title": "Pause before the copy"
     },
     {
       "id": "s11",
-      "start": 86.244,
-      "end": 95.479,
+      "start": 86.265,
+      "end": 95.5,
       "title": "The GPU write did not change value"
     },
     {
       "id": "s12",
-      "start": 95.479,
-      "end": 102.559,
+      "start": 95.5,
+      "end": 102.58,
       "title": "The copy transfers the result"
     },
     {
       "id": "s13",
-      "start": 102.559,
-      "end": 110.556,
+      "start": 102.58,
+      "end": 110.577,
       "title": "The copy completes before printing"
     },
     {
       "id": "s14",
-      "start": 110.556,
-      "end": 118.959,
+      "start": 110.577,
+      "end": 118.98,
       "title": "The CPU prints its copy"
     },
     {
       "id": "s15",
-      "start": 118.959,
-      "end": 128.385,
+      "start": 118.98,
+      "end": 128.407,
       "title": "Execution, storage and transfer"
     },
     {
       "id": "s16",
-      "start": 128.385,
-      "end": 136.172,
+      "start": 128.407,
+      "end": 136.193,
       "title": "Try tracing the same path"
     }
   ],
@@ -145,55 +145,55 @@
     {
       "id": "s08-c1",
       "start": 57.328,
-      "end": 63.792,
+      "end": 63.813,
       "text": "The program also has a CPU variable named value. main initialises it to 0.0."
     },
     {
       "id": "s09-c1",
-      "start": 65.112,
-      "end": 71.384,
+      "start": 65.133,
+      "end": 71.405,
       "text": "Suppose the GPU write and the CPU initialisation have both finished. The copy has not started."
     },
     {
       "id": "s10-c1",
-      "start": 72.704,
-      "end": 81.024,
+      "start": 72.725,
+      "end": 81.045,
       "text": "Pause here. Is the CPU variable value still 0.0, or has the GPU write changed it to 42.0?"
     },
     {
       "id": "s11-c1",
-      "start": 86.844,
-      "end": 94.759,
+      "start": 86.865,
+      "end": 94.78,
       "text": "value is still 0.0. The GPU wrote to output[0], a different location in GPU memory."
     },
     {
       "id": "s12-c1",
-      "start": 96.079,
-      "end": 101.839,
+      "start": 96.1,
+      "end": 101.86,
       "text": "The cudaMemcpy call copies the GPU result into value in CPU memory."
     },
     {
       "id": "s13-c1",
-      "start": 103.159,
-      "end": 109.836,
+      "start": 103.18,
+      "end": 109.857,
       "text": "For this call, main waits for the copy to complete before continuing. value now holds 42.0."
     },
     {
       "id": "s14-c1",
-      "start": 111.156,
-      "end": 118.239,
+      "start": 111.177,
+      "end": 118.26,
       "text": "The CPU reads value and prints 42.0 in Console. The kernel itself did not print that line."
     },
     {
       "id": "s15-c1",
-      "start": 119.559,
-      "end": 127.665,
+      "start": 119.58,
+      "end": 127.687,
       "text": "The SM executes the thread. GPU memory holds its result. The copy makes that result available to CPU code."
     },
     {
       "id": "s16-c1",
-      "start": 128.985,
-      "end": 135.452,
+      "start": 129.007,
+      "end": 135.473,
       "text": "Return to the lesson. Find the assignment inside hello, then the copy and print calls inside main."
     }
   ],
@@ -285,107 +285,107 @@
     },
     {
       "start": 57.328,
-      "end": 61.465,
+      "end": 61.479,
       "text": "The program also has a CPU variable named value."
     },
     {
-      "start": 61.465,
-      "end": 63.792,
+      "start": 61.479,
+      "end": 63.813,
       "text": "main initialises it to 0.0."
     },
     {
-      "start": 65.112,
-      "end": 68.349,
+      "start": 65.133,
+      "end": 68.37,
       "text": "Suppose the GPU write and the CPU initialisation"
     },
     {
-      "start": 68.349,
-      "end": 71.384,
+      "start": 68.37,
+      "end": 71.405,
       "text": "have both finished. The copy has not started."
     },
     {
-      "start": 72.704,
-      "end": 77.242,
+      "start": 72.725,
+      "end": 77.264,
       "text": "Pause here. Is the CPU variable value still 0.0,"
     },
     {
-      "start": 77.242,
-      "end": 81.024,
+      "start": 77.264,
+      "end": 81.045,
       "text": "or has the GPU write changed it to 42.0?"
     },
     {
-      "start": 86.844,
-      "end": 91.38,
+      "start": 86.865,
+      "end": 91.402,
       "text": "value is still 0.0. The GPU wrote to output[0],"
     },
     {
-      "start": 91.38,
-      "end": 94.759,
+      "start": 91.402,
+      "end": 94.78,
       "text": "a different location in GPU memory."
     },
     {
-      "start": 96.079,
-      "end": 99.657,
+      "start": 96.1,
+      "end": 99.678,
       "text": "The cudaMemcpy call copies the GPU result"
     },
     {
-      "start": 99.657,
-      "end": 101.839,
+      "start": 99.678,
+      "end": 101.86,
       "text": "into value in CPU memory."
     },
     {
-      "start": 103.159,
-      "end": 106.235,
+      "start": 103.18,
+      "end": 106.256,
       "text": "For this call, main waits for the copy to"
     },
     {
-      "start": 106.235,
-      "end": 108.26,
+      "start": 106.256,
+      "end": 108.282,
       "text": "complete before continuing."
     },
     {
-      "start": 108.26,
-      "end": 109.836,
+      "start": 108.282,
+      "end": 109.857,
       "text": "value now holds 42.0."
     },
     {
-      "start": 111.156,
-      "end": 114.896,
+      "start": 111.177,
+      "end": 114.918,
       "text": "The CPU reads value and prints 42.0 in Console."
     },
     {
-      "start": 114.896,
-      "end": 118.239,
+      "start": 114.918,
+      "end": 118.26,
       "text": "The kernel itself did not print that line."
     },
     {
-      "start": 119.559,
-      "end": 123.3,
+      "start": 119.58,
+      "end": 123.322,
       "text": "The SM executes the thread. GPU memory holds its"
     },
     {
-      "start": 123.3,
-      "end": 125.405,
+      "start": 123.322,
+      "end": 125.426,
       "text": "result. The copy makes that"
     },
     {
-      "start": 125.405,
-      "end": 127.665,
+      "start": 125.426,
+      "end": 127.687,
       "text": "result available to CPU code."
     },
     {
-      "start": 128.985,
-      "end": 132.219,
+      "start": 129.007,
+      "end": 132.24,
       "text": "Return to the lesson. Find the assignment inside"
     },
     {
-      "start": 132.219,
-      "end": 133.835,
+      "start": 132.24,
+      "end": 133.857,
       "text": "hello, then the copy and"
     },
     {
-      "start": 133.835,
-      "end": 135.452,
+      "start": 133.857,
+      "end": 135.473,
       "text": "print calls inside main."
     }
   ],
@@ -410,7 +410,7 @@
       "s05-c1": 5.525,
       "s06-c1": 8.832,
       "s07-c1": 5.568,
-      "s08-c1": 6.464,
+      "s08-c1": 6.485,
       "s09-c1": 6.272,
       "s10-c1": 8.32,
       "s11-c1": 7.915,

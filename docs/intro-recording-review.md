@@ -16,12 +16,11 @@ initialisation have finished. It asks whether the GPU write also changed the CPU
 variable. The answer follows the pause. The recording does not ask learners to
 edit supplied memory-management or error-checking code.
 
-Thirteen narration clips are retained from the earlier review copy. Three use
-the same pinned voice with clearer SM letter forms and CUDA pronunciation. The
-pictures now zoom into the relationship being explained and reserve the lower
-part of the frame for native captions, instead of baking a second caption copy
-into the picture. The source, voice provenance and raw speech checks remain in
-the normal production workflow.
+Both introductory recordings were regenerated with the same pinned voice after
+checking the native player with captions and paused controls. The pictures zoom
+into the relationship being explained and reserve the lower part of the frame
+for those controls. The source, voice provenance and raw speech checks remain
+in the normal production workflow.
 
 ## Lesson 2
 

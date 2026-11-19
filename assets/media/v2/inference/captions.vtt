@@ -1,34 +1,109 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:13.059
-append reads cached keys and values for each lane, then writes the next token slot. cached is the number of old tokens, width the values per token, and capacity the allocated token slots.
+00:00:00.600 --> 00:00:04.012 position:50% size:92% align:center
+The key-value cache stores earlier tokens’ keys
 
-00:00:13.279 --> 00:00:18.207
-The printed byte count accounts for requested payload, not measured memory traffic.
+00:00:04.012 --> 00:00:07.497 position:50% size:92% align:center
+and values in device memory. It is not the GPU’s
 
-00:00:20.227 --> 00:00:21.336
-Read history.
+00:00:07.497 --> 00:00:09.240 position:50% size:92% align:center
+L1 or L2 hardware cache.
 
-00:00:21.556 --> 00:00:23.625
-Accumulate old keys and values.
+00:00:09.460 --> 00:00:12.922 position:50% size:92% align:center
+The starter has room for seventeen token slots,
 
-00:00:23.845 --> 00:00:25.040
-Append token.
+00:00:12.922 --> 00:00:14.763 position:50% size:92% align:center
+with four FP32 values per
 
-00:00:25.260 --> 00:00:27.223
-Write the new key and value slot.
+00:00:14.763 --> 00:00:16.457 position:50% size:92% align:center
+key and four per value.
 
-00:00:27.443 --> 00:00:28.467
-Read back.
+00:00:18.477 --> 00:00:21.451 position:50% size:92% align:center
+Four token slots are logically part of the old
 
-00:00:28.687 --> 00:00:31.759
-Inspect the accumulated result on the CPU.
+00:00:21.451 --> 00:00:24.555 position:50% size:92% align:center
+history. Reserving seventeen slots does not mean
 
-00:00:33.779 --> 00:00:38.152
-The key-value cache here is an application data structure in device memory.
+00:00:24.555 --> 00:00:26.947 position:50% size:92% align:center
+all seventeen belong to that history.
 
-00:00:38.372 --> 00:00:42.596
-It is distinct from the GPU’s L1 and L2 hardware caches.
+00:00:27.167 --> 00:00:29.809 position:50% size:92% align:center
+The kernel’s four threads each inspect one
 
-00:00:42.816 --> 00:00:46.187
-Longer histories request more old key and value data.
+00:00:29.809 --> 00:00:32.137 position:50% size:92% align:center
+component across the four old tokens.
+
+00:00:34.157 --> 00:00:37.238 position:50% size:92% align:center
+A key and value together contain eight FP32
+
+00:00:37.238 --> 00:00:38.958 position:50% size:92% align:center
+components per token, or
+
+00:00:38.958 --> 00:00:40.749 position:50% size:92% align:center
+thirty-two payload bytes.
+
+00:00:40.969 --> 00:00:43.935 position:50% size:92% align:center
+Four old tokens therefore supply one hundred and
+
+00:00:43.935 --> 00:00:46.654 position:50% size:92% align:center
+twenty-eight requested payload bytes to this
+
+00:00:46.654 --> 00:00:48.199 position:50% size:92% align:center
+step. Hardware caches may
+
+00:00:48.199 --> 00:00:49.929 position:50% size:92% align:center
+affect the physical traffic.
+
+00:00:51.949 --> 00:00:54.709 position:50% size:92% align:center
+The new key and value are written at token slot
+
+00:00:54.709 --> 00:00:57.411 position:50% size:92% align:center
+four. That is thirty-two append payload bytes.
+
+00:00:57.631 --> 00:01:00.359 position:50% size:92% align:center
+Reading old history and appending a new entry
+
+00:01:00.359 --> 00:01:01.814 position:50% size:92% align:center
+are different jobs, with
+
+00:01:01.814 --> 00:01:03.391 position:50% size:92% align:center
+different amounts of data.
+
+00:01:05.411 --> 00:01:07.944 position:50% size:92% align:center
+Consider eight old tokens with the same
+
+00:01:07.944 --> 00:01:10.803 position:50% size:92% align:center
+component width and one new token. Pause and
+
+00:01:10.803 --> 00:01:13.791 position:50% size:92% align:center
+predict which payload doubles: the old-history
+
+00:01:13.791 --> 00:01:15.480 position:50% size:92% align:center
+read, the append, or both?
+
+00:01:15.700 --> 00:01:17.267 position:50% size:92% align:center
+The reserved capacity still
+
+00:01:17.267 --> 00:01:18.601 position:50% size:92% align:center
+has room for this case.
+
+00:01:24.421 --> 00:01:27.269 position:50% size:92% align:center
+The old-history read becomes two hundred and
+
+00:01:27.269 --> 00:01:30.376 position:50% size:92% align:center
+fifty-six payload bytes. The single-token append
+
+00:01:30.376 --> 00:01:31.995 position:50% size:92% align:center
+remains thirty-two bytes.
+
+00:01:32.215 --> 00:01:34.997 position:50% size:92% align:center
+Longer history changes how much old data is
+
+00:01:34.997 --> 00:01:38.039 position:50% size:92% align:center
+consumed, even when the number of new tokens is
+
+00:01:38.039 --> 00:01:39.851 position:50% size:92% align:center
+unchanged. These are payload
+
+00:01:39.851 --> 00:01:41.857 position:50% size:92% align:center
+counts, not measured bandwidth.

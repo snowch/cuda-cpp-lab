@@ -10,12 +10,19 @@ v1.0, `af_heart`, speed 1.0, ONNX CPU. The original skill verifies model and voi
 files against pinned SHA-256 hashes. No speech service or GPU is used.
 
 The published course contains 21 videos. Unused V1 recordings and their decks
-have been retired; the current first-kernel recording keeps its existing media URL. The first two current lessons now use progressive
-hardware walkthroughs; their scripts and figures connect source, working values
-and physical resources. The remaining recordings retain their original scripts.
-Speech forms clarify pronunciation separately from canonical captions. The first
-two walkthroughs use focused shots and native captions in a reserved lower area;
-the second defers detailed warp and register discussion to later lessons.
+have been retired; the first-kernel recording keeps its existing media URL.
+Each recording connects its example to GPU memory, execution resources or
+coordination, with an observable outcome and a new prediction before comparison.
+The first two establish execution, copying and array indices; later recordings
+add block-local warps, caches, shared storage, matrix hardware and dependencies.
+Values come from course models or checked starter contracts.
+
+Storyboards use [Instructional Design](https://github.com/joelrkohlman/instructional-design/blob/main/SKILL.md)
+for the learning sequence and [Frontend Design](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md)
+for hierarchy, typography, spacing and readable diagrams. Speech forms clarify
+pronunciation and add processing beats separately from canonical captions.
+Keep native captions and paused playback controls clear of source and data;
+inspect both inline phone playback and landscape fullscreen before exporting.
 
 Before writing a walkthrough, read the parent lesson's application question as
 well as its example. Choose a different case or question and show a relationship
@@ -67,7 +74,7 @@ Exports use H.264 at 30 fps, AAC at 160 kbps/48 kHz, a −16 LUFS target and a
 controls encoding cost; the default is `veryfast`. Colour conversion precedes
 frame repetition so each still is converted once. Captions follow measured cue lengths with deliberate
 inter-cue and scene pauses. Videos contain English soft subtitles and also ship
-WebVTT for the browser. Existing URLs stay stable. For the first two lessons,
+WebVTT for the browser. Existing URLs stay stable. For all current lessons,
 short display captions subdivide measured narration cues without changing their
 wording. Metadata keeps `cues` for speech screening and `displayCues` for seeking
 the displayed text. Display boundaries are interpolated, not forced word alignment.

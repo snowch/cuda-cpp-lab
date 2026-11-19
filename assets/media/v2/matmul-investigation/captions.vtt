@@ -1,34 +1,115 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:09.709
-Inside multiply, tile sets both shared array dimensions and the block’s two-dimensional thread shape. main derives the grid from width and tile.
+00:00:00.600 --> 00:00:03.406 position:50% size:92% align:center
+For the eight-by-eight calculation, a larger
 
-00:00:09.929 --> 00:00:26.740
-Zero padding handles partial tiles while every thread reaches the barriers. main verifies every output against a CPU reference on nonuniform inputs before reporting calculated loads and shared bytes; those counts alone do not identify a faster kernel.
+00:00:03.406 --> 00:00:05.383 position:50% size:92% align:center
+tile can reduce the algorithm’s
 
-00:00:28.760 --> 00:00:29.955
-Choose tile width.
+00:00:05.383 --> 00:00:06.723 position:50% size:92% align:center
+global operand loads.
 
-00:00:30.175 --> 00:00:32.223
-Set the block shape and shared arrays.
+00:00:06.943 --> 00:00:09.695 position:50% size:92% align:center
+The same change also increases each block’s
 
-00:00:32.443 --> 00:00:33.829
-Verify the product.
+00:00:09.695 --> 00:00:12.767 position:50% size:92% align:center
+shared storage and thread working state. We need
 
-00:00:34.049 --> 00:00:36.695
-Check correctness before comparing resources.
+00:00:12.767 --> 00:00:14.687 position:50% size:92% align:center
+both sides of that comparison.
 
-00:00:36.915 --> 00:00:38.387
-Form a hypothesis.
+00:00:16.707 --> 00:00:19.514 position:50% size:92% align:center
+Two shared input tiles need thirty-two bytes per
 
-00:00:38.607 --> 00:00:41.231
-Measure the real GPU to test performance.
+00:00:19.514 --> 00:00:22.088 position:50% size:92% align:center
+block at tile width two, and one hundred and
 
-00:00:43.251 --> 00:00:47.560
-Each resident block consumes shared storage and registers on its SM.
+00:00:22.088 --> 00:00:23.960 position:50% size:92% align:center
+twenty-eight at tile width four.
 
-00:00:47.780 --> 00:00:51.940
-Larger tiles can improve reuse while reducing how many blocks fit.
+00:00:24.180 --> 00:00:26.407 position:50% size:92% align:center
+These are storage requirements of this
 
-00:00:52.160 --> 00:00:56.768
-The teaching resource budget is separate from the device-specific occupancy limits.
+00:00:26.407 --> 00:00:28.166 position:50% size:92% align:center
+algorithm, not measurements of
+
+00:00:28.166 --> 00:00:29.748 position:50% size:92% align:center
+device-memory transactions.
+
+00:00:31.768 --> 00:00:34.334 position:50% size:92% align:center
+Use an imaginary SM with one hundred and
+
+00:00:34.334 --> 00:00:37.093 position:50% size:92% align:center
+twenty-eight shared bytes, one thousand and
+
+00:00:37.093 --> 00:00:38.890 position:50% size:92% align:center
+twenty-four registers, and a
+
+00:00:38.890 --> 00:00:40.429 position:50% size:92% align:center
+maximum of eight blocks.
+
+00:00:40.649 --> 00:00:43.517 position:50% size:92% align:center
+These intentionally small teaching budgets are
+
+00:00:43.517 --> 00:00:46.073 position:50% size:92% align:center
+separate from a real device’s limits. The
+
+00:00:46.073 --> 00:00:47.569 position:50% size:92% align:center
+smaller tile allows four
+
+00:00:47.569 --> 00:00:49.439 position:50% size:92% align:center
+resident blocks in this model.
+
+00:00:51.459 --> 00:00:54.498 position:50% size:92% align:center
+At tile width four, one block consumes the whole
+
+00:00:54.498 --> 00:00:57.347 position:50% size:92% align:center
+shared-memory budget, so only one block fits.
+
+00:00:57.567 --> 00:01:00.493 position:50% size:92% align:center
+The reduced operand-load count does not tell us
+
+00:01:00.493 --> 00:01:02.984 position:50% size:92% align:center
+whether that loss of resident work helps
+
+00:01:02.984 --> 00:01:04.479 position:50% size:92% align:center
+or hurts execution time.
+
+00:01:06.499 --> 00:01:09.129 position:50% size:92% align:center
+Keep tile width four and the same register
+
+00:01:09.129 --> 00:01:11.696 position:50% size:92% align:center
+budget, but raise shared capacity to five
+
+00:01:11.696 --> 00:01:13.261 position:50% size:92% align:center
+hundred and twelve bytes.
+
+00:01:13.481 --> 00:01:16.189 position:50% size:92% align:center
+Pause and predict whether eight blocks must now
+
+00:01:16.189 --> 00:01:17.629 position:50% size:92% align:center
+fit. Which other resource
+
+00:01:17.629 --> 00:01:19.241 position:50% size:92% align:center
+could still limit residency?
+
+00:01:25.061 --> 00:01:27.964 position:50% size:92% align:center
+The model permits four blocks, not eight. Each
+
+00:01:27.964 --> 00:01:30.424 position:50% size:92% align:center
+larger block also needs two hundred and
+
+00:01:30.424 --> 00:01:32.254 position:50% size:92% align:center
+fifty-six registers under the
+
+00:01:32.254 --> 00:01:33.957 position:50% size:92% align:center
+chosen register assumption.
+
+00:01:34.177 --> 00:01:37.585 position:50% size:92% align:center
+Use counts to form a hypothesis, verify the full
+
+00:01:37.585 --> 00:01:40.922 position:50% size:92% align:center
+numerical result, then measure a named real GPU
+
+00:01:40.922 --> 00:01:42.839 position:50% size:92% align:center
+before ranking performance.

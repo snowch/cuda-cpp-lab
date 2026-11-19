@@ -1,37 +1,121 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:05.720
-doubleValues gives each thread two elements, separated by blockDim.x.
+00:00:00.600 --> 00:00:03.392 position:50% size:92% align:center
+Each thread in this starter doubles two inputs.
 
-00:00:05.940 --> 00:00:14.580
-Each assignment needs a loaded input before its multiply. main sets threads from warpsPerBlock and allocates twice as many elements.
+00:00:03.392 --> 00:00:04.996 position:50% size:92% align:center
+Follow just the first load,
 
-00:00:14.800 --> 00:00:19.323
-The teaching trace models this dependency, not compiler instruction order.
+00:00:04.996 --> 00:00:06.659 position:50% size:92% align:center
+multiply and store sequence.
 
-00:00:21.343 --> 00:00:22.239
-Load.
+00:00:06.879 --> 00:00:09.719 position:50% size:92% align:center
+A multiply cannot use its input before that
 
-00:00:22.459 --> 00:00:24.613
-A warp requests its input values.
+00:00:09.719 --> 00:00:11.503 position:50% size:92% align:center
+input arrives. What can the
 
-00:00:24.833 --> 00:00:26.711
-Wait or issue another warp.
+00:00:11.503 --> 00:00:13.023 position:50% size:92% align:center
+SM do during that wait?
 
-00:00:26.931 --> 00:00:29.832
-Only instructions with ready operands can issue.
+00:00:15.043 --> 00:00:18.209 position:50% size:92% align:center
+The SM holds state for multiple resident warps.
 
-00:00:30.052 --> 00:00:31.417
-Multiply and store.
+00:00:18.209 --> 00:00:20.297 position:50% size:92% align:center
+Registers hold values belonging
 
-00:00:31.637 --> 00:00:34.219
-Use the returned values and write results.
+00:00:20.297 --> 00:00:21.443 position:50% size:92% align:center
+to their threads.
 
-00:00:36.239 --> 00:00:40.441
-An SM keeps resident warps and their register values available.
+00:00:21.663 --> 00:00:24.417 position:50% size:92% align:center
+Resident means the warp’s state and required
 
-00:00:40.661 --> 00:00:45.483
-A warp scheduler selects a ready instruction for an appropriate execution unit.
+00:00:24.417 --> 00:00:27.233 position:50% size:92% align:center
+resources are present on this SM; it does not
 
-00:00:45.703 --> 00:00:49.393
-Another warp can issue while a load dependency blocks the first.
+00:00:27.233 --> 00:00:29.236 position:50% size:92% align:center
+mean every instruction is ready.
+
+00:00:31.256 --> 00:00:34.277 position:50% size:92% align:center
+In this chosen sequence, warp A requests its
+
+00:00:34.277 --> 00:00:37.504 position:50% size:92% align:center
+data and then receives it. Its first thread can
+
+00:00:37.504 --> 00:00:39.427 position:50% size:92% align:center
+now multiply one point zero.
+
+00:00:39.647 --> 00:00:42.640 position:50% size:92% align:center
+The scheduler selects ready instructions; the
+
+00:00:42.640 --> 00:00:44.302 position:50% size:92% align:center
+picture is not a measured
+
+00:00:44.302 --> 00:00:46.431 position:50% size:92% align:center
+schedule or a fixed GPU latency.
+
+00:00:48.451 --> 00:00:51.638 position:50% size:92% align:center
+Warp B now has an outstanding load. Warp A still
+
+00:00:51.638 --> 00:00:54.360 position:50% size:92% align:center
+has usable operands in its own registers.
+
+00:00:54.580 --> 00:00:56.415 position:50% size:92% align:center
+The two warps do not need separate
+
+00:00:56.415 --> 00:00:58.249 position:50% size:92% align:center
+arithmetic units to make progress.
+
+00:01:00.269 --> 00:01:03.446 position:50% size:92% align:center
+Pause here. Warp B’s load is pending, but warp
+
+00:01:03.446 --> 00:01:05.517 position:50% size:92% align:center
+A’s multiply has its operands.
+
+00:01:05.737 --> 00:01:08.375 position:50% size:92% align:center
+Can the scheduler choose A’s ready multiply
+
+00:01:08.375 --> 00:01:10.153 position:50% size:92% align:center
+without discarding B’s state?
+
+00:01:15.973 --> 00:01:18.823 position:50% size:92% align:center
+Yes. The arithmetic hardware uses A’s ready
+
+00:01:18.823 --> 00:01:21.209 position:50% size:92% align:center
+operands and produces two point zero
+
+00:01:21.209 --> 00:01:22.800 position:50% size:92% align:center
+for the selected thread.
+
+00:01:23.020 --> 00:01:25.808 position:50% size:92% align:center
+B’s state remains resident while its load is
+
+00:01:25.808 --> 00:01:28.850 position:50% size:92% align:center
+pending. This is hardware sharing between warps,
+
+00:01:28.850 --> 00:01:31.639 position:50% size:92% align:center
+not one processor reserved for every thread.
+
+00:01:33.659 --> 00:01:36.595 position:50% size:92% align:center
+When B’s values arrive, the same arithmetic
+
+00:01:36.595 --> 00:01:39.601 position:50% size:92% align:center
+hardware can use them. Its selected input of
+
+00:01:39.601 --> 00:01:41.718 position:50% size:92% align:center
+thirty-three point zero becomes
+
+00:01:41.718 --> 00:01:43.152 position:50% size:92% align:center
+sixty-six point zero.
+
+00:01:43.372 --> 00:01:45.578 position:50% size:92% align:center
+More resident warps can supply ready
+
+00:01:45.578 --> 00:01:48.213 position:50% size:92% align:center
+instructions, but dependencies and resource
+
+00:01:48.213 --> 00:01:50.296 position:50% size:92% align:center
+limits still matter. This sequence
+
+00:01:50.296 --> 00:01:52.012 position:50% size:92% align:center
+does not predict a speed-up.

@@ -1,34 +1,106 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:14.573
-Inside tile, left and right are FP16 matrix fragments and sum is an FP32 accumulator fragment. fill_fragment sets the initial accumulator; the loads use a row stride of 16 elements.
+00:00:00.600 --> 00:00:03.520 position:50% size:92% align:center
+The starter’s two sixteen-by-sixteen input
 
-00:00:14.793 --> 00:00:20.681
-All 32 threads call the same warp-wide operations with matching pointers and parameters.
+00:00:03.520 --> 00:00:06.441 position:50% size:92% align:center
+matrices contain ones. One warp cooperates
 
-00:00:22.701 --> 00:00:23.960
-Load fragments.
+00:00:06.441 --> 00:00:08.109 position:50% size:92% align:center
+on the matrix operation.
 
-00:00:24.180 --> 00:00:26.313
-The warp supplies A and B operands.
+00:00:08.329 --> 00:00:11.194 position:50% size:92% align:center
+Follow the data through that cooperation instead
 
-00:00:26.533 --> 00:00:28.688
-Matrix multiply-accumulate.
+00:00:11.194 --> 00:00:12.985 position:50% size:92% align:center
+of assigning an output element
 
-00:00:28.908 --> 00:00:31.895
-Combine operands with the existing accumulator.
+00:00:12.985 --> 00:00:14.239 position:50% size:92% align:center
+to a particular lane.
 
-00:00:32.115 --> 00:00:33.203
-Store the tile.
+00:00:16.259 --> 00:00:19.075 position:50% size:92% align:center
+A fragment is the matrix API’s container for
 
-00:00:33.423 --> 00:00:35.599
-Write the updated accumulator to C.
+00:00:19.075 --> 00:00:21.251 position:50% size:92% align:center
+part of the collective operation’s
 
-00:00:37.619 --> 00:00:41.587
-Tensor cores are matrix execution units inside an SM.
+00:00:21.251 --> 00:00:22.147 position:50% size:92% align:center
+working state.
 
-00:00:41.807 --> 00:00:46.159
-A warp collectively supplies register fragments for matrix instructions.
+00:00:22.367 --> 00:00:24.597 position:50% size:92% align:center
+The fragment layout across lanes is
 
-00:00:46.379 --> 00:00:54.848
-WMMA’s fragment layout is device-dependent; a source tile is not a diagram of individual tensor-core units.
+00:00:24.597 --> 00:00:27.591 position:50% size:92% align:center
+implementation-dependent. The diagram therefore
+
+00:00:27.591 --> 00:00:30.395 position:50% size:92% align:center
+groups fragments by role, not by an invented
+
+00:00:30.395 --> 00:00:31.924 position:50% size:92% align:center
+lane-to-element mapping.
+
+00:00:33.944 --> 00:00:37.212 position:50% size:92% align:center
+The warp-level matrix call uses the SM’s matrix
+
+00:00:37.212 --> 00:00:39.646 position:50% size:92% align:center
+execution capability with the input
+
+00:00:39.646 --> 00:00:41.453 position:50% size:92% align:center
+fragments and accumulator.
+
+00:00:41.673 --> 00:00:44.769 position:50% size:92% align:center
+It is a collective call. The API operation is
+
+00:00:44.769 --> 00:00:47.659 position:50% size:92% align:center
+not a promise about one particular machine
+
+00:00:47.659 --> 00:00:50.548 position:50% size:92% align:center
+instruction or a fixed execution duration.
+
+00:00:52.568 --> 00:00:55.517 position:50% size:92% align:center
+For C at row zero and column zero, sixteen
+
+00:00:55.517 --> 00:00:58.748 position:50% size:92% align:center
+products of one contribute sixteen point zero.
+
+00:00:58.748 --> 00:01:00.995 position:50% size:92% align:center
+The initial accumulator is zero.
+
+00:01:01.215 --> 00:01:03.620 position:50% size:92% align:center
+The final store writes the collective
+
+00:01:03.620 --> 00:01:05.311 position:50% size:92% align:center
+result back to GPU memory.
+
+00:01:07.331 --> 00:01:10.362 position:50% size:92% align:center
+Now consider startingValue equal to five point
+
+00:01:10.362 --> 00:01:13.261 position:50% size:92% align:center
+zero, with the same input matrices and warp.
+
+00:01:13.481 --> 00:01:16.515 position:50% size:92% align:center
+Pause and predict C at row zero, column zero.
+
+00:01:16.515 --> 00:01:19.414 position:50% size:92% align:center
+Does changing that starting value require a
+
+00:01:19.414 --> 00:01:21.908 position:50% size:92% align:center
+different set of cooperating threads?
+
+00:01:27.728 --> 00:01:30.588 position:50% size:92% align:center
+The selected output becomes twenty-one point
+
+00:01:30.588 --> 00:01:33.579 position:50% size:92% align:center
+zero: five plus the sixteen products. The same
+
+00:01:33.579 --> 00:01:35.984 position:50% size:92% align:center
+warp still participates collectively.
+
+00:01:36.204 --> 00:01:39.547 position:50% size:92% align:center
+Fragments supply operands and working state; the
+
+00:01:39.547 --> 00:01:42.750 position:50% size:92% align:center
+SM supplies shared matrix hardware; GPU memory
+
+00:01:42.750 --> 00:01:44.631 position:50% size:92% align:center
+receives the stored result.

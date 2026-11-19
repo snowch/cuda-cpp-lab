@@ -1,34 +1,103 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:16.707
-Inside onlineAttention, next is the new maximum score found for the tile. expf(x) computes the exponential of an FP32 value; it supplies the rescaling factor and weights. denominator and weighted carry the running totals.
+00:00:00.600 --> 00:00:03.755 position:50% size:92% align:center
+This teaching kernel follows one scalar query
 
-00:00:16.927 --> 00:00:24.905
-This correctness example uses one GPU thread over eight keys; it is not a parallel FlashAttention implementation.
+00:00:03.755 --> 00:00:06.981 position:50% size:92% align:center
+over eight keys and eight values. The keys and
 
-00:00:26.925 --> 00:00:28.376
-Find tile maximum.
+00:00:06.981 --> 00:00:09.645 position:50% size:92% align:center
+values are input arrays in GPU memory.
 
-00:00:28.596 --> 00:00:30.879
-Compare scores with the running maximum.
+00:00:09.865 --> 00:00:12.439 position:50% size:92% align:center
+The question is which intermediate values the
 
-00:00:31.099 --> 00:00:32.336
-Rescale and add.
+00:00:12.439 --> 00:00:15.071 position:50% size:92% align:center
+thread must keep while it visits those arrays.
 
-00:00:32.556 --> 00:00:35.180
-Carry a denominator and weighted sum forward.
+00:00:17.091 --> 00:00:19.874 position:50% size:92% align:center
+With two keys per tile, the thread visits four
 
-00:00:35.400 --> 00:00:36.509
-Normalise.
+00:00:19.874 --> 00:00:22.596 position:50% size:92% align:center
+tiles. It updates a running maximum, a sum of
 
-00:00:36.729 --> 00:00:39.225
-Divide after processing all key tiles.
+00:00:22.596 --> 00:00:24.835 position:50% size:92% align:center
+weights and a weighted sum of values.
 
-00:00:41.245 --> 00:00:46.749
-Running totals can remain as thread working state while successive key and value tiles are read.
+00:00:25.055 --> 00:00:27.926 position:50% size:92% align:center
+These are per-thread working values during SM
 
-00:00:46.969 --> 00:00:50.489
-Avoiding a full score array changes intermediate storage.
+00:00:27.926 --> 00:00:30.670 position:50% size:92% align:center
+execution, not full arrays of scores stored
 
-00:00:50.709 --> 00:00:57.493
-Real parallel attention kernels also use shared memory and matrix units according to their implementation.
+00:00:30.670 --> 00:00:32.265 position:50% size:92% align:center
+between separate kernels.
+
+00:00:34.285 --> 00:00:37.289 position:50% size:92% align:center
+When a later tile increases the maximum, the old
+
+00:00:37.289 --> 00:00:40.293 position:50% size:92% align:center
+sums are rescaled to that new maximum before new
+
+00:00:40.293 --> 00:00:41.795 position:50% size:92% align:center
+contributions are added.
+
+00:00:42.015 --> 00:00:44.638 position:50% size:92% align:center
+The first tile’s working state is shown here.
+
+00:00:44.638 --> 00:00:46.154 position:50% size:92% align:center
+The state survives so that
+
+00:00:46.154 --> 00:00:47.903 position:50% size:92% align:center
+earlier keys still contribute.
+
+00:00:49.923 --> 00:00:53.621 position:50% size:92% align:center
+After all eight keys, the weighted sum divided
+
+00:00:53.621 --> 00:00:56.515 position:50% size:92% align:center
+by the weight sum gives about 7.421.
+
+00:00:56.735 --> 00:00:59.614 position:50% size:92% align:center
+This scalar starter demonstrates the dependency
+
+00:00:59.614 --> 00:01:01.820 position:50% size:92% align:center
+and retained state; it is not a full
+
+00:01:01.820 --> 00:01:04.393 position:50% size:92% align:center
+high-performance attention implementation.
+
+00:01:06.413 --> 00:01:09.454 position:50% size:92% align:center
+Now consider four keys per tile, with the same
+
+00:01:09.454 --> 00:01:11.370 position:50% size:92% align:center
+query, keys and values. Pause
+
+00:01:11.370 --> 00:01:13.155 position:50% size:92% align:center
+and predict the tile count.
+
+00:01:13.375 --> 00:01:15.841 position:50% size:92% align:center
+Should visiting fewer tiles change which eight
+
+00:01:15.841 --> 00:01:17.449 position:50% size:92% align:center
+keys contribute to the result?
+
+00:01:23.269 --> 00:01:26.177 position:50% size:92% align:center
+There are now two tiles. The same eight keys and
+
+00:01:26.177 --> 00:01:28.116 position:50% size:92% align:center
+values still contribute, and the
+
+00:01:28.116 --> 00:01:29.691 position:50% size:92% align:center
+illustrated result agrees.
+
+00:01:29.911 --> 00:01:32.878 position:50% size:92% align:center
+The memory benefit comes from retaining a small
+
+00:01:32.878 --> 00:01:35.277 position:50% size:92% align:center
+running state instead of materialising
+
+00:01:35.277 --> 00:01:37.612 position:50% size:92% align:center
+intermediate arrays. Tile count alone
+
+00:01:37.612 --> 00:01:39.191 position:50% size:92% align:center
+does not measure runtime.

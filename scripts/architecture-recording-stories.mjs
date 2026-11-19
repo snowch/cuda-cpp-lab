@@ -43,7 +43,9 @@ P('more-threads-than-elements',3,'Why eight threads can form two warps',
  S('Check grouping separately from values',[
   'In the CUDA source editor, set threadsPerBlock to eight and click Compile and run.',
   'Trace CUDA calls shows one block of eight threads. Console’s five outputs stay the same; the warp diagram explains grouping, not measured execution time.'],
-  ()=>array('Output · the same five values',e.boundsOther.output)),
+  ()=>array('Output · the same five values',e.boundsOther.output),{speech:[
+   'In the CUDA source editor, set threadsPerBlock to eight and click Compile and run.',
+   'Trace [pause 0.3] CUDA calls shows one block of eight threads. Console’s five outputs stay the same; the warp diagram explains grouping, not measured execution time.']}),
 ]);
 
 P('from-cpu-array-to-gpu-result',4,'Follow values across two memory domains',
@@ -192,7 +194,9 @@ P('reduction',8,'Connect shared writes to safe partner reads',
  S('Only part of the block adds at a stage',[
   'At partner distance four, threads zero through three add the upper four values into the lower four positions.',
   'The next stage must use these completed partial sums, so every block thread reaches the following barrier.'],
-  ()=>array('After the first partner-add stage',e.reduction.levels[1].map(x=>x.value))),
+  ()=>array('After the first partner-add stage',e.reduction.levels[1].map(x=>x.value)),{speech:[
+   'At partner distance four. [pause 0.4] Threads zero through three add the upper four values into the lower four positions.',
+   'The next stage must use these completed partial sums, so every block thread reaches the following barrier.']}),
  S('The reduction narrows to one addition',[
   'The next partner stage leaves two partial sums: sixteen point zero and twenty point zero.',
   'Thread zero adds them to form thirty-six point zero. Fewer adding threads does not change the block’s matching barrier participants.'],
@@ -246,7 +250,7 @@ P('matmul',10,'See which values a shared tile reuses',
  S('A block loads two shared input tiles',[
   'Four threads form a two-by-two output block. They cooperatively load a two-by-two tile from each input into their block’s shared memory.',
   'The first block barrier completes those shared writes before the tile is consumed.'],
-  ()=>tileView(e.matrix,0)),
+  ()=>tileView(e.matrix,0,{before:true})),
  S('Shared inputs feed private working sums',[
   'Threads computing the same output row can reuse an A value. Threads computing the same output column can reuse a B value.',
   'Each thread keeps its own partial output sum. Sharing the inputs does not merge the output accumulators.'],
@@ -258,7 +262,7 @@ P('matmul',10,'See which values a shared tile reuses',
  predict('Can another block use this shared tile?',[
   'Suppose two blocks are resident on the same SM. Pause and predict whether the second block’s shared array is the same workspace as the first block’s.',
   'Does sharing an SM make block-scoped arrays shared between blocks?'],
-  ()=>flow([{title:['Block A','Shared tiles'],value:'A workspace',kind:'chip'},{title:'Same SM',value:'Shared hardware'},{title:['Block B','Shared tiles'],value:'B workspace',kind:'chip'}])),
+  ()=>flow([{title:['Block A','Shared tiles'],value:'A workspace',kind:'chip'},{title:'Same SM',value:'Shared hardware'},{title:['Block B','Shared tiles'],value:'B workspace',kind:'chip'}],{directions:[false,false]})),
  S('Shared-memory ownership stays per block',[
   'Each block has its own shared workspace, even when both use the same SM. One block cannot use the other block’s shared array as its tile.',
   'Reuse in this kernel comes from cooperating threads within a block, while each thread retains a private output sum.'],
@@ -287,7 +291,7 @@ P('precision',11,'Separate stored precision from arithmetic state',
  predict('Must every FP16 conversion lose information?',[
   'Consider a new row alternating one point zero and negative zero point five. Both values are exactly representable in FP16.',
   'Pause and predict whether the round trip must change the operands or the final sum.'],
-  ()=>array('A different, exactly representable input case',e.exact.row.slice(0,4))),
+  ()=>array('First four of sixteen exactly representable inputs',e.exact.row.slice(0,4))),
  S('Representability decides this case',[
   'No input value changes in that case, and the illustrated sum remains four point zero.',
   'Reason separately about stored types, operand conversion and accumulation. A smaller format does not by itself establish an accuracy loss or a speed-up.'],
@@ -387,8 +391,8 @@ P('inference',14,'Locate the key-value cache in device memory',
 ]);
 
 const resourceView=model=>svg(rect(15,5,1170,285,'chip')+text(35,47,'Imaginary SM budget · 128 shared bytes, 1024 registers','label')+
- rect(40,90,470,150,'box')+text(60,133,'Tile width','label')+text(275,205,model.tile,'big','middle')+
- rect(655,90,490,150,'active')+text(675,133,'Blocks that fit','label')+text(900,205,model.residentBlocks,'big','middle'));
+ rect(40,90,470,170,'box')+text(60,133,'Tile width','label')+text(275,220,model.tile,'big','middle')+
+ rect(655,90,490,170,'active')+text(675,133,'Blocks that fit','label')+text(900,220,model.residentBlocks,'big','middle'));
 P('matmul-investigation',15,'Balance reuse against SM resource demand',
  'Explain why operand-load counts and shared storage do not establish a faster tile configuration.',
  '8 × 8 calculation · explicitly imaginary resource budget · no real GPU occupancy or timing claim',[
@@ -432,7 +436,7 @@ P('histograms',16,'Follow local counts into global counters',
  S('Local contributions are combined before merging',[
   'Threads make their atomic contributions to the block’s shared counters. A following block barrier completes this counting phase before the merge.',
   'Only nonzero partial counters need a global atomic merge in this example.'],
-  ()=>flow([{title:['SM','Block 0 partials'],value:'Own workspace',kind:'chip'},{title:['GPU memory','Global counters'],value:words(e.histogram.counts)},{title:['SM','Block 1 partials'],value:'Own workspace',kind:'chip'}],{active:1})),
+  ()=>flow([{title:['SM','Block 0 partials'],value:'Own workspace',kind:'chip'},{title:['GPU memory','Global counters'],value:words(e.histogram.counts)},{title:['SM','Block 1 partials'],value:'Own workspace',kind:'chip'}],{active:1,directions:['right','left']})),
  S('Read both kinds of operation count',[
   'Direct global counting makes eight global atomic additions. Local aggregation makes eight shared atomic additions and six global merges for these inputs.',
   'That changes where operations occur. Extra local work and synchronisation still matter, so these counts are not a speed measurement.'],
@@ -536,10 +540,10 @@ P('progress',19,'Separate consumers from barrier participants',
 
 const slotView=stage=>svg(
  text(30,42,'GPU input copy and SM execution use different resources','label')+
- rect(30,78,325,150,stage==='copy'?'active':'box')+text(50,122,'Copy engine','label')+text(50,187,'Next input','value')+
- rect(438,78,325,150,stage==='waiting'?'guard':'box')+text(458,122,'GPU buffer A','label')+text(458,187,stage==='released'?'Released':'Still in use','value')+
- rect(845,78,325,150,'chip')+text(865,122,'SM execution','label')+text(865,187,'Process A','value')+
- arrow(360,156,433,156)+arrow(768,156,840,156)+text(30,280,stage==='released'?'used[0] follows the result copy; the next input can now reuse A.':'Wait for the previous consumer and result copy before overwriting A.','small'));
+ rect(30,78,325,150,stage==='copy'?'active':'box')+text(50,122,'Copy engine','label')+text(50,187,stage==='released'?'Next input':'Free','value')+
+ rect(438,78,325,150,stage==='waiting'?'guard':'box')+text(458,122,'GPU buffer A','label')+text(458,187,stage==='released'?'Reusable':'Still in use','value')+
+ rect(845,78,325,150,'chip')+text(865,122,'SM execution','label')+text(865,187,stage==='released'?'Finished A':'Process A','value')+
+ (stage==='released'?arrow(360,156,433,156):'')+text(30,280,stage==='released'?'used[0] follows the result copy; the next input can now reuse A.':'Wait for the previous consumer and result copy before overwriting A.','small'));
 P('pipelines',20,'Follow readiness and buffer reuse between engines',
  'Explain event dependencies and safe slot reuse independently of an overlap timing claim.',
  'Four chunks · two GPU buffer slots · dependency diagram, not a measured timeline',[
