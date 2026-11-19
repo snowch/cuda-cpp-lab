@@ -363,7 +363,16 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                     await cache.delete(new URL('examples/gather.cu',base));
                 }''',{'base':url,'id':releases['two']['id']})
                 CourseHandler.fail='examples/gather.cu';page.locator('#download-update').click()
-                expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
+                # gather.cu follows the recording/compiler assets. A fresh
+                # candidate can transfer the complete asset set before this 503.
+                try:expect(page.locator('#app-status-error')).not_to_be_empty(timeout=DOWNLOAD_TIMEOUT)
+                except AssertionError:
+                    print('Failed replacement diagnostics:',{
+                        'version':page.locator('#version-status').inner_text(),
+                        'progress':page.locator('#progress-text').inner_text(),
+                        'recentRequests':CourseHandler.requests[-10:],
+                    },flush=True)
+                    raise
                 ready(page);expect(page.locator('#restart-update')).to_be_hidden()
                 CourseHandler.fail=None;page.locator('#download-update').click()
                 update_ready(page)
