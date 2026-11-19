@@ -158,6 +158,8 @@ and explicit Restart, even if active metadata is missing. The real older client
 protocol is exercised alongside the older compiled worker: the original defect
 is reproduced, the normal older upgrade works, and the new worker fixes the
 missing-state case without changing the open page or losing its saved draft.
+An already verified candidate with the old incorrect active selection also
+recovers Restart through the native planning path without another payload transfer.
 Foreground downloads also announce the final verification phase separately from
 transfer. No forced activation, automatic reload or storage clearing is added.
 

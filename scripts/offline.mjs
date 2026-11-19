@@ -19,12 +19,12 @@ const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title"
 <div id="app-status-feedback"><p id="app-status-error" role="status"></p></div>
 <section id="update-section" aria-labelledby="version-title"><h3 id="version-title">Updates</h3>
 <p id="version-status" role="status">Checking for updates</p><p id="version-detail"></p>
-<div class="status-actions"><button id="restart-update" type="button" hidden>Restart to update</button><button id="download-update" type="button" hidden>Update</button><button id="later-update" type="button" hidden>Later</button><button id="check-update" type="button">Check for updates</button></div>
+<div class="status-actions"><button id="restart-update" class="primary" type="button" hidden>Restart to update</button><button id="download-update" class="primary" type="button" hidden>Update</button><button id="later-update" type="button" hidden>Later</button><button id="check-update" type="button">Check for updates</button></div>
 <div id="update-download-feedback"></div>
 <p id="restart-note" hidden>Restart reloads your open GPU Lab windows and restores their lessons and saved work. Finish any running experiment first.</p></section>
 <section id="offline-section" aria-labelledby="offline-title"><h3 id="offline-title">Offline access</h3><p id="offline-status" role="status">Not saved for offline use</p>
 <p id="offline-size"></p>
-<div class="status-actions"><button id="save-offline" type="button">Download for offline use</button></div>
+<div class="status-actions"><button id="save-offline" class="primary" type="button">Download for offline use</button></div>
 <div id="offline-download-feedback"><div id="download-progress" hidden><label id="download-progress-label" for="asset-progress">Checking files</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><p id="download-behaviour"></p><button id="cancel-download" type="button">Cancel download</button></div></div></section>
 <details id="app-status-details"><summary>Version and download details</summary><p id="running-version"></p><p id="release-detail"></p>
 <p>Downloads include all lessons, recordings, diagrams, examples, browser simulators and the CUDA compiler. Browser storage overhead is additional. External links need internet access.</p>

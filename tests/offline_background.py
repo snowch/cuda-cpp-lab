@@ -241,6 +241,7 @@ def quota_startup_error(browser,url):
         cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/'),'quotaSize':1})
         page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
+        expect(page.locator('#app-status-error')).to_be_visible()
         assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
         assert page.locator('html').get_attribute('data-test-release')=='one'
         expect(page.locator('#offline-status')).to_have_text('Available offline')
@@ -293,8 +294,16 @@ def missing_state_native(browser,url):
         expect(page.locator('#restart-update')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
         expect(page.locator('#version-detail')).to_have_text('The complete update has been downloaded and checked.')
         assert page.locator('html').get_attribute('data-test-release')=='one'
+        # Recover an already complete cache with the old worker's incorrect
+        # active selection. The native planning path must need no new transfer.
+        candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+        page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
+        page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+        before=payload_requests();page.locator('#download-update').click()
+        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        assert payload_requests()==before,'A verified existing candidate needs no payload download to recover Restart.'
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
-    print('PASS native downloads keep an update pending after lost cache metadata and expose explicit Restart only after verification',flush=True)
+    print('PASS native downloads keep updates pending after lost metadata and recover Restart for an already verified candidate without downloading its payload again',flush=True)
 
 def dialog_states(browser,url):
     for width in [390,820,1440]:
@@ -303,6 +312,10 @@ def dialog_states(browser,url):
             with browser.new_context(viewport={'width':width,'height':900},color_scheme=theme) as c:
                 c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
                 page=open_page(c,url);dialog=page.locator('#app-status-dialog')
+                # This minimal fixture has no theme controller. Apply the course
+                # theme explicitly; preferred colour scheme alone does not set it.
+                page.evaluate('theme=>document.documentElement.dataset.theme=theme',theme)
+                assert dialog.evaluate('e=>getComputedStyle(e).backgroundColor')==('rgb(28, 46, 49)' if theme=='dark' else 'rgb(255, 255, 255)')
                 expect(page.locator('#app-status-details')).not_to_have_attribute('open','')
                 expect(page.locator('#running-version')).to_be_hidden()
                 expect(page.locator('#offline-size')).to_contain_text('MB')
