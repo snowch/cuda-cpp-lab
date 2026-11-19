@@ -1,7 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
-import { installMarkup } from './install.mjs';
+import { installMarkup, installHelp } from './install.mjs';
 import { validateRelease } from '../src/release-contract.mjs';
 const hash = data => createHash('sha256').update(data).digest('hex');
 async function filesUnder(directory, prefix = '') {
@@ -26,6 +26,7 @@ const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title"
 <div class="status-actions"><button id="save-offline" type="button">Download for offline use</button><button id="remove-offline" type="button" hidden>Remove offline copy</button></div>
 <div id="offline-download-feedback"><div id="download-progress" hidden><label id="download-progress-label" for="asset-progress">Verified download progress</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><p id="download-behaviour"></p><button id="cancel-download" type="button">Cancel download</button></div></div>
 <div id="remove-confirmation" hidden><p>Remove GPU Lab’s downloaded files from this browser? Your experiment work, preferences and other apps will be kept.</p><button id="confirm-remove" type="button">Remove downloaded files</button><button id="cancel-remove" type="button">Keep offline copy</button></div></section>
+${installHelp}
 <p id="app-status-error" role="status"></p>
 </dialog>`;
 export async function buildOffline(directory, identity = { commit: null, date: null }) {

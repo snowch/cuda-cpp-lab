@@ -36,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def fixture(temp,name):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
-    for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','install.mjs','style.css']:
+    for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
     shutil.copytree(ROOT/'assets/fonts',folder/'assets/fonts')
     for icon in ['icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png']:shutil.copy2(ROOT/'assets'/icon,folder/'assets'/icon)
@@ -132,7 +132,7 @@ def rejected_response(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':820,'height':1100},color_scheme='dark') as c:
         page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
-        Handler.revision='two';Handler.corrupt='src/install.mjs';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        Handler.revision='two';Handler.corrupt='src/experiment-state.mjs';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).to_contain_text('did not match the release',timeout=30000)
         assert not job(page)['wanted'];assert not rpc(page,'STATUS')['pendingReady'];assert page.locator('html').get_attribute('data-test-release')=='one'
         expect(page.locator('#offline-status')).to_have_text('Available offline')
