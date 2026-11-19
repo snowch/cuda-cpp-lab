@@ -1,34 +1,106 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:15.277
-main launches runKernel with one warp of 32 threads. stride sets the distance between input indices, while output remains contiguous. n counts outputs; the input allocation must also cover the largest strided read.
+00:00:00.600 --> 00:00:03.900 position:50% size:92% align:center
+One warp requests thirty-two FP32 values. That
 
-00:00:15.497 --> 00:00:18.185
-The host groups returned indices into sectors.
+00:00:03.900 --> 00:00:07.128 position:50% size:92% align:center
+is one hundred and twenty-eight useful bytes.
 
-00:00:20.205 --> 00:00:21.443
-Lane addresses.
+00:00:07.348 --> 00:00:10.128 position:50% size:92% align:center
+Changing the input stride can change the number
 
-00:00:21.663 --> 00:00:24.329
-Each lane selects input[lane × stride].
+00:00:10.128 --> 00:00:12.258 position:50% size:92% align:center
+of addressed sectors even when every
 
-00:00:24.549 --> 00:00:25.680
-Group addresses.
+00:00:12.258 --> 00:00:13.855 position:50% size:92% align:center
+lane still reads one value.
 
-00:00:25.900 --> 00:00:28.481
-Aligned sectors group the requested words.
+00:00:15.875 --> 00:00:18.959 position:50% size:92% align:center
+The warp’s threads supply addresses to the SM’s
 
-00:00:28.701 --> 00:00:29.939
-Return values.
+00:00:18.959 --> 00:00:20.534 position:50% size:92% align:center
+load and store hardware.
 
-00:00:30.159 --> 00:00:32.804
-Each lane writes its contiguous output slot.
+00:00:20.754 --> 00:00:23.717 position:50% size:92% align:center
+The memory path groups these addresses. Caches
 
-00:00:34.824 --> 00:00:38.451
-One warp issues a load with an address for each active lane.
+00:00:23.717 --> 00:00:25.585 position:50% size:92% align:center
+can satisfy requests before a
 
-00:00:38.671 --> 00:00:41.849
-The memory path groups these addresses into requests.
+00:00:25.585 --> 00:00:27.325 position:50% size:92% align:center
+miss reaches device memory.
 
-00:00:42.069 --> 00:00:49.600
-Caches may supply data before device memory is accessed; a sector count does not measure device-memory traffic.
+00:00:29.345 --> 00:00:32.178 position:50% size:92% align:center
+With stride one, lanes zero, one and two read
+
+00:00:32.178 --> 00:00:35.201 position:50% size:92% align:center
+byte addresses zero, four and eight. Those words
+
+00:00:35.201 --> 00:00:37.153 position:50% size:92% align:center
+share the first aligned sector.
+
+00:00:37.373 --> 00:00:39.564 position:50% size:92% align:center
+Across the whole warp, the thirty-two
+
+00:00:39.564 --> 00:00:41.341 position:50% size:92% align:center
+addresses occupy four sectors.
+
+00:00:43.361 --> 00:00:46.135 position:50% size:92% align:center
+Now use stride eight. Each input word is four
+
+00:00:46.135 --> 00:00:47.861 position:50% size:92% align:center
+bytes, so neighbouring lanes
+
+00:00:47.861 --> 00:00:49.526 position:50% size:92% align:center
+are thirty-two bytes apart.
+
+00:00:49.746 --> 00:00:52.147 position:50% size:92% align:center
+Pause and predict whether the warp still
+
+00:00:52.147 --> 00:00:54.188 position:50% size:92% align:center
+addresses four sectors. The useful
+
+00:00:54.188 --> 00:00:55.869 position:50% size:92% align:center
+value count has not changed.
+
+00:01:01.689 --> 00:01:04.264 position:50% size:92% align:center
+Stride eight places each lane’s word in a
+
+00:01:04.264 --> 00:01:07.217 position:50% size:92% align:center
+different sector. The warp addresses thirty-two
+
+00:01:07.217 --> 00:01:09.667 position:50% size:92% align:center
+sectors for the same thirty-two values.
+
+00:01:09.887 --> 00:01:12.601 position:50% size:92% align:center
+That covers one thousand and twenty-four sector
+
+00:01:12.601 --> 00:01:15.199 position:50% size:92% align:center
+bytes while only one hundred and twenty-eight
+
+00:01:15.199 --> 00:01:17.162 position:50% size:92% align:center
+bytes contain the requested words.
+
+00:01:19.182 --> 00:01:22.072 position:50% size:92% align:center
+These counts describe the addresses touched by
+
+00:01:22.072 --> 00:01:24.900 position:50% size:92% align:center
+one load instruction. They do not tell us how
+
+00:01:24.900 --> 00:01:26.722 position:50% size:92% align:center
+many requests miss the caches
+
+00:01:26.722 --> 00:01:28.355 position:50% size:92% align:center
+or how long the GPU takes.
+
+00:01:28.575 --> 00:01:31.761 position:50% size:92% align:center
+To explain the count, follow lane addresses into
+
+00:01:31.761 --> 00:01:34.947 position:50% size:92% align:center
+aligned sectors. To explain real memory traffic,
+
+00:01:34.947 --> 00:01:36.872 position:50% size:92% align:center
+additional cache and hardware
+
+00:01:36.872 --> 00:01:38.133 position:50% size:92% align:center
+evidence is needed.

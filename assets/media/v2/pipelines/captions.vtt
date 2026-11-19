@@ -1,37 +1,106 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:11.821
-In main, ready[s] is recorded after the input copy in copy’s stream. cudaStreamWaitEvent orders compute after that event, and process doubles the slot values.
+00:00:00.600 --> 00:00:03.932 position:50% size:92% align:center
+The starter has four input chunks and two
 
-00:00:12.041 --> 00:00:17.631
-Later, used[s] is recorded after the output copy; the next reuse waits for it.
+00:00:03.932 --> 00:00:07.834 position:50% size:92% align:center
+reusable GPU buffer slots. Copies supply values;
 
-00:00:17.851 --> 00:00:21.499
-Streams are ordered queues, and events connect their dependencies.
+00:00:07.834 --> 00:00:10.435 position:50% size:92% align:center
+SMs execute the doubling kernel.
 
-00:00:23.519 --> 00:00:25.033
-Copy and record ready.
+00:00:10.655 --> 00:00:13.483 position:50% size:92% align:center
+Separate resources can overlap eligible work,
 
-00:00:25.253 --> 00:00:27.216
-Finish supplying the slot’s input.
+00:00:13.483 --> 00:00:15.997 position:50% size:92% align:center
+but streams express ordering rather than
 
-00:00:27.436 --> 00:00:28.737
-Wait and compute.
+00:00:15.997 --> 00:00:17.631 position:50% size:92% align:center
+reserved hardware engines.
 
-00:00:28.957 --> 00:00:31.219
-Order the kernel after its input event.
+00:00:19.651 --> 00:00:22.519 position:50% size:92% align:center
+The copy stream records ready after supplying a
 
-00:00:31.439 --> 00:00:32.719
-Record consumed.
+00:00:22.519 --> 00:00:25.387 position:50% size:92% align:center
+slot’s input. The compute stream waits for that
 
-00:00:32.939 --> 00:00:35.904
-Protect the slot until output copying finishes.
+00:00:25.387 --> 00:00:27.096 position:50% size:92% align:center
+event before using the slot.
 
-00:00:37.924 --> 00:00:46.095
-Copy engines can transfer data while SMs execute independent kernels, if the device and workload support overlap.
+00:00:27.316 --> 00:00:30.181 position:50% size:92% align:center
+An event marks completion of earlier work in its
 
-00:00:46.315 --> 00:00:49.259
-Streams express ordering, not dedicated hardware.
+00:00:30.181 --> 00:00:32.211 position:50% size:92% align:center
+stream; the wait adds a dependency
 
-00:00:49.479 --> 00:00:54.897
-A reusable buffer must wait for its previous consumer, even when its next copy is ready.
+00:00:32.211 --> 00:00:33.524 position:50% size:92% align:center
+from the other stream.
+
+00:00:35.544 --> 00:00:38.473 position:50% size:92% align:center
+After the kernel, the compute stream copies the
+
+00:00:38.473 --> 00:00:41.028 position:50% size:92% align:center
+result back to the CPU. Only then does it
+
+00:00:41.028 --> 00:00:42.648 position:50% size:92% align:center
+record used for that slot.
+
+00:00:42.868 --> 00:00:45.614 position:50% size:92% align:center
+Finishing the input copy alone does not make a
+
+00:00:45.614 --> 00:00:48.180 position:50% size:92% align:center
+buffer safe for a later chunk to overwrite.
+
+00:00:50.200 --> 00:00:53.547 position:50% size:92% align:center
+Chunk two wants to reuse slot A from chunk zero.
+
+00:00:53.547 --> 00:00:56.755 position:50% size:92% align:center
+The copy engine is available, but the previous
+
+00:00:56.755 --> 00:00:59.544 position:50% size:92% align:center
+computation or result copy still uses A.
+
+00:00:59.764 --> 00:01:02.271 position:50% size:92% align:center
+Pause and predict whether the next input can
+
+00:01:02.271 --> 00:01:04.095 position:50% size:92% align:center
+overwrite that slot immediately.
+
+00:01:09.915 --> 00:01:12.916 position:50% size:92% align:center
+It must wait for used from the previous chunk in
+
+00:01:12.916 --> 00:01:15.916 position:50% size:92% align:center
+that slot. The next input copy can proceed after
+
+00:01:15.916 --> 00:01:17.542 position:50% size:92% align:center
+the kernel and result copy
+
+00:01:17.542 --> 00:01:18.917 position:50% size:92% align:center
+have finished using A.
+
+00:01:19.137 --> 00:01:21.628 position:50% size:92% align:center
+Slot B permits a different chunk to make
+
+00:01:21.628 --> 00:01:23.683 position:50% size:92% align:center
+progress while A is held; it does
+
+00:01:23.683 --> 00:01:25.303 position:50% size:92% align:center
+not remove A’s dependency.
+
+00:01:27.323 --> 00:01:29.783 position:50% size:92% align:center
+Correct overlap needs readiness before
+
+00:01:29.783 --> 00:01:32.437 position:50% size:92% align:center
+consumption and release before reuse. The
+
+00:01:32.437 --> 00:01:34.768 position:50% size:92% align:center
+supplied events express those edges.
+
+00:01:34.988 --> 00:01:37.761 position:50% size:92% align:center
+Actual overlap depends on the device and
+
+00:01:37.761 --> 00:01:40.743 position:50% size:92% align:center
+workload. A diagram of eligible work is not
+
+00:01:40.743 --> 00:01:43.308 position:50% size:92% align:center
+evidence of elapsed-time improvement.

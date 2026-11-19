@@ -1,34 +1,97 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:02.456
-exchange launches four threads.
+00:00:00.600 --> 00:00:03.338 position:50% size:92% align:center
+The four-thread block writes values one through
 
-00:00:02.676 --> 00:00:12.895
-Every thread writes its shared slot and reaches __syncthreads before the readers condition. readers changes who consumes the values, not who must participate in the barrier.
+00:00:03.338 --> 00:00:05.144 position:50% size:92% align:center
+four into its shared workspace.
 
-00:00:14.915 --> 00:00:16.323
-Publish shared values.
+00:00:05.364 --> 00:00:08.235 position:50% size:92% align:center
+A block barrier follows those writes. Only after
 
-00:00:16.543 --> 00:00:18.505
-All four threads supply a value.
+00:00:08.235 --> 00:00:09.790 position:50% size:92% align:center
+it do the selected readers
 
-00:00:18.725 --> 00:00:19.813
-All arrive.
+00:00:09.790 --> 00:00:11.465 position:50% size:92% align:center
+consume neighbouring values.
 
-00:00:20.033 --> 00:00:23.767
-Keep the barrier outside t < readers.
+00:00:13.485 --> 00:00:16.380 position:50% size:92% align:center
+All four non-exited block threads must reach the
 
-00:00:23.987 --> 00:00:25.501
-Selected threads read.
+00:00:16.380 --> 00:00:18.371 position:50% size:92% align:center
+matching barrier in this example.
 
-00:00:25.721 --> 00:00:27.791
-Only the consumer set changes.
+00:00:18.591 --> 00:00:21.324 position:50% size:92% align:center
+Having enough SM resources does not repair a
 
-00:00:29.811 --> 00:00:33.267
-Resident threads can wait for other threads at a block barrier.
+00:00:21.324 --> 00:00:24.120 position:50% size:92% align:center
+missing participant. The barrier contract and
 
-00:00:33.487 --> 00:00:37.625
-Enough hardware resources alone do not repair a missing participant.
+00:00:24.120 --> 00:00:27.103 position:50% size:92% align:center
+the hardware’s capacity are different questions.
 
-00:00:37.845 --> 00:00:41.579
-This safe kernel keeps the barrier outside the conditional reads.
+00:00:29.123 --> 00:00:31.963 position:50% size:92% align:center
+With two readers, threads zero and one consume
+
+00:00:31.963 --> 00:00:33.692 position:50% size:92% align:center
+shared values after all four
+
+00:00:33.692 --> 00:00:34.989 position:50% size:92% align:center
+writers have arrived.
+
+00:00:35.209 --> 00:00:37.804 position:50% size:92% align:center
+The condition selects consumers. It does not
+
+00:00:37.804 --> 00:00:39.692 position:50% size:92% align:center
+select which writers participate
+
+00:00:39.692 --> 00:00:41.225 position:50% size:92% align:center
+in the earlier collective.
+
+00:00:43.245 --> 00:00:45.896 position:50% size:92% align:center
+Consider readers equal to one, with the same
+
+00:00:45.896 --> 00:00:48.365 position:50% size:92% align:center
+four launched threads and no early exits.
+
+00:00:48.585 --> 00:00:51.683 position:50% size:92% align:center
+Pause and predict the required number of barrier
+
+00:00:51.683 --> 00:00:53.748 position:50% size:92% align:center
+arrivals. Is it now one or four?
+
+00:00:59.568 --> 00:01:02.254 position:50% size:92% align:center
+The required arrivals stay at four. Only the
+
+00:01:02.254 --> 00:01:03.963 position:50% size:92% align:center
+number of consumers changes.
+
+00:01:04.183 --> 00:01:06.800 position:50% size:92% align:center
+The safe program leaves the barrier outside the
+
+00:01:06.800 --> 00:01:08.917 position:50% size:92% align:center
+reader condition, so the shared writes
+
+00:01:08.917 --> 00:01:10.476 position:50% size:92% align:center
+precede the dependent reads.
+
+00:01:12.496 --> 00:01:15.224 position:50% size:92% align:center
+If some of these non-exited threads skip a
+
+00:01:15.224 --> 00:01:18.083 position:50% size:92% align:center
+barrier taken by the others, this is invalid
+
+00:01:18.083 --> 00:01:19.707 position:50% size:92% align:center
+collective participation.
+
+00:01:19.927 --> 00:01:22.880 position:50% size:92% align:center
+The diagnostic does not assign a numerical
+
+00:01:22.880 --> 00:01:26.184 position:50% size:92% align:center
+result or promise how a real GPU will fail. Fix
+
+00:01:26.184 --> 00:01:28.012 position:50% size:92% align:center
+the participant set before
+
+00:01:28.012 --> 00:01:29.911 position:50% size:92% align:center
+reasoning about the output.

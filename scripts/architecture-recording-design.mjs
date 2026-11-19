@@ -59,8 +59,8 @@ export function smState(frame){
 export function sectors(model){
  const n=model.sectors.length;
  return svg(text(30,40,'32 lane addresses from one load instruction','label')+
-  [0,1,2].map((i)=>{const l=model.lanes[i],x=30+i*255;return rect(x,76,235,145,'box')+text(x+18,116,`Lane ${i}`,'label')+text(x+18,170,`byte ${l.address}`,'value')+text(x+18,207,`sector ${l.sector}`,'small');}).join('')+
-  rect(845,58,320,180,'active')+text(1005,132,n,'big','middle')+text(1005,189,'addressed sectors','small','middle')+
+  [0,1,2].map((i)=>{const l=model.lanes[i],x=30+i*255;return rect(x,76,235,165,'box')+text(x+18,116,`Lane ${i}`,'label')+text(x+18,180,`byte ${l.address}`,'value')+text(x+18,225,`sector ${l.sector}`,'small');}).join('')+
+  rect(845,58,320,180,'active')+text(1005,150,n,'big','middle')+text(1005,205,'addressed sectors','small','middle')+
   text(30,280,`${model.usefulBytes} useful bytes · ${model.coveredBytes} bytes covered by aligned sectors`,'small'));
 }
 export function masks(model,path='all'){
@@ -72,14 +72,14 @@ export function masks(model,path='all'){
 }
 export function bankView(model){
  return svg(text(30,40,'SM shared memory · bank = word index modulo 32','label')+
-  model.lanes.slice(0,3).map((l,i)=>{const x=30+i*255;return rect(x,80,230,145,'box')+text(x+18,121,`Lane ${i}`,'label')+text(x+18,171,`word ${l.word}`,'value')+text(x+18,211,`bank ${l.bank}`,'small');}).join('')+
-  rect(845,75,325,155,'active')+text(1005,145,model.rounds,'big','middle')+text(1005,201,`model service round${model.rounds===1?'':'s'}`,'small','middle')+
+  model.lanes.slice(0,3).map((l,i)=>{const x=30+i*255;return rect(x,80,230,160,'box')+text(x+18,121,`Lane ${i}`,'label')+text(x+18,180,`word ${l.word}`,'value')+text(x+18,220,`bank ${l.bank}`,'small');}).join('')+
+  rect(845,75,325,155,'active')+text(1005,160,model.rounds,'big','middle')+text(1005,210,`model service round${model.rounds===1?'':'s'}`,'small','middle')+
   text(30,278,`${model.distinctWords} distinct word${model.distinctWords===1?'':'s'} · ${model.banksUsed} bank${model.banksUsed===1?'':'s'} used`,'small'));
 }
 export function gate({arrivals=8,readers=4,phase='ready'}={}){
  return svg(rect(12,6,1176,287,'chip')+text(32,46,'One block on an SM','label')+
   rect(40,80,330,155,'box')+text(60,122,'Shared values','label')+text(205,191,phase==='bad'?'Unordered':'Published','value','middle')+
-  rect(462,65,280,185,phase==='bad'?'guard':'active')+text(602,130,arrivals,'big','middle')+text(602,190,'barrier arrivals','small','middle')+
+  rect(462,65,280,185,phase==='bad'?'guard':'active')+text(602,165,arrivals,'big','middle')+text(602,210,'barrier arrivals','small','middle')+
   rect(835,80,320,155,'box')+text(855,122,'Next operation','label')+text(995,191,phase==='bad'?'Not valid':`${readers} reader${readers===1?'':'s'}`,'value','middle')+
   arrow(374,160,457,160)+(phase==='bad'?'':arrow(747,160,830,160))+text(40,277,phase==='bad'?'Invalid participation: no valid result is defined.':'Shared-memory ownership and barrier participation belong to the block.','small'));
 }

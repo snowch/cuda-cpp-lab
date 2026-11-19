@@ -1,34 +1,109 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:03.928
-sum first copies each input to shared scratch storage.
+00:00:00.600 --> 00:00:03.476 position:50% size:92% align:center
+The block begins with values one through eight.
 
-00:00:04.148 --> 00:00:07.839
-A block barrier makes those writes available before partner reads.
+00:00:03.476 --> 00:00:06.168 position:50% size:92% align:center
+The required total is thirty-six point zero.
 
-00:00:08.059 --> 00:00:15.440
-Each loop stage adds a partner value, and every thread reaches the following barrier, including threads that skipped the addition.
+00:00:06.388 --> 00:00:09.427 position:50% size:92% align:center
+The important GPU question is how one thread can
 
-00:00:17.460 --> 00:00:18.804
-Write shared inputs.
+00:00:09.427 --> 00:00:12.212 position:50% size:92% align:center
+safely use values produced by other threads.
 
-00:00:19.024 --> 00:00:20.944
-Each thread supplies its own value.
+00:00:14.232 --> 00:00:17.219 position:50% size:92% align:center
+Each thread writes its input into shared memory
 
-00:00:21.164 --> 00:00:22.209
-Synchronise.
+00:00:17.219 --> 00:00:20.269 position:50% size:92% align:center
+on the SM. This workspace belongs to this block.
 
-00:00:22.429 --> 00:00:24.584
-Complete writes before partner reads.
+00:00:20.489 --> 00:00:22.921 position:50% size:92% align:center
+A thread’s own working value and the block’s
 
-00:00:24.804 --> 00:00:26.105
-Combine stages.
+00:00:22.921 --> 00:00:25.021 position:50% size:92% align:center
+shared array have different ownership.
 
-00:00:26.325 --> 00:00:28.949
-Add partners and synchronise before reuse.
+00:00:27.041 --> 00:00:29.833 position:50% size:92% align:center
+All eight block threads reach the initial block
 
-00:00:30.969 --> 00:00:35.471
-Shared memory belongs to the SM and is allocated per resident block.
+00:00:29.833 --> 00:00:32.566 position:50% size:92% align:center
+barrier. A following partner read can then use
 
-00:00:35.691 --> 00:00:42.219
-A block barrier orders participating threads; it does not synchronise other blocks on this SM or elsewhere.
+00:00:32.566 --> 00:00:34.230 position:50% size:92% align:center
+the completed shared writes.
+
+00:00:34.450 --> 00:00:37.356 position:50% size:92% align:center
+The barrier does not synchronise an unrelated
+
+00:00:37.356 --> 00:00:39.165 position:50% size:92% align:center
+block on this or another SM.
+
+00:00:41.185 --> 00:00:44.117 position:50% size:92% align:center
+At partner distance four, threads zero through
+
+00:00:44.117 --> 00:00:46.412 position:50% size:92% align:center
+three add the upper four values into
+
+00:00:46.412 --> 00:00:48.006 position:50% size:92% align:center
+the lower four positions.
+
+00:00:48.226 --> 00:00:50.954 position:50% size:92% align:center
+The next stage must use these completed partial
+
+00:00:50.954 --> 00:00:52.522 position:50% size:92% align:center
+sums, so every block thread
+
+00:00:52.522 --> 00:00:54.263 position:50% size:92% align:center
+reaches the following barrier.
+
+00:00:56.283 --> 00:00:59.314 position:50% size:92% align:center
+The next partner stage leaves two partial sums:
+
+00:00:59.314 --> 00:01:01.958 position:50% size:92% align:center
+sixteen point zero and twenty point zero.
+
+00:01:02.178 --> 00:01:05.054 position:50% size:92% align:center
+Thread zero adds them to form thirty-six point
+
+00:01:05.054 --> 00:01:07.930 position:50% size:92% align:center
+zero. Fewer adding threads does not change the
+
+00:01:07.930 --> 00:01:10.306 position:50% size:92% align:center
+block’s matching barrier participants.
+
+00:01:12.326 --> 00:01:15.154 position:50% size:92% align:center
+Only thread zero performs the final addition.
+
+00:01:15.154 --> 00:01:18.171 position:50% size:92% align:center
+None of the eight threads has exited the kernel.
+
+00:01:18.391 --> 00:01:21.002 position:50% size:92% align:center
+Pause and predict how many threads must reach
+
+00:01:21.002 --> 00:01:23.033 position:50% size:92% align:center
+the matching block barrier. Can the
+
+00:01:23.033 --> 00:01:24.599 position:50% size:92% align:center
+other seven simply skip it?
+
+00:01:30.419 --> 00:01:33.104 position:50% size:92% align:center
+All eight must reach the matching barrier. The
+
+00:01:33.104 --> 00:01:35.789 position:50% size:92% align:center
+arithmetic condition selects who adds; it does
+
+00:01:35.789 --> 00:01:37.423 position:50% size:92% align:center
+not remove the other threads
+
+00:01:37.423 --> 00:01:38.590 position:50% size:92% align:center
+from the collective.
+
+00:01:38.810 --> 00:01:41.498 position:50% size:92% align:center
+The safe sequence is shared writes, a block
+
+00:01:41.498 --> 00:01:44.499 position:50% size:92% align:center
+barrier, then dependent reads. That relationship
+
+00:01:44.499 --> 00:01:46.874 position:50% size:92% align:center
+remains true as the reduction narrows.

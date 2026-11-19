@@ -1,37 +1,112 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:03.416
-transform tests the sign of each lane’s value.
+00:00:00.600 --> 00:00:03.577 position:50% size:92% align:center
+The starter alternates positive two point zero
 
-00:00:03.636 --> 00:00:07.604
-Negative values are negated; the other path doubles its values.
+00:00:03.577 --> 00:00:06.424 position:50% size:92% align:center
+and negative two point zero across one warp.
 
-00:00:07.824 --> 00:00:16.123
-All 32 threads belong to one warp. alternateSigns in main changes the input signs, rather than the kernel’s branch condition.
+00:00:06.644 --> 00:00:09.280 position:50% size:92% align:center
+The positive path doubles its value. The
 
-00:00:18.143 --> 00:00:19.295
-Test signs.
+00:00:09.280 --> 00:00:12.378 position:50% size:92% align:center
+negative path negates it. The question is which
 
-00:00:19.515 --> 00:00:22.587
-Each lane evaluates value < 0.0f.
+00:00:12.378 --> 00:00:14.751 position:50% size:92% align:center
+lanes participate in each operation.
 
-00:00:22.807 --> 00:00:24.044
-Execute paths.
+00:00:16.771 --> 00:00:19.566 position:50% size:92% align:center
+A lane identifies a thread’s position in its
 
-00:00:24.264 --> 00:00:27.080
-Only participating lanes update their outputs.
+00:00:19.566 --> 00:00:22.551 position:50% size:92% align:center
+warp. These positions do not represent separate
 
-00:00:27.300 --> 00:00:28.324
-Continue.
+00:00:22.551 --> 00:00:25.283 position:50% size:92% align:center
+physical processors owned by those threads.
 
-00:00:28.544 --> 00:00:30.464
-The warp proceeds after the branch.
+00:00:25.503 --> 00:00:28.208 position:50% size:92% align:center
+A warp instruction can have only a subset of
 
-00:00:32.484 --> 00:00:35.151
-A warp instruction has participating lanes.
+00:00:28.208 --> 00:00:29.684 position:50% size:92% align:center
+its lanes participating.
 
-00:00:35.371 --> 00:00:38.763
-Different branch paths can require different active lane sets.
+00:00:31.704 --> 00:00:34.638 position:50% size:92% align:center
+Sixteen lanes have positive inputs. Those lanes
 
-00:00:38.983 --> 00:00:44.700
-These lanes are logical positions in a warp, not a drawing of separate dedicated processors.
+00:00:34.638 --> 00:00:37.260 position:50% size:92% align:center
+participate in the doubling operation; the
+
+00:00:37.260 --> 00:00:39.382 position:50% size:92% align:center
+negative lanes do not update their
+
+00:00:39.382 --> 00:00:41.005 position:50% size:92% align:center
+results through this path.
+
+00:00:41.225 --> 00:00:44.101 position:50% size:92% align:center
+The diagram shows participation, not a claim
+
+00:00:44.101 --> 00:00:45.865 position:50% size:92% align:center
+that the compiler must emit
+
+00:00:45.865 --> 00:00:47.433 position:50% size:92% align:center
+this exact branch order.
+
+00:00:49.453 --> 00:00:52.676 position:50% size:92% align:center
+The other sixteen lanes participate in negation.
+
+00:00:52.676 --> 00:00:55.160 position:50% size:92% align:center
+Their negative two point zero becomes
+
+00:00:55.160 --> 00:00:56.771 position:50% size:92% align:center
+positive two point zero.
+
+00:00:56.991 --> 00:00:59.760 position:50% size:92% align:center
+The same warp still contains all thirty-two
+
+00:00:59.760 --> 00:01:01.821 position:50% size:92% align:center
+threads. A lane inactive for one
+
+00:01:01.821 --> 00:01:03.753 position:50% size:92% align:center
+operation has not disappeared.
+
+00:01:05.773 --> 00:01:08.815 position:50% size:92% align:center
+After the paths, lane zero has four point zero
+
+00:01:08.815 --> 00:01:11.724 position:50% size:92% align:center
+and lane one has two point zero. Each thread
+
+00:01:11.724 --> 00:01:13.773 position:50% size:92% align:center
+writes its own output position.
+
+00:01:13.993 --> 00:01:16.489 position:50% size:92% align:center
+Both lane sets belong to the original warp.
+
+00:01:18.509 --> 00:01:21.638 position:50% size:92% align:center
+Now consider thirty-two positive inputs. Pause
+
+00:01:21.638 --> 00:01:24.087 position:50% size:92% align:center
+and predict which lane set needs the
+
+00:01:24.087 --> 00:01:25.720 position:50% size:92% align:center
+negative-path operation.
+
+00:01:25.940 --> 00:01:28.500 position:50% size:92% align:center
+Does changing the signs change the warp’s size?
+
+00:01:34.320 --> 00:01:36.791 position:50% size:92% align:center
+No lane needs negation in that case. All
+
+00:01:36.791 --> 00:01:39.695 position:50% size:92% align:center
+thirty-two can participate in doubling, and the
+
+00:01:39.695 --> 00:01:42.043 position:50% size:92% align:center
+warp is still thirty-two threads wide.
+
+00:01:42.263 --> 00:01:45.521 position:50% size:92% align:center
+Input patterns change instruction participation.
+
+00:01:45.521 --> 00:01:48.508 position:50% size:92% align:center
+They do not tell us an exact runtime without
+
+00:01:48.508 --> 00:01:50.476 position:50% size:92% align:center
+compiler and device evidence.

@@ -1,37 +1,106 @@
 WEBVTT
 
-00:00:00.600 --> 00:00:05.251
-Inside multiply, the block loads left and right tiles into shared memory.
+00:00:00.600 --> 00:00:03.752 position:50% size:92% align:center
+For output C at row zero and column zero, a
 
-00:00:05.471 --> 00:00:09.993
-After the barrier, each output thread accumulates products using those tiles.
+00:00:03.752 --> 00:00:05.731 position:50% size:92% align:center
+thread combines row zero of
 
-00:00:10.213 --> 00:00:12.432
-The second barrier protects tile reuse.
+00:00:05.731 --> 00:00:07.491 position:50% size:92% align:center
+A with column zero of B.
 
-00:00:12.652 --> 00:00:24.812
-Tail loads contribute zero without leaving a barrier; only valid outputs are written. main checks every product element against an independent CPU reference with nonuniform inputs.
+00:00:07.711 --> 00:00:10.284 position:50% size:92% align:center
+Neighbouring outputs reuse parts of those
 
-00:00:26.832 --> 00:00:27.963
-Load tiles.
+00:00:10.284 --> 00:00:12.481 position:50% size:92% align:center
+inputs. The recording follows where
 
-00:00:28.183 --> 00:00:30.465
-Threads fill shared left and right arrays.
+00:00:12.481 --> 00:00:14.239 position:50% size:92% align:center
+that reuse happens on an SM.
 
-00:00:30.685 --> 00:00:31.965
-Reuse operands.
+00:00:16.259 --> 00:00:18.900 position:50% size:92% align:center
+Four threads form a two-by-two output block.
 
-00:00:32.185 --> 00:00:35.023
-Several outputs consume the same tile values.
+00:00:18.900 --> 00:00:21.660 position:50% size:92% align:center
+They cooperatively load a two-by-two tile from
 
-00:00:35.243 --> 00:00:36.523
-Protect reuse.
+00:00:21.660 --> 00:00:24.301 position:50% size:92% align:center
+each input into their block’s shared memory.
 
-00:00:36.743 --> 00:00:39.068
-Synchronise before loading the next tiles.
+00:00:24.521 --> 00:00:27.066 position:50% size:92% align:center
+The first block barrier completes those shared
 
-00:00:41.088 --> 00:00:46.656
-Threads reuse shared tiles while each output sum is working state associated with its thread.
+00:00:27.066 --> 00:00:29.001 position:50% size:92% align:center
+writes before the tile is consumed.
 
-00:00:46.876 --> 00:00:52.679
-This multiply kernel uses scalar arithmetic; it does not call matrix-unit instructions.
+00:00:31.021 --> 00:00:34.333 position:50% size:92% align:center
+Threads computing the same output row can reuse
+
+00:00:34.333 --> 00:00:37.503 position:50% size:92% align:center
+an A value. Threads computing the same output
+
+00:00:37.503 --> 00:00:39.405 position:50% size:92% align:center
+column can reuse a B value.
+
+00:00:39.625 --> 00:00:42.374 position:50% size:92% align:center
+Each thread keeps its own partial output sum.
+
+00:00:42.374 --> 00:00:44.389 position:50% size:92% align:center
+Sharing the inputs does not merge
+
+00:00:44.389 --> 00:00:45.855 position:50% size:92% align:center
+the output accumulators.
+
+00:00:47.875 --> 00:00:50.366 position:50% size:92% align:center
+The second block barrier protects the tile from
+
+00:00:50.366 --> 00:00:52.009 position:50% size:92% align:center
+being overwritten while another
+
+00:00:52.009 --> 00:00:53.123 position:50% size:92% align:center
+thread still uses it.
+
+00:00:53.343 --> 00:00:56.069 position:50% size:92% align:center
+The block loads the next K positions and
+
+00:00:56.069 --> 00:00:59.205 position:50% size:92% align:center
+continues its private sums. The shown C at row
+
+00:00:59.205 --> 00:01:02.409 position:50% size:92% align:center
+zero, column zero finishes at three point zero.
+
+00:01:04.429 --> 00:01:07.362 position:50% size:92% align:center
+Suppose two blocks are resident on the same SM.
+
+00:01:07.362 --> 00:01:10.107 position:50% size:92% align:center
+Pause and predict whether the second block’s
+
+00:01:10.107 --> 00:01:11.604 position:50% size:92% align:center
+shared array is the same
+
+00:01:11.604 --> 00:01:13.539 position:50% size:92% align:center
+workspace as the first block’s.
+
+00:01:13.759 --> 00:01:15.980 position:50% size:92% align:center
+Does sharing an SM make block-scoped
+
+00:01:15.980 --> 00:01:17.769 position:50% size:92% align:center
+arrays shared between blocks?
+
+00:01:23.589 --> 00:01:26.533 position:50% size:92% align:center
+Each block has its own shared workspace, even
+
+00:01:26.533 --> 00:01:29.608 position:50% size:92% align:center
+when both use the same SM. One block cannot use
+
+00:01:29.608 --> 00:01:32.421 position:50% size:92% align:center
+the other block’s shared array as its tile.
+
+00:01:32.641 --> 00:01:35.247 position:50% size:92% align:center
+Reuse in this kernel comes from cooperating
+
+00:01:35.247 --> 00:01:37.732 position:50% size:92% align:center
+threads within a block, while each thread
+
+00:01:37.732 --> 00:01:39.489 position:50% size:92% align:center
+retains a private output sum.
