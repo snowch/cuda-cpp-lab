@@ -243,7 +243,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page.locator('#save-offline').click()
                 expect(page.locator('#download-progress')).to_be_visible()
                 expect(page.locator('#offline-download-feedback #download-progress')).to_be_visible()
-                assert page.locator('#download-progress').evaluate('el => el.closest("section").getAttribute("aria-labelledby")') == 'offline-title'
+                assert page.locator('#download-progress').evaluate('el => el.closest("section").id') == 'course-status'
                 page.wait_for_function('document.getElementById("asset-progress").value > 0')
                 page.locator('#cancel-download').click()
                 expect(page.locator('#save-offline')).to_have_text('Resume download')

@@ -429,9 +429,16 @@ dialog.addEventListener('close', () => $('app-status-open').focus({ preventScrol
 const recheck=()=>{check(true);refresh();};
 $('check-update').addEventListener('click',recheck);
 $('retry-update').addEventListener('click',async()=>{
+  const button=$('retry-update'),hadFocus=document.activeElement===button;
   retryingCheck=true;
   try{await Promise.all([check(true),refresh()]);}
-  finally{retryingCheck=false;render();}
+  finally{
+    retryingCheck=false;render();
+    // Disabling a focused button can move focus to body while the request runs.
+    // Restore it only if the learner has not moved to another dialog control.
+    if(hadFocus&&dialog.open&&(document.activeElement===document.body||document.activeElement===button))
+      (button.hidden?$('course-status'):button).focus({preventScroll:true});
+  }
 });
 $('download-update').addEventListener('click', () => download(false));
 $('save-offline').addEventListener('click', () => download(true));

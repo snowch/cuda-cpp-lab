@@ -55,6 +55,7 @@ def check_version(browser, base_url):
     expect(page.locator('#retry-update')).to_be_disabled()
     expect(indicator).to_have_text('Couldn’t check for updates',timeout=12000)
     expect(page.locator('#retry-update')).to_have_text('Retry')
+    expect(page.locator('#retry-update')).to_be_focused()
     for route in held:
         try: route.fulfill(json=RELEASE)
         except Exception: pass  # Chromium may already have disposed the aborted request.
@@ -63,6 +64,7 @@ def check_version(browser, base_url):
     context.route('**/release.json?*', lambda route:route.fulfill(json=RELEASE))
     page.locator('#retry-update').click(); expect(indicator).to_have_text('Up to date')
     expect(page.locator('#retry-update')).to_be_hidden()
+    expect(page.locator('#course-status')).to_be_focused()
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     page.keyboard.press('Escape'); expect(page.locator('#app-status-open')).to_be_focused()
     context.close()
