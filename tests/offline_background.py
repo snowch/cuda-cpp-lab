@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results/background-updates';RESULTS.mkdir(parents=True,exist_ok=True)
 class Handler(BaseHTTPRequestHandler):
-    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False
+    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False;previous_native_worker=False
     def log_message(self,*args):pass
     def do_GET(self):
         path=unquote(urlsplit(self.path).path).removeprefix('/gpu-lab/').lstrip('/') or 'index.html'
@@ -25,7 +25,8 @@ class Handler(BaseHTTPRequestHandler):
             root=next((p for p in self.roots.values() if (p/path).is_file()),root)
         file=(root/path).resolve()
         if not file.is_relative_to(root) or not file.is_file():self.send_error(404);return
-        self.requests.append(path);data=(ROOT/'tests/fixtures/previous-download-worker.js').read_bytes() if path=='sw.js' and self.previous_worker else file.read_bytes()
+        self.requests.append(path);worker_fixture='previous-native-download-worker.js' if self.previous_native_worker else 'previous-download-worker.js'
+        data=(ROOT/'tests/fixtures'/worker_fixture).read_bytes() if path=='sw.js' and (self.previous_worker or self.previous_native_worker) else file.read_bytes()
         if self.corrupt and path.endswith(self.corrupt):data=b'bad'+data[3:]
         mime={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.html':'text/html'}.get(file.suffix,'application/octet-stream')
         self.send_response(200);self.send_header('Content-Type',mime);self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers()
@@ -38,7 +39,9 @@ def fixture(temp,name,previous_client=False):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
     for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
-    if previous_client:shutil.copy2(ROOT/'tests/fixtures/previous-download-client.mjs',folder/'src/offline.mjs')
+    if previous_client:
+        client_fixture='previous-native-download-client.mjs' if previous_client=='native' else 'previous-download-client.mjs'
+        shutil.copy2(ROOT/'tests/fixtures'/client_fixture,folder/'src/offline.mjs')
     shutil.copytree(ROOT/'assets/fonts',folder/'assets/fonts')
     for icon in ['icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png']:shutil.copy2(ROOT/'assets'/icon,folder/'assets'/icon)
     shutil.copy2(ROOT/'manifest.webmanifest',folder/'manifest.webmanifest')
@@ -91,6 +94,14 @@ def fallback_resume(browser,url):
         page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
         current=job(page);assert current['wanted'] and current['bytes']>0
+        candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+        css=next(file for file in candidate['files'] if file['path']=='src/style.css')
+        assert page.evaluate('''async ({id,sha})=>{
+            const base=new URL('./',location.href),cache=await caches.open('gpu-lab:'+base.href+':release-'+id);
+            const response=await cache.match(new URL('src/style.css',base));if(!response)return false;
+            const digest=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());
+            return [...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,'0')).join('')===sha;
+        }''',{'id':candidate['id'],'sha':css['sha256']}),'The candidate stylesheet must be verified in CacheStorage before worker termination.'
         page.screenshot(path=str(RESULTS/'fallback-downloading.png'))
         before=list(Handler.requests);session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
         page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
@@ -98,7 +109,7 @@ def fallback_resume(browser,url):
         assert page.locator('#draft').input_value()=='saved during update'
         resumed=Handler.requests[len(before):]
         assert sum(p.endswith('zz-payload.bin') for p in resumed)==1
-        assert not any(p.endswith('/src/style.css') for p in resumed),'Completed verified files must be reused.'
+        assert 'releases/'+candidate['id']+'/src/style.css' not in resumed,('The completed candidate stylesheet must be reused.',resumed)
         page.screenshot(path=str(RESULTS/'fallback-resumed-ready.png'))
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two');expect(page.locator('#draft')).to_have_value('saved during update')
     print('PASS unsupported-browser fallback resumes after worker termination, reuses verified files and waits for explicit restart',flush=True)
@@ -295,15 +306,134 @@ def missing_state_native(browser,url):
         expect(page.locator('#version-detail')).to_have_text('The complete update has been downloaded and checked.')
         assert page.locator('html').get_attribute('data-test-release')=='one'
         # Recover an already complete cache with the old worker's incorrect
-        # active selection. The native planning path must need no new transfer.
+        # active selection. Status recovery must need no new transfer.
         candidate=json.loads((Handler.roots['two']/'release.json').read_text())
         page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
-        page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
-        before=payload_requests();page.locator('#download-update').click()
+        before=payload_requests();page.locator('#check-update').click()
+        until(lambda:rpc(page,'STATUS').get('pending')==candidate['id'])
         expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
         assert payload_requests()==before,'A verified existing candidate needs no payload download to recover Restart.'
         page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
     print('PASS native downloads keep updates pending after lost metadata and recover Restart for an already verified candidate without downloading its payload again',flush=True)
+
+def completed_native_update_recovery(browser,url,old_root):
+    """A current page may still use the installed 7ee4913 native worker."""
+    original=Handler.roots['one']
+    try:
+        cases=[(True,390,'dark',True),(True,390,'light',False)]
+        cases += [(False,width,theme,theme=='dark') for width in [390,820,1440] for theme in ['light','dark']]
+        for old_client,width,theme,native in cases:
+            Handler.roots['one']=old_root if old_client else original
+            Handler.previous_native_worker=True;Handler.revision='one';Handler.pause=None;Handler.requests=[]
+            with browser.new_context(viewport={'width':width,'height':900},color_scheme=theme) as c:
+                if not native:c.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+                page=open_page(c,url)
+                until(lambda:(s:=rpc(page,'STATUS')).get('active') is not None and not s['busy'])
+                page.locator('#app-status-close').click();page.locator('#draft').fill('saved through completed-update recovery');page.locator('#app-status-open').click()
+                companion=None
+                if not old_client and width==1440 and theme=='light':
+                    companion=c.new_page();companion.goto(url);companion.locator('#draft').fill('the other tab draft')
+                    page.bring_to_front()
+                page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).delete(new URL('__app_status_state__',location.href))}")
+                Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+                candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+                until(lambda:(rpc(page,'STATUS').get('download') or {}).get('state')=='ready',30)
+                if old_client:
+                    # Exact ace5867 client + old native worker: finishing the
+                    # transfer, and pressing Update again, never offers Restart.
+                    expect(page.locator('#download-update')).to_be_visible();expect(page.locator('#restart-update')).to_be_hidden()
+                    before=payload_requests();page.locator('#download-update').click()
+                    expect(page.locator('#download-progress')).to_be_hidden(timeout=30000)
+                    expect(page.locator('#download-update')).to_be_visible();expect(page.locator('#restart-update')).to_be_hidden()
+                    assert payload_requests()==before
+                    page.screenshot(path=str(RESULTS/f'completed-update-before-{native}.png'))
+                    # One-time recovery for already-pinned old code: keep its
+                    # draft/caches, close every app page and reopen the course.
+                    Handler.previous_native_worker=False
+                    page.evaluate('async()=>{const r=await navigator.serviceWorker.ready;await r.update()}')
+                    page.wait_for_function('navigator.serviceWorker.getRegistration().then(r=>!!r.waiting)')
+                    page.close();page=c.new_page();page.goto(url)
+                    expect(page.locator('html')).to_have_attribute('data-test-release','two')
+                    expect(page.locator('#draft')).to_have_value('saved through completed-update recovery')
+                    continue
+                expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
+                expect(page.locator('#version-status')).to_have_text('Update ready')
+                expect(page.locator('#download-update')).to_be_hidden();expect(page.locator('#app-status-error')).to_be_empty()
+                assert page.locator('html').get_attribute('data-test-release')=='one'
+                state=rpc(page,'STATUS');assert state['pending']==candidate['id'] and state['pendingReady'] and state['pendingSaved']
+                before=payload_requests();page.locator('#check-update').click()
+                expect(page.locator('#restart-update')).to_be_visible();assert payload_requests()==before
+                page.evaluate("theme=>document.documentElement.dataset.theme=theme",theme)
+                page.screenshot(path=str(RESULTS/f'completed-update-ready-{width}-{theme}.png'))
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                # Restart still uses the all-window save guard and needs no network.
+                c.set_offline(True)
+                if companion:
+                    companion.evaluate("window.recoveryGuard=e=>{e.detail.reason='Keep the other tab open for now.'};addEventListener('gpu-lab:before-restart',recoveryGuard)")
+                    page.locator('#restart-update').click();expect(page.locator('#app-status-error')).to_contain_text('Keep the other tab')
+                    assert page.locator('html').get_attribute('data-test-release')=='one'
+                    assert companion.locator('html').get_attribute('data-test-release')=='one'
+                    companion.evaluate("removeEventListener('gpu-lab:before-restart',recoveryGuard)")
+                page.locator('#restart-update').focus();page.locator('#restart-update').press('Enter')
+                expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
+                expect(page.locator('#draft')).to_have_value('saved through completed-update recovery')
+                if companion:
+                    expect(companion.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
+                    expect(companion.locator('#draft')).to_have_value('the other tab draft')
+                assert payload_requests()==before
+        print('PASS exact old native worker/client update loop reproduced; close/reopen retains drafts; new client recovers Restart without another payload in six layouts/themes and both download paths',flush=True)
+    finally:Handler.roots['one']=original;Handler.previous_native_worker=False
+
+def cancel_completed_update_recovery(browser,url):
+    Handler.previous_native_worker=True;Handler.revision='one';Handler.pause=None;Handler.requests=[]
+    try:
+        with browser.new_context(viewport={'width':390,'height':844}) as c:
+            c.add_init_script("""{
+                Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined});
+                const send=ServiceWorker.prototype.postMessage;
+                ServiceWorker.prototype.postMessage=function(data,...args){
+                    const result=send.call(this,data,...args);
+                    if(data.type==='PREPARE'&&data.save===false){
+                        window.recoveryRequests=(window.recoveryRequests||0)+1;
+                        if(window.cancelRecoveryOnce){window.cancelRecoveryOnce=false;setTimeout(()=>document.querySelector('#cancel-download').click(),0);}
+                    }
+                    return result;
+                };
+            }""")
+            page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active') is not None and not s['busy'])
+            page.evaluate("async()=>{window.cancelRecoveryOnce=true;const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).delete(new URL('__app_status_state__',location.href))}")
+            Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+            page.wait_for_function('window.cancelRecoveryOnce===false')
+            expect(page.locator('#download-update')).to_be_visible(timeout=30000);expect(page.locator('#download-update')).to_be_enabled()
+            expect(page.locator('#download-progress')).to_be_hidden();expect(page.locator('#restart-update')).to_be_hidden()
+            expect(page.locator('#app-status-error')).to_be_empty()
+            count=page.evaluate('window.recoveryRequests');before=payload_requests()
+            for _ in range(2):page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_enabled()
+            assert page.evaluate('window.recoveryRequests')==count,'Cancel must not restart cache verification automatically.'
+            page.locator('#download-update').click();expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
+            assert payload_requests()==before
+        print('PASS Cancel stops completed-update recovery, keeps Update usable, and an explicit retry recovers Restart without another payload',flush=True)
+    finally:Handler.previous_native_worker=False
+
+def no_completed_cache_downgrade(browser,url):
+    for mode in ['offline','update']:
+        Handler.revision='one';Handler.pause=None;Handler.requests=[]
+        with browser.new_context(viewport={'width':390,'height':844}) as c:
+            page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active') is not None and not s['busy'])
+            running=page.locator('meta[name="gpu-release"]').get_attribute('content')
+            candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+            # A verified older save/update can remain selected when a hard
+            # refresh opens the currently published page. It is no new consent
+            # to restart that page into the different cached release.
+            rpc(page,'PREPARE',release=candidate,save=True,requestDownload=True,mode=mode,running=running if mode=='offline' else '0'*64)
+            page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
+            before=payload_requests();page.locator('#check-update').click()
+            expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
+            expect(page.locator('#restart-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
+            assert rpc(page,'STATUS').get('pending') is None
+            assert payload_requests()==before
+            assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
+    print('PASS a completed offline copy or unrelated older update never restarts the currently published page into that cached release',flush=True)
 
 def dialog_states(browser,url):
     for width in [390,820,1440]:
@@ -357,6 +487,7 @@ def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
         old_root=fixture(Path(tmp),'old-client',previous_client=True)
+        native_old_root=fixture(Path(tmp),'old-native-client',previous_client='native')
         server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
         try:
             with sync_playwright() as p:
@@ -368,6 +499,9 @@ def main():
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
                     quota_startup_error(browser,url)
                     previous_client_upgrade(browser,url,old_root);missing_state_native(browser,url)
+                    completed_native_update_recovery(browser,url,native_old_root)
+                    cancel_completed_update_recovery(browser,url)
+                    no_completed_cache_downgrade(browser,url)
                     dialog_states(browser,url)
                     full_course_native(browser,Handler.roots['two'])
                 finally:browser.close()
