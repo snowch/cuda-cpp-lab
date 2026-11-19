@@ -152,7 +152,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
             panel(tab);ready(tab)
             expect(tab.locator('#save-offline')).to_be_hidden()
-            expect(tab.locator('#offline-size')).to_be_visible()
+            expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#app-status-close').click()
             hello=tab.frame_locator('[data-kernel-workbench="hello"]')
             expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
@@ -221,7 +221,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 expect(page.locator('#version-status')).to_have_text('Up to date')
                 page.wait_for_function('navigator.serviceWorker.controller !== null')
                 expect(page.locator('#offline-status')).to_have_text('Not saved for offline use')
-                expect(page.locator('#offline-size')).to_contain_text(f"{releases['one']['bytes']:,} bytes")
+                expect(page.locator('#offline-size')).to_contain_text(f"{releases['one']['bytes']/1000000:.1f} MB")
                 # Installation/checking/opening must not fetch other labs or CUDA assets.
                 assert not any(x.startswith('releases/') and x.endswith('examples/gather.cu') for x in CourseHandler.requests)
                 assert not any(x.endswith('.html') and not x.endswith('lessons/hello.html') for x in CourseHandler.requests)
@@ -324,26 +324,33 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 # than below the separate offline-access explanation.
                 CourseHandler.slow=True
                 CourseHandler.pause=(f"releases/{releases['two']['id']}/{releases['two']['files'][0]['path']}", Event())
+                request_start=len(CourseHandler.requests)
                 page.locator('#download-update').click()
                 progress=page.locator('#download-progress')
                 expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
+                # Cancel is available during startup too. This case specifically
+                # exercises an incomplete transfer, so wait for the real worker
+                # request rather than treating visible progress as network I/O.
+                deadline=time.monotonic()+30
+                while CourseHandler.pause[0] not in CourseHandler.requests[request_start:] and time.monotonic()<deadline:time.sleep(.05)
+                assert CourseHandler.pause[0] in CourseHandler.requests[request_start:],'The candidate transfer did not start.'
                 # Read both rectangles in one task; separate browser calls can
                 # straddle a progress render or a completed download.
                 geometry=page.wait_for_function('''() => {
                     const progress=document.getElementById('download-progress');
                     if(progress.hidden || !progress.getClientRects().length) return false;
                     const box=progress.getBoundingClientRect();
-                    const button=document.getElementById('download-update').getBoundingClientRect();
+                    const button=document.getElementById('version-status').getBoundingClientRect();
                     return {section:progress.closest('section').getAttribute('aria-labelledby'),gap:box.top-button.bottom};
                 }''',polling=50).json_value()
                 assert geometry['section']=='version-title',geometry
-                assert 0<=geometry['gap']<=24,geometry
+                assert 0<=geometry['gap']<=40,geometry
                 page.screenshot(path=str(RESULTS/f'status-{width}-{theme}-updating.png'))
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter')
                 CourseHandler.pause[1].set();CourseHandler.pause=None
                 expect(progress).to_be_hidden()
                 # Cancellation refreshes the verified cache status before render.
-                expect(page.locator('#version-status')).to_have_text('Update available',timeout=30000)
+                expect(page.locator('#version-status')).to_have_text('Update download incomplete',timeout=30000)
                 ready(page)
                 CourseHandler.slow=False
                 # Real browser quota failure cannot overwrite a complete release.
@@ -491,7 +498,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 context.set_offline(False);CourseHandler.corrupt='examples/gather.cu'
                 assert not page.evaluate('''async url => (await fetch(url+'examples/gather.cu')).ok''',url)
                 CourseHandler.corrupt=None;page.locator('#save-offline').click();ready(page)
-                page.locator('#remove-offline').click();page.locator('#cancel-remove').click();ready(page)
+                page.locator('#app-status-details > summary').click();page.locator('#remove-offline').click();page.locator('#cancel-remove').click();ready(page)
                 page.locator('#remove-offline').click();page.locator('#confirm-remove').click()
                 # REMOVE waits for any in-flight full-book cache scan. Its RPC
                 # permits 15 seconds; allow that response plus UI scheduling.

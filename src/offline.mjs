@@ -13,18 +13,19 @@ let unavailable = !supported;
 let remembered = false, remembering, connected = false;
 let backgroundDownload,backgroundProgress,resumeWork,resumeTimer,downloadCancelled=false,localDownloadId,downloadWork;
 const bytes = n => `${n.toLocaleString('en-GB')} bytes (${(n / 1048576).toFixed(2)} MiB)`;
-const progressSize = n => `${(n / 1048576).toFixed(2)} MiB`;
+const progressSize = n => `${(n / 1000000).toFixed(1)} MB`;
 function error(message = '',source='operation') {
   const element=$('app-status-error');
   if(element.textContent!==message)element.textContent=message;
   element.dataset.source=source;
-  const owner=source.startsWith('download')?$(mode==='update'?'update-download-feedback':'offline-download-feedback'):dialog;
+  const owner=source.startsWith('download')?$(mode==='update'?'update-download-feedback':'offline-download-feedback'):$('app-status-feedback');
   if(element.parentElement!==owner)owner.append(element);
 }
 function render() {
+  const focused=document.activeElement;
   const job=snapshot.download;
   const locked=Boolean(downloadWork)||downloading||Boolean(job?.busy);
-  const active=(downloading&&!downloadCancelled)||Boolean(job?.busy);
+  const active=((Boolean(downloadWork)||downloading)&&!downloadCancelled)||Boolean(job?.busy);
   const stopping=cancelling&&active;
   const requested=Boolean(job?.wanted&&job.state!=='ready');
   if(job&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')mode=job.mode;
@@ -33,39 +34,53 @@ function render() {
   // Move the single progress/cancel group only when its owning action changes.
   // Repeated status refreshes must preserve focus inside the group.
   if (progress.parentElement !== feedback) feedback.append(progress);
-  progress.hidden=cancelling||!((downloading&&!downloadCancelled)||requested);
+  progress.hidden=cancelling||!(active||requested);
   if(job&&!downloading)showProgress({bytes:job.bytes,total:job.total,stage:job.stage});
   const notice=$('download-behaviour');
-  notice.textContent=requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?(mode==='update'?'Downloading in the background. Return here to apply the update.':'Downloading in the background. The course is available offline when all files are checked.'):job?.state==='verifying'?(mode==='update'?'Checking the downloaded files before the update is ready.':'Checking the saved files before marking the course available offline.'):'Completed files are kept. If your browser pauses the download, it resumes when you return.';
+  notice.textContent=job?.error?'':requested&&!navigator.onLine?'Waiting for a connection. Completed files are kept.':job?.state==='background'?'Your browser can continue this download in the background.':job?.state==='verifying'?'All files must pass verification before the download is ready.':'Completed files are kept. Return here to resume if your browser pauses the download.';
   if(job?.error&&!downloading&&!downloadWork&&$('app-status-error').dataset.source!=='download-start')error(job.error,'download');
   else if($('app-status-error').dataset.source==='download')error('');
   if($('app-status-error').dataset.source?.startsWith('download')&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
   const pending = snapshot.pending && snapshot.pending !== running;
   const available = latest && latest.id !== running;
   const ready = pending && snapshot.pendingReady;
-  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : version;
-  $('app-status-summary').textContent = `${document.querySelector('.build-info a')?.textContent || running.slice(0, 7)} · ${ready ? 'Update ready' : available || pending ? 'Update available' : version === 'Up to date' ? 'Up to date' : 'Check version'}`;
-  $('download-update').hidden = !available || Boolean(ready && snapshot.pending === latest.id);
+  const incomplete=available&&snapshot.partial===latest.id;
+  const transferring=active||requested||cancelling;
+  $('version-status').textContent = stopping&&mode==='update'?'Stopping download':active && mode === 'update' ? job?.state==='verifying'?'Checking update':'Downloading update' : requested&&mode==='update'?'Update download paused' : ready ? 'Update ready' : incomplete?'Update download incomplete':version;
+  $('app-status-summary').textContent = ready?'Update ready':transferring&&mode==='update'?$('version-status').textContent:transferring?'Offline download':available||pending?'Update available':version==='Up to date'?'Up to date':'Check version';
+  $('update-section').hidden=transferring&&mode==='offline';
+  $('offline-section').hidden=Boolean(ready||(transferring&&mode==='update')||(available&&!snapshot.offlineReady));
+  $('app-status-details').hidden=transferring;
+  $('install-help').hidden=transferring;
+  $('download-update').hidden = locked || !available || Boolean(ready && snapshot.pending === latest.id);
   $('download-update').disabled = locked || !supported;
   $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Update';
   $('restart-update').hidden = !ready; $('later-update').hidden = !ready;
   $('restart-note').hidden = !ready;
   $('restart-update').disabled=restarting||locked;
   $('check-update').disabled = Boolean(checking);
+  $('check-update').hidden = transferring;
   $('check-update').textContent = version === 'Couldn’t check for updates' ? 'Retry' : 'Check for updates';
   let offline = unavailable ? 'Offline access unavailable' : stopping&&mode==='offline'?'Stopping download':active && mode === 'offline' ? 'Saving for offline use' : snapshot.offlineReady ? 'Available offline' : ready ? 'Available after restarting update' : snapshot.saved || snapshot.partial ? 'Offline download incomplete' : 'Not saved for offline use';
   $('offline-status').textContent = offline;
   $('offline-status').dataset.state = snapshot.offlineReady ? 'ready' : 'unavailable';
   const release = runningRelease;
-  $('offline-size').textContent = release ? `Complete app: ${bytes(release.bytes)}. Includes all required files; browser storage overhead is additional.` : 'The download size is unavailable. Connect to the internet and retry.';
-  $('offline-size').hidden = Boolean(ready && !snapshot.offlineReady);
-  $('save-offline').hidden = Boolean(snapshot.offlineReady || ready) || !supported;
+  $('offline-size').textContent = release ? `${progressSize(release.bytes)} for the complete course, including recordings.` : 'Connect to check the download size.';
+  $('offline-size').hidden = Boolean(transferring||snapshot.offlineReady||(ready && !snapshot.offlineReady));
+  $('save-offline').hidden = locked || Boolean(snapshot.offlineReady || ready || available) || !supported;
   $('save-offline').disabled = locked || !release;
   $('save-offline').textContent = unavailable ? 'Retry offline access' : snapshot.partial === running ? 'Resume download' : snapshot.saved ? 'Repair offline copy' : 'Download for offline use';
   $('remove-offline').hidden = !supported || !(snapshot.saved || snapshot.partial || snapshot.active || snapshot.pending);
   $('remove-offline').disabled = locked;
   const cacheNote = cacheLifetime ? ` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.` : '';
-  $('version-detail').textContent = !supported ? 'This browser cannot save or prepare updates here. You can keep using GPU Lab online.' : latest && available ? `Deployed release ${latest.commit?.slice(0, 7) || latest.id.slice(0, 7)}${latest.date ? ' · ' + latest.date : ''}. Download: ${bytes(latest.bytes)}.${cacheNote}` : latest && cacheLifetime ? 'The published release matches this app.'+cacheNote : version === 'Cannot check for updates' ? 'You are offline. Saved files remain usable; the published version cannot be checked.' : version === 'Couldn’t check for updates' ? 'The deployed release could not be verified. Try again when connected.' : '';
+  $('version-detail').textContent = !supported ? 'This browser cannot prepare updates. You can keep using GPU Lab online.' : ready?'The complete update has been downloaded and checked.':transferring?'':available?`${progressSize(latest.bytes)} download. Your saved work is kept.`:version==='Cannot check for updates'?'You are offline. Saved lessons remain usable.':version==='Couldn’t check for updates'?'Connect to the internet and try again.':'';
+  $('release-detail').textContent = latest ? `Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}` : '';
+  // State changes hide the previous action. Keep keyboard users at the next
+  // useful control rather than dropping focus behind the modal.
+  if(dialog.open&&dialog.contains(focused)&&!focused.getClientRects().length){
+    const next=['restart-update','cancel-download','download-update','save-offline','app-status-close'].map($).find(element=>element.getClientRects().length&&!element.disabled);
+    next?.focus({preventScroll:true});
+  }
 }
 function rpc(type, data = {}, progress) {
   return new Promise((resolve, reject) => {
@@ -244,8 +259,8 @@ function showProgress(value) {
   const stage=value.stage||'verified';
   if(stage==='unknown'){$('asset-progress').removeAttribute('value');$('download-progress-label').textContent='Download in progress';$('progress-text').textContent='Waiting for download status. Completed files are kept.';return;}
   $('asset-progress').max=value.total;$('asset-progress').value=value.bytes;
-  $('download-progress-label').textContent=stage==='downloaded'?'Downloaded files':stage==='checking'?'Checking saved files':'Verified download progress';
-  $('progress-text').textContent=`${progressSize(value.bytes)} of ${progressSize(value.total)} ${stage==='downloaded'?'downloaded; files are checked before the course is ready':'verified'}`;
+  $('download-progress-label').textContent=stage==='downloaded'?'Downloading files':stage==='checking'?'Checking saved files':'Checking files';
+  $('progress-text').textContent=`${progressSize(value.bytes)} of ${progressSize(value.total)} ${stage==='downloaded'?'downloaded':'checked'}`;
 }
 async function watchBackground(id) {
   if(!registration.backgroundFetch)return;

@@ -34,10 +34,11 @@ class Handler(BaseHTTPRequestHandler):
         try:self.wfile.write(data)
         except (BrokenPipeError,ConnectionResetError):pass
 
-def fixture(temp,name):
+def fixture(temp,name,previous_client=False):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
     for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
+    if previous_client:shutil.copy2(ROOT/'tests/fixtures/previous-download-client.mjs',folder/'src/offline.mjs')
     shutil.copytree(ROOT/'assets/fonts',folder/'assets/fonts')
     for icon in ['icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png']:shutil.copy2(ROOT/'assets'/icon,folder/'assets'/icon)
     shutil.copy2(ROOT/'manifest.webmanifest',folder/'manifest.webmanifest')
@@ -155,7 +156,7 @@ def previous_worker_recovery(browser,url):
         # Keep the body gated until the older worker has acknowledged Cancel.
         # Otherwise the server can win the abort race and legitimately leave a
         # complete cached file, so the next transfer would have nothing to fetch.
-        until(lambda:not rpc(page,'STATUS')['busy'])
+        until(lambda:(s:=rpc(page,'STATUS')).get('active')==page.locator('meta[name="gpu-release"]').get_attribute('content') and not s['busy'])
         Handler.pause.set();Handler.pause=None
         count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(200);assert payload_requests()==count
         Handler.pause=Event();page.locator('#download-update').click();until(lambda:payload_requests()>=count+1)
@@ -240,6 +241,7 @@ def quota_startup_error(browser,url):
         cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/'),'quotaSize':1})
         page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
+        expect(page.locator('#app-status-error')).to_be_visible()
         assert page.locator('#app-status-error').evaluate("e=>e.parentElement.id==='update-download-feedback'")
         assert page.locator('html').get_attribute('data-test-release')=='one'
         expect(page.locator('#offline-status')).to_have_text('Available offline')
@@ -250,9 +252,111 @@ def quota_startup_error(browser,url):
         expect(page.locator('#app-status-error')).to_be_empty()
     print('PASS a new request reports real quota failure beside Update despite a previous completed job; the old course remains available and retry succeeds',flush=True)
 
+def previous_client_upgrade(browser,url,old_root):
+    """The actual 72c5e0e page protocol, not just its worker under a new UI."""
+    original=Handler.roots['one'];Handler.roots['one']=old_root
+    try:
+        for previous_worker,missing_state in [(True,False),(True,True),(False,True)]:
+            Handler.previous_worker=previous_worker;Handler.revision='one';Handler.pause=None
+            with browser.new_context(viewport={'width':390,'height':844}) as c:
+                page=open_page(c,url)
+                # Join the old page's optional retention before evicting only its
+                # cache metadata; the lesson and the learner's work remain open.
+                until(lambda:(s:=rpc(page,'STATUS')).get('active')==page.locator('meta[name="gpu-release"]').get_attribute('content') and not s['busy'])
+                page.locator('#app-status-close').click();page.locator('#draft').fill('old client draft');page.locator('#app-status-open').click()
+                if missing_state:
+                    page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));const cache=await caches.open(name);await cache.delete(new URL('__app_status_state__',location.href))}")
+                Handler.revision='two';page.locator('#check-update').click()
+                expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+                candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+                until(lambda:(s:=rpc(page,'STATUS')).get('partial') is None and (s.get('active')==candidate['id'] or s.get('pending')==candidate['id']))
+                if previous_worker and missing_state:
+                    # Reproduce the old defect: a complete candidate was marked
+                    # active despite this page still running the previous course.
+                    state=rpc(page,'STATUS');assert state['active']==candidate['id'] and state.get('pending') is None
+                    expect(page.locator('#restart-update')).to_be_hidden()
+                else:
+                    expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
+                    assert page.locator('html').get_attribute('data-test-release')=='old-client'
+                    page.locator('#restart-update').click()
+                    expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
+                    assert page.locator('#draft').input_value()=='old client draft'
+        print('PASS the actual older client upgrades normally; its missing-state defect is reproduced with the old worker and fixed by the new worker without losing drafts',flush=True)
+    finally:Handler.roots['one']=original;Handler.previous_worker=False
+
+def missing_state_native(browser,url):
+    Handler.revision='one';Handler.pause=None
+    with browser.new_context(viewport={'width':390,'height':844}) as c:
+        page=open_page(c,url);until(lambda:(s:=rpc(page,'STATUS')).get('active')==page.locator('meta[name="gpu-release"]').get_attribute('content') and not s['busy'])
+        page.evaluate("async()=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));const cache=await caches.open(name);await cache.delete(new URL('__app_status_state__',location.href))}")
+        Handler.revision='two';page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
+        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        expect(page.locator('#restart-update')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
+        expect(page.locator('#version-detail')).to_have_text('The complete update has been downloaded and checked.')
+        assert page.locator('html').get_attribute('data-test-release')=='one'
+        # Recover an already complete cache with the old worker's incorrect
+        # active selection. The native planning path must need no new transfer.
+        candidate=json.loads((Handler.roots['two']/'release.json').read_text())
+        page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
+        page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+        before=payload_requests();page.locator('#download-update').click()
+        expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+        assert payload_requests()==before,'A verified existing candidate needs no payload download to recover Restart.'
+        page.locator('#restart-update').click();expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
+    print('PASS native downloads keep updates pending after lost metadata and recover Restart for an already verified candidate without downloading its payload again',flush=True)
+
+def dialog_states(browser,url):
+    for width in [390,820,1440]:
+        for theme in ['light','dark']:
+            Handler.revision='one';Handler.pause=None
+            with browser.new_context(viewport={'width':width,'height':900},color_scheme=theme) as c:
+                c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+                page=open_page(c,url);dialog=page.locator('#app-status-dialog')
+                # This minimal fixture has no theme controller. Apply the course
+                # theme explicitly; preferred colour scheme alone does not set it.
+                page.evaluate('theme=>document.documentElement.dataset.theme=theme',theme)
+                assert dialog.evaluate('e=>getComputedStyle(e).backgroundColor')==('rgb(28, 46, 49)' if theme=='dark' else 'rgb(255, 255, 255)')
+                expect(page.locator('#app-status-details')).not_to_have_attribute('open','')
+                expect(page.locator('#running-version')).to_be_hidden()
+                expect(page.locator('#offline-size')).to_contain_text('MB')
+                page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-idle.png'))
+                page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Available offline',timeout=30000)
+                Handler.revision='two';Handler.pause=Event();page.locator('#check-update').click();expect(page.locator('#download-update')).to_be_visible()
+                before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
+                expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()
+                for control in ['check-update','download-update','offline-section','app-status-details','install-help']:expect(page.locator('#'+control)).to_be_hidden()
+                assert dialog.evaluate('e=>e.scrollWidth<=e.clientWidth+1')
+                assert page.locator('#cancel-download').evaluate('e=>{const r=e.getBoundingClientRect();return r.bottom<=innerHeight&&r.top>=0}')
+                page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloading.png'))
+                until(lambda:payload_requests()>before);page.keyboard.press('Enter');Handler.pause.set();Handler.pause=None
+                expect(page.locator('#download-update')).to_be_visible(timeout=30000)
+                expect(page.locator('#version-status')).to_have_text('Update download incomplete')
+                expect(page.locator('#restart-update')).to_be_hidden()
+                page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update ready',timeout=30000)
+                expect(page.locator('#restart-update')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
+                expect(page.locator('#download-progress')).to_be_hidden()
+                page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-ready.png'))
+                page.keyboard.press('Escape');expect(dialog).to_be_hidden();expect(page.locator('#app-status-open')).to_be_focused()
+    print('PASS dialog idle, downloading, cancelled/incomplete and verified-ready states in six width/theme layouts; Cancel and modal close remain keyboard accessible',flush=True)
+
+def early_cancel(browser,url):
+    Handler.revision='one';Handler.pause=None
+    with browser.new_context() as c:
+        page=open_page(c,url);Handler.revision='two';page.locator('#check-update').click()
+        expect(page.locator('#download-update')).to_be_visible()
+        before=payload_requests()
+        # Both clicks in one task cancel before the first awaited startup step.
+        page.evaluate("()=>{document.getElementById('download-update').click();document.getElementById('cancel-download').click()}")
+        expect(page.locator('#download-update')).to_be_visible();expect(page.locator('#download-update')).to_be_enabled()
+        expect(page.locator('#download-progress')).to_be_hidden();expect(page.locator('#restart-update')).to_be_hidden()
+        expect(page.locator('#version-status')).to_have_text('Update available')
+        assert payload_requests()==before
+    print('PASS cancelling during startup keeps Update usable and offers no Restart or unsolicited transfer',flush=True)
+
 def main():
     with TemporaryDirectory(prefix='gpu-download-lifecycle-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
+        old_root=fixture(Path(tmp),'old-client',previous_client=True)
         server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
         try:
             with sync_playwright() as p:
@@ -260,8 +364,11 @@ def main():
                 try:
                     native_closed_page(browser,url);fallback_resume(browser,url)
                     cancelled_request(browser,url);cancelled_request(browser,url,browser_cancel=True);cancelled_request(browser,url,native=False)
+                    early_cancel(browser,url)
                     rejected_response(browser,url);previous_worker_recovery(browser,url)
                     quota_startup_error(browser,url)
+                    previous_client_upgrade(browser,url,old_root);missing_state_native(browser,url)
+                    dialog_states(browser,url)
                     full_course_native(browser,Handler.roots['two'])
                 finally:browser.close()
         finally:

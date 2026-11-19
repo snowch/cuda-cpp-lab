@@ -141,3 +141,50 @@ offline controls and expanded guidance were checked at 390px, 820px and 1440px i
 both themes, including keyboard expansion, Escape, focus return and overflow.
 All six contexts, the manifest check, unit/build checks and the nine download
 lifecycle cases pass. Saved lesson source and inputs are unchanged.
+
+## Update completion and a quieter status dialog
+
+A browser can lose its active-release metadata while a pinned lesson remains
+open. The 72c5e0e client and worker reproduce a completed download followed by
+“Update available” and no Restart: PREPARE treated an absent active cache as an
+initial offline save, selected the candidate as active and left no pending update.
+This reproduces the reported symptom; it does not establish the contents of the
+reporter's browser storage.
+
+The worker now uses the requesting page's running release to distinguish saving
+that release from preparing another release. Native downloads retain this context
+in the durable request. Both paths keep the candidate pending until verification
+and explicit Restart, even if active metadata is missing. The real older client
+protocol is exercised alongside the older compiled worker: the original defect
+is reproduced, the normal older upgrade works, and the new worker fixes the
+missing-state case without changing the open page or losing its saved draft.
+An already verified candidate with the old incorrect active selection also
+recovers Restart through the native planning path without another payload transfer.
+Immediate cancellation before startup also keeps Update usable without starting
+a transfer. The full offline cancellation case waits for the server's first
+candidate request before asserting an incomplete download; visible startup
+progress alone does not establish that any transfer has started.
+Foreground downloads also announce the final verification phase separately from
+transfer. No forced activation, automatic reload or storage clearing is added.
+
+The frontend-design and instructional-design skills were applied proportionately.
+This is a tool/usability gap, rather than a new GPU learning objective. Success
+means a learner can identify whether the download is transferring, incomplete or
+verified, and find its next action without reading build metadata. The design
+keeps the existing type and fern/teal palette; the download or Restart action has
+the existing primary-button treatment. Busy states show one progress group,
+human-readable MB quantities and Cancel. Unrelated disabled controls, competing
+offline actions and optional help disappear during transfer. Commit/build hashes,
+raw byte sizes, included files and removal controls live in Version and download
+details. Errors remain visible beside the action that failed. Keyboard focus
+moves to a usable control when a state change hides the previous action.
+
+The built lesson header → App status → optional installation guidance sequence
+was reviewed at 390, 820 and 1440 pixels in both themes. The same six layouts
+exercise idle, downloading, cancellation/incomplete and verified-ready states
+against real downloads, including visible keyboard Cancel, Escape/focus return,
+closed technical details and absence of horizontal overflow. Native and fallback
+lifecycle checks, the actual older client/worker regression and a complete-course
+offline download pass. The production build and all 204 unit checks pass. These
+are functional and presentation checks, not evidence of learning effectiveness
+or physical Android background execution.

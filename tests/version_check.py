@@ -18,6 +18,8 @@ def check_version(browser, base_url):
     indicator = page.locator('#version-status')
     expect(indicator).to_have_text('Up to date')
     expect(page.locator('#offline-status')).to_have_text('Offline access unavailable')
+    expect(page.locator('#running-version')).to_be_hidden()
+    page.locator('#app-status-details > summary').click()
     original = page.locator('#running-version').inner_text()
     context.set_offline(True); expect(indicator).to_have_text('Cannot check for updates')
     state['release'] = {**RELEASE, 'id':'0'*64}
@@ -25,12 +27,12 @@ def check_version(browser, base_url):
     expect(page.locator('#running-version')).to_have_text(original)
     state.update(age='17',cache_control='max-age=600')
     page.locator('#check-update').click(); expect(indicator).to_have_text('Update available')
-    expect(page.locator('#version-detail')).to_contain_text('10 minutes')
+    expect(page.locator('#release-detail')).to_contain_text('10 minutes')
     expect(page.locator('#download-update')).to_be_visible()
     state.update(age='600')
     page.locator('#check-update').click();expect(indicator).to_have_text('Couldn’t check for updates')
     expect(page.locator('#download-update')).to_be_hidden()
-    expect(page.locator('#version-detail')).not_to_contain_text('Deployed release')
+    expect(page.locator('#release-detail')).to_be_empty()
     state.update(age='0',cache_control='no-store')
     for bad in ['http', 'malformed', 'cached']:
         state.update(status=503 if bad=='http' else 200, release={} if bad=='malformed' else RELEASE, age='10' if bad=='cached' else '0')
