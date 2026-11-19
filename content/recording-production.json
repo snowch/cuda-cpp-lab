@@ -12,7 +12,7 @@
   },
   "asrModel": "small.en",
   "asrCueCount": 280,
-  "rawFlagCount": 88,
+  "rawFlagCount": 87,
   "recordings": [
     {
       "key": "first-kernel",
@@ -207,11 +207,11 @@
     {
       "key": "v2-precision",
       "video": "assets/media/v2/precision/recap.mp4",
-      "sha256": "baf6650d43f71e7dd2205521e1f850b59acff775e828c3902e6fc27f1d98b5f5",
-      "previousSha256": "49a355005ed40b60ea702936fb5234b4d4da48f2f18ed46f76eab0390f6674c7",
-      "captionSha256": "3bf1181a7b3cd871ce4ae2a218519b66f4bbc8d97f1f9ef9a948c432c484341d",
+      "sha256": "3be21ae9531165fc57b1a0d8b400ca364cd7c6004aecc0d4826354193bb85bf1",
+      "previousSha256": "baf6650d43f71e7dd2205521e1f850b59acff775e828c3902e6fc27f1d98b5f5",
+      "captionSha256": "2e1928dd4387ee349666efb068a2a670b92c3977fca5f05150eff1d5d46c65e1",
       "posterSha256": "191d5decf7eeb52f9788bbc3084105f74f9a44d215f67e91eafe8c64490146ac",
-      "bytes": 5350186,
+      "bytes": 5355308,
       "durationSeconds": 115,
       "cueCount": 12,
       "sceneCount": 6,
@@ -219,8 +219,8 @@
       "width": 3840,
       "height": 2160,
       "fps": 30,
-      "measuredLUFS": -16.62,
-      "measuredTruePeakDB": -1.38,
+      "measuredLUFS": -16.63,
+      "measuredTruePeakDB": -1.19,
       "minSceneSSIM": 0.998157
     },
     {

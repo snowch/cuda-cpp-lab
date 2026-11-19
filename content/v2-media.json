@@ -3437,7 +3437,7 @@
   },
   "precision": {
     "durationSeconds": 115,
-    "bytes": 5350186,
+    "bytes": 5355308,
     "learning": {
       "title": "Separate stored precision from arithmetic state",
       "outcome": "Explain where rounding occurs and why FP32 accumulation cannot restore lost input information.",
@@ -3471,13 +3471,13 @@
       {
         "id": "s05",
         "start": 76.267,
-        "end": 96.856,
+        "end": 96.877,
         "title": "Must every FP16 conversion lose information?"
       },
       {
         "id": "s06",
-        "start": 96.856,
-        "end": 114.669,
+        "start": 96.877,
+        "end": 114.691,
         "title": "Representability decides this case"
       }
     ],
@@ -3539,19 +3539,19 @@
       {
         "id": "s05-c2",
         "start": 86.751,
-        "end": 91.636,
+        "end": 91.657,
         "text": "Pause and predict whether the round trip must change the operands or the final sum."
       },
       {
         "id": "s06-c1",
-        "start": 97.456,
-        "end": 102.789,
+        "start": 97.477,
+        "end": 102.811,
         "text": "No input value changes in that case, and the illustrated sum remains four point zero."
       },
       {
         "id": "s06-c2",
-        "start": 103.009,
-        "end": 113.249,
+        "start": 103.031,
+        "end": 113.271,
         "text": "Reason separately about stored types, operand conversion and accumulation. A smaller format does not by itself establish an accuracy loss or a speed-up."
       }
     ],
@@ -3688,42 +3688,42 @@
       },
       {
         "start": 86.751,
-        "end": 89.432,
+        "end": 89.443,
         "text": "Pause and predict whether the round trip must"
       },
       {
-        "start": 89.432,
-        "end": 91.636,
+        "start": 89.443,
+        "end": 91.657,
         "text": "change the operands or the final sum."
       },
       {
-        "start": 97.456,
-        "end": 100.25,
+        "start": 97.477,
+        "end": 100.271,
         "text": "No input value changes in that case, and the"
       },
       {
-        "start": 100.25,
-        "end": 102.789,
+        "start": 100.271,
+        "end": 102.811,
         "text": "illustrated sum remains four point zero."
       },
       {
-        "start": 103.009,
-        "end": 106.102,
+        "start": 103.031,
+        "end": 106.123,
         "text": "Reason separately about stored types, operand"
       },
       {
-        "start": 106.102,
-        "end": 109.195,
+        "start": 106.123,
+        "end": 109.216,
         "text": "conversion and accumulation. A smaller format"
       },
       {
-        "start": 109.195,
-        "end": 111.325,
+        "start": 109.216,
+        "end": 111.346,
         "text": "does not by itself establish an"
       },
       {
-        "start": 111.325,
-        "end": 113.249,
+        "start": 111.346,
+        "end": 113.271,
         "text": "accuracy loss or a speed-up."
       }
     ],
@@ -3750,7 +3750,7 @@
         "s04-c1": 9.344,
         "s04-c2": 8.043,
         "s05-c1": 9.664,
-        "s05-c2": 4.885,
+        "s05-c2": 4.907,
         "s06-c1": 5.333,
         "s06-c2": 10.24
       },

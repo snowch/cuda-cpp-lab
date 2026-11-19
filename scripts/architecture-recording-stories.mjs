@@ -291,7 +291,7 @@ P('precision',11,'Separate stored precision from arithmetic state',
  predict('Must every FP16 conversion lose information?',[
   'Consider a new row alternating one point zero and negative zero point five. Both values are exactly representable in FP16.',
   'Pause and predict whether the round trip must change the operands or the final sum.'],
-  ()=>array('A different, exactly representable input case',e.exact.row.slice(0,4))),
+  ()=>array('First four of sixteen exactly representable inputs',e.exact.row.slice(0,4))),
  S('Representability decides this case',[
   'No input value changes in that case, and the illustrated sum remains four point zero.',
   'Reason separately about stored types, operand conversion and accumulation. A smaller format does not by itself establish an accuracy loss or a speed-up.'],
