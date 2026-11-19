@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / 'test-results'
 RESULTS.mkdir(exist_ok=True)
 # This is a whole-course transfer plus hash verification, not an inactivity
-# deadline. The 287 MB release can take over 30 s on persistent-profile CI disks.
+# deadline. The 400+ MB release can take over 30 s on persistent-profile CI disks.
 # The application's separate progress/inactivity watchdog remains in force.
 DOWNLOAD_TIMEOUT = 120_000
 
@@ -118,6 +118,10 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
     CourseHandler.roots = {name: built(temp, name) for name in ['one','two']}
     releases = {name: json.loads((root/'release.json').read_text()) for name,root in CourseHandler.roots.items()}
     assert releases['one']['id'] != releases['two']['id']
+    # Incognito quota depends on runner free space and can be smaller than two
+    # complete recordings/compiler releases. Reserve a deterministic test budget;
+    # the explicit one-byte override below still exercises real quota failure.
+    course_quota=4*max(release['bytes'] for release in releases.values())
     server = ThreadingHTTPServer(('127.0.0.1',0),CourseHandler)
     Thread(target=server.serve_forever,daemon=True).start()
     try:
@@ -217,7 +221,11 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
                 context=foreground(browser.new_context(viewport={'width':width,'height':900},color_scheme=theme,has_touch=width<500,reduced_motion='reduce'))
                 errors=[]; context.on('page',lambda page:page.on('pageerror',lambda error:errors.append(str(error))))
-                page=context.new_page(); page.goto(url+'lessons/hello.html?exercise=1#idea-2'); panel(page)
+                page=context.new_page();page.goto(url+'lessons/hello.html?exercise=1#idea-2')
+                quota_session=context.new_cdp_session(page)
+                quota_override={'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc,'quotaSize':course_quota}
+                quota_session.send('Storage.overrideQuotaForOrigin',quota_override)
+                panel(page)
                 expect(page.locator('#version-status')).to_have_text('Up to date')
                 page.wait_for_function('navigator.serviceWorker.controller !== null')
                 expect(page.locator('#offline-status')).to_have_text('Not saved for offline use')
@@ -354,13 +362,14 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 ready(page)
                 CourseHandler.slow=False
                 # Real browser quota failure cannot overwrite a complete release.
-                cdp=context.new_cdp_session(page)
-                cdp.send('Storage.overrideQuotaForOrigin', {'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc,'quotaSize':1})
+                cdp=quota_session
+                cdp.send('Storage.overrideQuotaForOrigin', {**quota_override,'quotaSize':1})
                 page.locator('#download-update').click()
                 expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
                 ready(page);expect(page.locator('#restart-update')).to_be_hidden()
-                cdp.send('Storage.overrideQuotaForOrigin', {'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc})
-                cdp.detach()
+                cdp.send('Storage.overrideQuotaForOrigin',quota_override)
+                # Keep this session alive through the two-release test. Detach
+                # would restore the runner's smaller, variable incognito quota.
                 # Failed replacement keeps the complete old release available.
                 # A valid candidate file may already have arrived before Cancel.
                 # Remove only its replacement copy so the injected 503 exercises
