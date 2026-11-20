@@ -65,7 +65,10 @@ Ordinary link navigation restores exercise values while honouring the requested
 section and browser history position. Reloads and coordinated restarts also
 restore their saved reading position and focus.
 Back/forward cache preserves its existing live document; busy operations are
-never replayed. Explicit coordinated restarts retain their stronger save guards.
+never replayed. When editor storage is constrained, automatic reading snapshots
+defer to its existing durable/tab draft and Undo restore recovery copies rather
+than overriding their selection. Explicit coordinated restarts retain their
+stronger save guards.
 
 App status distinguishes the current online page from a different saved offline
 version. Update course prepares the complete offline copy. Reading current

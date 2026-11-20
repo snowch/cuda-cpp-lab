@@ -78,7 +78,10 @@ def check_v2_clarity(browser, url, root):
     expect(frame.locator('#status')).to_contain_text('exit code 3')
     expect(output).to_have_text('7.0\n')
     tools = frame.get_by_text('Editor tools', exact=True)
-    tools.press('Enter')
+    def open_tools():
+        if not frame.locator('#editor-tools').evaluate('e=>e.open'):
+            tools.press('Enter')
+    open_tools()
     with page.expect_download() as info:
         frame.get_by_role('button', name='Export .cu').press('Enter')
     assert info.value.path().read_text() == nonzero
@@ -88,7 +91,7 @@ def check_v2_clarity(browser, url, root):
     expect(output).to_be_empty()
     page.reload()
     expect(editor).to_have_value(starter)
-    tools.press('Enter')
+    open_tools()
     frame.get_by_role('button', name='Undo restore').press('Enter')
     expect(editor).to_have_value(nonzero)
     page.reload()
@@ -126,7 +129,7 @@ def check_v2_clarity(browser, url, root):
             return nativeSet.call(this, key, value);
           };
         }''', scope)
-        tools.press('Enter')
+        open_tools()
         frame.get_by_role('button', name='Restore starter').press('Enter')
         expect(editor).to_have_value(starter)
         expect(frame.locator('#draft-warning')).to_contain_text('this tab' if scope == 'tab' else 'before leaving')
@@ -134,7 +137,7 @@ def check_v2_clarity(browser, url, root):
         page.reload()
         expect(editor).to_have_value(starter if scope == 'tab' else durable)
         if scope == 'tab':
-            tools.press('Enter')
+            open_tools()
             frame.get_by_role('button', name='Undo restore').press('Enter')
             expect(editor).to_have_value(durable)
             page.reload()
@@ -142,7 +145,7 @@ def check_v2_clarity(browser, url, root):
 
     # Undo must retain a durable recovery copy until the recovered source is durable.
     for scope in ['tab', 'page']:
-        tools.press('Enter')
+        open_tools()
         frame.get_by_role('button', name='Restore starter').press('Enter')
         expect(editor).to_have_value(starter)
         editor.evaluate('''(_, scope) => {
@@ -163,7 +166,7 @@ def check_v2_clarity(browser, url, root):
         )''') == durable
         page.reload()
         expect(editor).to_have_value(durable if scope == 'tab' else starter)
-        tools.press('Enter')
+        open_tools()
         undo.press('Enter')
         expect(editor).to_have_value(durable)
         page.reload()

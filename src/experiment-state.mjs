@@ -36,7 +36,7 @@ function snapshot(kind='restart') {
   if(document.getElementById('sm-explorer'))required.push('sm-hardware');
   if (required.some(name => !hooks.has(name))) throw new Error('An experiment has not finished loading. Wait or reload that window before restarting.');
   if (composing || document.readyState !== 'complete' || document.querySelector('main [aria-busy="true"],main [contenteditable="true"]')) throw new Error('Finish the current input or operation in each GPU Lab window, then try again.');
-  const guard = { reason: '' }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
+  const guard = { reason: '', kind }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
   const data = { schema: 1, kind, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
     details: readingDetails().map(el => el.open),
