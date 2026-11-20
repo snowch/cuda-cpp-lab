@@ -96,6 +96,8 @@ previous complete copy usable. App status detects missing/evicted files and offe
 repair. **Remove offline copy** asks for confirmation and preserves learner work,
 preferences and other apps. Offline access requires HTTPS (or localhost) and browser storage.
 See [the release contract, migration notes and validation](docs/app-status.md).
+Other labs can use the [offline and update design](docs/offline-update-design.md)
+for the shared behaviour, integration checklist and acceptance tests.
 
 ## Develop
 
