@@ -32,6 +32,7 @@ class CourseHandler(BaseHTTPRequestHandler):
     legacy = False
     corrupt = None
     pause = None
+    unreachable = False
     def log_message(self, *_): pass
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
@@ -39,6 +40,13 @@ class CourseHandler(BaseHTTPRequestHandler):
         if path.endswith('/'): path += 'index.html'
         path = path.lstrip('/')
         self.requests.append(path)
+        if self.unreachable:
+            # A cold persistent worker can start before Playwright applies its
+            # offline emulation to the worker target. Drop real connections too
+            # so this case verifies a genuinely unreachable host, not cache-first
+            # behaviour masking a service-worker request that still got online.
+            self.close_connection = True
+            return
         root = self.roots[self.revision]
         # A real static release directory. Both versions are retained for this
         # test deployment, just as documented for durable immutable assets.
@@ -347,6 +355,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
             tab.locator('#later-update').click();ctx.close()
+            CourseHandler.unreachable=True
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options));ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'index.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
@@ -367,6 +376,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 raise
             print(f'Cold offline restart completed in {time.monotonic()-started:.2f}s',flush=True)
             ctx.close()
+            CourseHandler.unreachable=False
             print('PASS persistent profile: no activation on closing all windows; cold offline reopen, deferred badge and explicit offline restart')
             # Exercise the actual former worker and its automatically saved cache.
             CourseHandler.revision='one';CourseHandler.legacy=True
