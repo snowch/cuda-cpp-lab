@@ -177,6 +177,7 @@ def newer_online_with_saved_copy(browser,url):
         fresh.locator('#app-status-open').click()
         expect(fresh.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.')
         expect(fresh.get_by_role('button',name='Update offline copy',exact=True)).to_be_enabled()
+        expect(fresh.locator('#offline-size')).to_contain_text('Your saved offline copy remains available.')
         offline(context,True)
         expect(fresh.locator('#offline-status')).to_be_visible()
         expect(fresh.locator('#offline-status')).to_have_text('A different version is saved and ready to use offline.')

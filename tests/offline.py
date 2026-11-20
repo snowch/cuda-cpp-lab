@@ -390,7 +390,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             travel.locator('#run').click()
             expect(travel.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
             expect(travel.locator('#program-output')).to_contain_text('7.0')
-            tab.locator('#v2-video > summary').click();film=tab.locator('video')
+            tab.locator('.sm-recording > summary').click();film=tab.locator('video')
             film.evaluate('v=>{v.muted=true;v.load()}');expect(film).to_have_js_property('readyState',4,timeout=30000)
             film.evaluate('v=>{v.currentTime=5;return v.play()}');expect(film).to_have_js_property('paused',False);film.evaluate('v=>v.pause()')
             print('PASS plane journey: cold browser with unreachable host, real Next/Back, retained edited source, offline7.0 compilation and recording playback',flush=True)

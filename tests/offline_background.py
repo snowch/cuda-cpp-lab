@@ -502,6 +502,8 @@ def dialog_states(browser,url):
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloaded.png'))
                 Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible()
                 expect(page.locator('#download-update')).to_have_text('Update offline copy')
+                expect(page.locator('#offline-status')).to_be_visible()
+                expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.')
                 expect(page.locator('#version-detail')).to_contain_text('complete course for offline use')
                 before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
                 expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()

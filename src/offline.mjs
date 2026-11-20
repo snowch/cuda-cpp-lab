@@ -72,7 +72,8 @@ function render() {
   // A failed online check says nothing about offline availability. Keep that
   // fact visible when it is not already stated in the primary status.
   const primaryStatesOffline=downloaded||ready||(!otherCourseDownloaded&&(snapshot.saved||snapshot.partial));
-  $('offline-section').hidden=!offlineTransfer&&!(failedCheck&&!transferring&&!primaryStatesOffline);
+  const savedCopyAlongsideUpdate=available&&!transferring&&!ready&&(downloaded||otherCourseDownloaded);
+  $('offline-section').hidden=!offlineTransfer&&!savedCopyAlongsideUpdate&&!(failedCheck&&!transferring&&!primaryStatesOffline);
   $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||relevantPending?'Update available':version==='Up to date'?'Up to date online':downloaded?'Downloaded':'Check version';
   $('app-status-details').hidden=transferring;
   $('install-help').hidden=transferring;
@@ -91,7 +92,7 @@ function render() {
   $('retry-update').textContent=retryingCheck?'Checking…':'Retry';
   const release=runningRelease;
   $('retry-update').classList.toggle('primary',$('download-update').hidden&&$('restart-update').hidden);
-  $('offline-size').textContent=release?`${progressSize(release.bytes)} for the complete course, including recordings. Save the offline copy before disconnecting.`:'Connect to check the download size.';
+  $('offline-size').textContent=release?otherCourseDownloaded?`${progressSize(release.bytes)} for this version. Your saved offline copy remains available.`:repair?`${progressSize(release.bytes)} for the complete course, including recordings. Verified files are kept when repairing it.`:`${progressSize(release.bytes)} for the complete course, including recordings. Save the offline copy before disconnecting.`:'Connect to check the download size.';
   $('offline-size').hidden=transferring||Boolean(downloaded||ready||available)||$('download-update').hidden;
   $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
   const completeOfflineCopy=Boolean(snapshot.offlineReady||(snapshot.pendingReady&&snapshot.pendingSaved));
