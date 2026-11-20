@@ -1,5 +1,9 @@
 # App status and release lifecycle
 
+For adaptation to another lab, start with the
+[reusable offline and update design](offline-update-design.md), including its
+state model, integration checklist and acceptance journeys.
+
 Issue #22 replaces the GitHub branch-head indicator and automatic offline save
 with one App status control on every generated course page. The public labels
 match the contract in Assembly Lab #35, Metadata Systems #2 and Video Lab #6.
