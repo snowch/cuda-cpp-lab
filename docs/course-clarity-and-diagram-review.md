@@ -4,6 +4,10 @@ Reviewed 20 November 2026 against `c13e98d357d22c873376ce25e441e55fe5613a92`.
 These are findings and proposed changes; the learner-facing text and diagrams have
 not been rewritten as part of this review.
 
+The later [sentence clarity followup](sentence-clarity-followup.md) records applied
+written fixes, including the lesson-1 opening missed here. Diagram proposals and
+published recording wording are tracked separately there.
+
 ## Audience and coverage
 
 The public introduction assumes basic programming and array indexing, and promises

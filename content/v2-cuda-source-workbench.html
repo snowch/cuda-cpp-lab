@@ -1596,7 +1596,7 @@ function launchWorker() {
   };
   created.onerror = event => {
     shutDown();
-    fail('The browser worker stopped.', event.message);
+    fail('The browser execution process stopped. Your source remains in the CUDA source editor. Click Compile and run to try again.', event.message);
   };
   return created;
 }
@@ -1609,7 +1609,7 @@ run.addEventListener('click', () => {
     engine ??= launchWorker();
     timeout = setTimeout(() => {
       shutDown();
-      fail('The run timed out.');
+      fail('The run timed out after 90 seconds. Your source remains in the CUDA source editor. Click Compile and run to try again.');
     }, 90_000);
     let assets;
     if (!prepared) {
@@ -1628,7 +1628,7 @@ run.addEventListener('click', () => {
     engine.postMessage({ source: editor.value, profile, fullProgram, advanced, assets });
   } catch (error) {
     shutDown();
-    fail('The compiler could not start.', String(error.message ?? error));
+    fail('The compiler could not start. Your source remains in the CUDA source editor. Read Compiler and execution messages below, then click Compile and run to try again.', String(error.message ?? error));
   }
 });
 

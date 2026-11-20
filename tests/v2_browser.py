@@ -44,6 +44,8 @@ def check_v2(browser, url):
             expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
             expect(page.locator('.v2-hardware')).to_be_visible()
             expect(page.locator('.v2-diagram')).to_have_count(1)
+            if mode == 'scheduling':
+                expect(page.locator('.v2-starter-model')).to_have_attribute('open', '')
             expect(page.locator('.v2-hw-device > [data-hardware="memory"]')).to_have_count(1)
             expect(page.locator('.v2-hw-chip [data-hardware="memory"]')).to_have_count(0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), route
