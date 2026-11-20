@@ -135,11 +135,11 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             ctx=foreground(browser.new_context());tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not downloaded for offline use')
-            expect(tab.locator('#save-offline')).to_be_visible()
+            expect(tab.locator('#download-update')).to_be_visible()
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
             expect(tab.locator('#offline-status')).to_have_text('Downloaded update is ready after restarting.')
-            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#download-update')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#later-update').click();tab.reload()
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
@@ -156,7 +156,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             ctx.set_offline(True);tab.locator('#restart-update').click()
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'],timeout=20000)
             panel(tab);ready(tab)
-            expect(tab.locator('#save-offline')).to_be_hidden()
+            expect(tab.locator('#download-update')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
             tab.locator('#app-status-close').click()
             hello=tab.frame_locator('[data-kernel-workbench="hello"]')
@@ -213,7 +213,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
               await cache.put(key, new Response(JSON.stringify(state)));
             }''',url)
             tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
-            panel(tab);ready(tab);expect(tab.locator('#save-offline')).to_be_hidden()
+            panel(tab);ready(tab);expect(tab.locator('#download-update')).to_be_hidden()
             ctx.close()
             print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
             for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
@@ -225,17 +225,17 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 page=context.new_page();page.goto(route)
                 quota=context.new_cdp_session(page);budget={'origin':urlsplit(url).scheme+'://'+urlsplit(url).netloc,'quotaSize':course_quota}
                 quota.send('Storage.overrideQuotaForOrigin',budget)
-                panel(page);expect(page.locator('#save-offline')).to_be_visible();expect(page.locator('#course-ready-icon')).to_be_hidden()
+                panel(page);expect(page.locator('#download-update')).to_be_visible();expect(page.locator('#course-ready-icon')).to_be_hidden()
                 assert not any(x.endswith('examples/first-kernel.cu') for x in CourseHandler.requests),'Opening App status must not download the course.'
                 page.evaluate("caches.open('sibling-app:keep');localStorage.setItem('user-content','keep')")
-                CourseHandler.slow=True;page.locator('#save-offline').click()
+                CourseHandler.slow=True;page.locator('#download-update').click()
                 expect(page.locator('#download-progress')).to_be_visible()
                 assert page.locator('#download-progress').evaluate('e=>e.closest("section").id')=='course-status'
                 page.wait_for_function('document.getElementById("asset-progress").value>0')
-                page.locator('#cancel-download').click();expect(page.locator('#save-offline')).to_have_text('Resume download')
+                page.locator('#cancel-download').click();expect(page.locator('#download-update')).to_have_text('Update course')
                 CourseHandler.slow=False
                 before=CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
-                page.locator('#save-offline').click();ready(page);expect(page.locator('#course-ready-icon')).to_be_visible()
+                page.locator('#download-update').click();ready(page);expect(page.locator('#course-ready-icon')).to_be_visible()
                 assert before==CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
                 page.keyboard.press('Escape');context.set_offline(True)
                 for file in releases['one']['files']:
@@ -322,7 +322,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 expect(page.locator('#offline-status')).to_have_text('Offline download incomplete',timeout=DOWNLOAD_TIMEOUT)
                 context.set_offline(False);CourseHandler.corrupt='examples/first-kernel.cu'
                 assert not page.evaluate('async url=>(await fetch(url+"examples/first-kernel.cu")).ok',url)
-                CourseHandler.corrupt=None;page.locator('#save-offline').click();ready(page)
+                CourseHandler.corrupt=None;page.locator('#download-update').click();ready(page)
                 page.locator('#app-status-details > summary').click();page.locator('#remove-offline').click();page.locator('#cancel-remove').click();ready(page)
                 page.locator('#remove-offline').click();page.locator('#confirm-remove').click()
                 expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use',timeout=30000)
@@ -338,7 +338,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
             profile=temp/'profile'
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options))
-            tab=ctx.pages[0];tab.goto(url+'index.html');panel(tab);tab.locator('#save-offline').click();ready(tab)
+            tab=ctx.pages[0];tab.goto(url+'index.html');panel(tab);tab.locator('#download-update').click();ready(tab)
             manifest=ctx.new_cdp_session(tab).send('Page.getAppManifest')
             assert not manifest['errors'],manifest
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
@@ -385,7 +385,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             expect(tab.locator('html')).to_have_attribute('data-test-release','two')
             expect(tab.locator('#offline-status')).to_have_text('Offline download incomplete')
             assert legacy_key in tab.evaluate('caches.keys()')
-            tab.locator('#save-offline').click();ready(tab)
+            tab.locator('#download-update').click();ready(tab)
             ctx.set_offline(True);tab.reload();panel(tab);ready(tab)
             ctx.close();CourseHandler.legacy=False
             print('PASS legacy migration: real former worker, retained cache/consent, explicit verified repair and offline reopen')
