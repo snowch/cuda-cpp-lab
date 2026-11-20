@@ -31,12 +31,18 @@ def online_cases(browser,url,saved):
             old.locator('#download-update').click()
             expect(old.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         old.locator('#app-status-close').click();old.locator('#draft').fill('keep my edits')
-        old.frame_locator('iframe').locator('#frame-draft').fill('keep editor state')
+        expect(old.locator('#draft')).to_have_value('keep my edits')
+        editor=old.frame_locator('iframe').locator('#frame-draft')
+        # Native text insertion targets the browser's focused frame. Establish
+        # that target and validate both inputs before testing navigation/restore.
+        editor.click();expect(editor).to_be_focused();editor.fill('keep editor state')
+        expect(editor).to_have_value('keep editor state')
+        expect(old.locator('#draft')).to_have_value('keep my edits')
         before=payload_requests();Handler.revision='two'
         fresh=context.new_page();fresh.goto(url);two=version(fresh,'two')
         assert one!=two;version(old,'one')
         fresh.locator('#app-status-open').click()
-        expect(fresh.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.' if saved else 'Up to date')
+        expect(fresh.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.' if saved else 'Up to date online. Not saved for offline use.')
         assert rpc(fresh,'STATUS')['active']==one
         until(lambda:rpc(fresh,'STATUS').get('visited')==two)
         assert payload_requests()==before,'Online navigation must not download an unvisited course payload'
@@ -57,7 +63,7 @@ def online_cases(browser,url,saved):
                     fresh.set_viewport_size({'width':width,'height':1000})
                     fresh.evaluate('theme=>document.documentElement.dataset.theme=theme',theme)
                     assert fresh.evaluate('document.documentElement.scrollWidth<=innerWidth')
-                    expect(fresh.get_by_role('button',name='Update course',exact=True)).to_have_count(1)
+                    expect(fresh.get_by_role('button',name='Update offline copy',exact=True)).to_have_count(1)
                     fresh.screenshot(path=str(RESULTS/f'online-offline-copy-{width}-{theme}.png'))
             fresh.set_viewport_size({'width':390,'height':1000})
         old.reload();version(old,'two')
@@ -79,7 +85,7 @@ def online_cases(browser,url,saved):
             Handler.revision='two' # The host now differs from the prepared three.
             fresh.locator('#app-status-open').click();manual_check(fresh)
             expect(fresh.locator('#restart-update')).to_be_hidden()
-            expect(fresh.get_by_role('button',name='Update course',exact=True)).to_be_visible()
+            expect(fresh.get_by_role('button',name='Update offline copy',exact=True)).to_be_visible()
             expect(fresh.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.')
             old.locator('#restart-update').click();version(old,'three');version(fresh,'three')
             assert rpc(old,'STATUS')['active']==prepared

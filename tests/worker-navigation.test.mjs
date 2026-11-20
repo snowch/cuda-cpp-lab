@@ -6,12 +6,12 @@ import {webcrypto,createHash} from 'node:crypto';
 import vm from 'node:vm';
 const base='https://example.test/gpu-lab/',prefix=`gpu-lab:${base}:`;
 const A='a'.repeat(64),B='b'.repeat(64),C='c'.repeat(64),D='d'.repeat(64);
-async function machine({state={active:A,saved:true},network=()=>new Response('latest'),denied=false,clients=[]}={}){
+async function machine({state={active:A,saved:true},network=()=>new Response('latest'),denied=false,clients=[],beforeRead=async()=>{}}={}){
  const stores=new Map(),handlers=new Map(),requests=[];
  const caches={async open(name){
   if(denied)throw Error('Storage denied');
   if(!stores.has(name))stores.set(name,new Map());const entries=stores.get(name);
-  return {async match(url){return entries.get(String(url))?.clone();},async put(url,response){entries.set(String(url),response.clone());},async keys(){return [...entries.keys()].map(url=>new Request(url));}};
+  return {async match(url){await beforeRead(String(url));return entries.get(String(url))?.clone();},async put(url,response){entries.set(String(url),response.clone());},async keys(){return [...entries.keys()].map(url=>new Request(url));}};
  },async keys(){return [...stores.keys()];},async delete(name){return stores.delete(name);}};
  async function put(name,path,body){await(await caches.open(name)).put(new URL(path,base),new Response(typeof body==='string'?body:JSON.stringify(body)));}
  if(!denied)await put(prefix+'status-v1','__app_status_state__',state);
@@ -22,9 +22,9 @@ async function machine({state={active:A,saved:true},network=()=>new Response('la
  });
  const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
  vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);
- async function request(path,{destination='document',replacesClientId='',mode='navigate'}={}){
+ async function request(path,{destination='document',replacesClientId='',mode='navigate',referrer=''}={}){
   let response;const headers=new Headers();
-  handlers.get('fetch')({request:{url:new URL(path,base).href,method:'GET',mode,destination,headers},replacesClientId,clientId:'',respondWith(work){response=work;}});
+  handlers.get('fetch')({request:{url:new URL(path,base).href,referrer,method:'GET',mode,destination,headers},replacesClientId,clientId:'',respondWith(work){response=work;}});
   return response;
  }
  // Node cannot construct navigation Requests. The worker clones the request for
@@ -68,6 +68,61 @@ test('a committed restart reloads its verified version once; subsequent online n
  assert.equal(await(await m.request('index.html',{replacesClientId:'replacement-window'})).text(),'latest');
  await m.put(prefix+'status-v1','__restart_navigation__',{token:'aborted',release:B,clients:['old-window']});
  assert.equal(await(await m.request('index.html',{replacesClientId:'old-window'})).text(),'latest','An aborted ticket cannot act as a committed restart');
+});
+
+test('uncached offline navigation gives a usable recovery page without saving the course or caching the error',async()=>{
+ for(const denied of [false,true]){
+  const m=await machine({state:{active:A,saved:false},denied,network:()=>{throw Error('Offline');}});
+  const response=await m.request('next.html?x=1&y=2',{referrer:base+'index.html?keep=1&draft=7'});
+  assert.equal(response.status,503);assert.match(response.headers.get('Content-Type'),/text\/html/);
+  const html=await response.text();assert.match(html,/This lesson isn’t saved offline/);assert.match(html,/Choose Save offline copy/);
+  assert.match(html,/href="https:\/\/example.test\/gpu-lab\/index.html\?keep=1&amp;draft=7"/);
+  assert.match(html,/next.html\?x=1&amp;y=2/);assert.match(html,/Back to previous lesson/);
+  assert.equal(response.headers.get('Cache-Control'),'no-store');
+  if(!denied)assert.equal(await(await m.caches.open(prefix+'release-'+A)).match(base+'next.html'),undefined);
+ }
+ const direct=await machine({state:{},network:()=>{throw Error('Offline');}});
+ const html=await(await direct.request('next.html',{referrer:'https://other.test/'})).text();
+ assert.match(html,/Course overview/);assert.ok(!html.includes('https://other.test/'));
+});
+
+test('missing or corrupt saved HTML requests repair; verified pending copies offer restart without replacing the saved selection',async()=>{
+ const file=(path,body)=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
+ const release={schema:1,id:A,commit:null,date:null,files:[file('index.html','page'),file('next.html','next')],bytes:8};
+ for(const corrupt of [false,true]){
+  const m=await machine({network:()=>{throw Error('Offline');}});
+  await m.put(prefix+'release-'+A,'__release_manifest__',release);await m.put(prefix+'release-'+A,'index.html','page');
+  if(corrupt)await m.put(prefix+'release-'+A,'next.html','corrupt saved HTML');
+  const html=await(await m.request('next.html')).text();assert.match(html,/This offline copy needs repair/);assert.match(html,/Choose Repair offline copy/);
+  assert.equal((await m.rpc('STATUS')).active,A);
+ }
+ const unknown=await machine({network:()=>{throw Error('Offline');}});
+ await unknown.put(prefix+'release-'+A,'__release_manifest__',release);
+ await unknown.put(prefix+'release-'+A,'index.html','page');await unknown.put(prefix+'release-'+A,'next.html','next');
+ const unknownHTML=await(await unknown.request('retired.html')).text();assert.match(unknownHTML,/This page isn’t in the saved course/);
+ assert.ok(!unknownHTML.includes('Choose Repair offline copy'));assert.equal((await unknown.rpc('STATUS')).offlineReady,true);
+ const m=await machine({state:{active:A,saved:false,pending:B,pendingSaved:true},network:()=>{throw Error('Offline');}});
+ await m.put(prefix+'release-'+B,'__release_manifest__',{...release,id:B});
+ await m.put(prefix+'release-'+B,'index.html','page');await m.put(prefix+'release-'+B,'next.html','next');
+ const html=await(await m.request('next.html')).text();assert.match(html,/Your saved update is ready/);assert.match(html,/Choose Restart to update/);
+ const state=await m.rpc('STATUS');assert.equal(state.active,A);assert.equal(state.pending,B);
+});
+
+test('observed damage invalidates an overlapping verification before it can report offline readiness',async()=>{
+ let releaseScan,markStarted,allow=false;
+ const gate=new Promise(resolve=>releaseScan=resolve),started=new Promise(resolve=>markStarted=resolve);
+ const m=await machine({network:()=>{throw Error('Offline');},beforeRead:async url=>{
+  if(url===base+'z.bin'&&!allow){markStarted();await gate;}
+ }});
+ const bodies={'index.html':'page','next.html':'next','a.bin':'a','b.bin':'b','z.bin':'last'};
+ const files=Object.entries(bodies).map(([path,body])=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}));
+ await m.put(prefix+'release-'+A,'__release_manifest__',{schema:1,id:A,commit:null,date:null,files,bytes:files.reduce((sum,file)=>sum+file.bytes,0)});
+ for(const [path,body] of Object.entries(bodies))await m.put(prefix+'release-'+A,path,body);
+ const checking=m.rpc('STATUS');await started;
+ await m.put(prefix+'release-'+A,'next.html','damaged after this file was checked');
+ assert.match(await(await m.request('next.html')).text(),/This offline copy needs repair/);
+ allow=true;releaseScan();assert.equal((await checking).offlineReady,false);
+ assert.equal((await m.rpc('STATUS')).offlineReady,false);
 });
 
 test('an open version can recover unchanged live files but never substitutes changed bytes',async()=>{

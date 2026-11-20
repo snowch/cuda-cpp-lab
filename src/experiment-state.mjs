@@ -5,6 +5,7 @@ let composing = false, lock = null, unlockTimer;
 const snapshotKey = () => {
   const url=new URL(location.href);
   url.searchParams.delete('gpu-release');
+  if(url.searchParams.get('download')==='1')url.searchParams.delete('download');
   return 'gpu-lab:restart:' + url.pathname + url.search;
 };
 // Read the incoming route before a page migrates its URL; saves still use the live route.
