@@ -48,6 +48,12 @@ def fixture(temp,name,previous_client=False):
     shutil.copy2(ROOT/'manifest.webmanifest',folder/'manifest.webmanifest')
     (folder/'zz-payload.bin').write_bytes((b'one' if name=='one' else b'two')*350000)
     (folder/'index.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/style.css"><title>GPU Lab lifecycle test</title></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Course {name}</h1><label for="draft">Saved learner draft</label><input id="draft" value="7"><p>The current lesson stays open while an update downloads.</p></main><footer><span class="build-info"><a href="#">{name}</a></span></footer><script>const d=document.querySelector('#draft');d.value=localStorage.getItem('fixture-draft')||d.value;d.addEventListener('input',()=>localStorage.setItem('fixture-draft',d.value));</script></body></html>''')
+    if previous_client:
+        # Recreate the removed control before a frozen older controller runs.
+        # This parser-ordered module precedes the controller injected in <head>.
+        legacy_action='''<script type="module">document.querySelector('.status-actions').insertAdjacentHTML('beforeend','<button id="save-offline" type="button">Download for offline use</button>');</script>'''
+        page=folder/'index.html'
+        page.write_text(page.read_text().replace('</head>',legacy_action+'</head>'))
     subprocess.run(['node','--input-type=module','-e',"import {buildOffline} from './scripts/offline.mjs';await buildOffline(process.argv[1]);",str(folder)],cwd=ROOT,check=True,stdout=subprocess.DEVNULL)
     return folder
 
@@ -57,7 +63,10 @@ def launch(p):
 
 def open_page(context,url):
     page=context.new_page();page.goto(url);page.wait_for_function('navigator.serviceWorker.controller!==null')
-    page.locator('#app-status-open').click();expect(page.locator('#save-offline')).to_be_enabled();return page
+    page.locator('#app-status-open').click()
+    # Frozen older clients still expose their original first-save control.
+    action=page.locator('#save-offline') if page.locator('#save-offline').count() else page.locator('#download-update')
+    expect(action).to_be_enabled();return page
 
 def rpc(page,type,**data):
     return page.evaluate('''async data=>{const r=await navigator.serviceWorker.ready,c=new MessageChannel();return new Promise((resolve,reject)=>{c.port1.onmessage=({data})=>{if(data.progress)return;data.error?reject(Error(data.error)):resolve(data.result)};r.active.postMessage(data,[c.port2]);})}''',{'type':type,**data})
@@ -77,7 +86,7 @@ def native_closed_page(browser,url):
         page=open_page(c,url)
         assert page.evaluate('(async()=>!!(await navigator.serviceWorker.ready).backgroundFetch)()'),'Native Background Fetch requires full Chromium for this check.'
         assert payload_requests()==0,'Visiting a page must not consent to a course download.'
-        page.locator('#app-status-close').click();page.locator('#draft').fill('learner work retained');expect(page.locator('#draft')).to_have_value('learner work retained');page.locator('#app-status-open').click();page.locator('#save-offline').click();until(lambda:payload_requests()>0)
+        page.locator('#app-status-close').click();page.locator('#draft').fill('learner work retained');expect(page.locator('#draft')).to_have_value('learner work retained');page.locator('#app-status-open').click();page.locator('#download-update').click();until(lambda:payload_requests()>0)
         page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
         page.screenshot(path=str(RESULTS/'native-downloading.png'));page.close();Handler.pause.set()
         page=c.new_page();page.goto(url);page.wait_for_function('navigator.serviceWorker.controller!==null')
@@ -91,7 +100,7 @@ def fallback_resume(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        page=open_page(c,url);page.locator('#download-update').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         page.locator('#app-status-close').click();page.locator('#draft').fill('saved during update');page.locator('#app-status-open').click();Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         until(lambda:payload_requests()>=2)
         current=job(page);assert current['wanted'] and current['bytes']>0
@@ -120,7 +129,7 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         if not native:c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        page=open_page(c,url);page.locator('#download-update').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
         expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
         expect(page.locator('#version-status')).to_have_text('Downloading update')
@@ -144,7 +153,7 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
 def rejected_response(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context(viewport={'width':820,'height':1100},color_scheme='dark') as c:
-        page=open_page(c,url);page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        page=open_page(c,url);page.locator('#download-update').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         Handler.revision='two';Handler.corrupt='src/experiment-state.mjs';manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).to_contain_text('did not match the release',timeout=30000)
         assert not job(page)['wanted'];assert not rpc(page,'STATUS')['pendingReady'];assert page.locator('html').get_attribute('data-test-release')=='one'
@@ -162,7 +171,7 @@ def previous_worker_recovery(browser,url):
     with browser.new_context(viewport={'width':390,'height':844}) as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
         page=open_page(c,url);assert rpc(page,'STATUS').get('downloadVersion') is None
-        page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        page.locator('#download-update').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible();page.locator('#download-update').click();until(lambda:payload_requests()>=2)
         page.locator('#cancel-download').click()
         # Keep the body gated until the older worker has acknowledged Cancel.
@@ -204,7 +213,7 @@ def full_course_native(browser,update_root):
             page.locator('#app-status-open').click()
             # Click as soon as the control allows it: startup retention and the
             # explicit download must share connection work without racing.
-            page.locator('#save-offline').dblclick()
+            page.locator('#download-update').dblclick()
             try:page.wait_for_function("document.querySelector('#download-behaviour').textContent.includes('background')")
             except Exception:
                 print('Full native startup diagnostics:',page.locator('#app-status-dialog').inner_text(),flush=True)
@@ -244,7 +253,7 @@ def quota_startup_error(browser,url):
     Handler.revision='one';Handler.requests=[];Handler.pause=None;Handler.corrupt=False
     with browser.new_context() as c:
         c.add_init_script("if(typeof ServiceWorkerRegistration!=='undefined')Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
-        page=open_page(c,url);page.locator('#save-offline').click()
+        page=open_page(c,url);page.locator('#download-update').click()
         expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         assert job(page)['state']=='ready'
         Handler.revision='two';manual_check(page)
@@ -430,14 +439,14 @@ def no_completed_cache_downgrade(browser,url):
             page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
             before=payload_requests();manual_check(page)
             expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
-            expect(page.locator('#restart-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
-            expect(page.locator('#save-offline')).to_have_text('Download for offline use')
-            expect(page.locator('#save-offline')).to_be_visible()
+            expect(page.locator('#restart-update')).to_be_hidden()
+            expect(page.locator('#download-update')).to_have_text('Update course')
+            expect(page.locator('#download-update')).to_be_visible()
             expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
             assert rpc(page,'STATUS').get('pending') is None
             assert payload_requests()==before
             assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
-            page.locator('#save-offline').click()
+            page.locator('#download-update').click()
             # Saving the open version prepares it for every window when an old
             # complete course is still selected. Keep the coordinated restart.
             expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
@@ -466,21 +475,23 @@ def dialog_states(browser,url):
                 expect(dialog.get_by_role('heading',name='Offline access',exact=True)).to_have_count(0)
                 expect(dialog.get_by_role('heading',name='Updates',exact=True)).to_have_count(0)
                 expect(page.locator('#check-update')).to_be_hidden()
-                expect(page.locator('#save-offline')).to_be_visible()
+                expect(page.locator('#download-update')).to_be_visible()
+                expect(dialog.get_by_role('button',name='Update course',exact=True)).to_have_count(1)
+                expect(page.locator('#save-offline')).to_have_count(0)
                 expect(page.locator('#retry-update')).to_be_hidden()
                 expect(page.locator('#version-status')).to_have_text('Up to date')
                 expect(page.locator('#app-status-details')).not_to_have_attribute('open','')
                 expect(page.locator('#running-version')).to_be_hidden()
                 expect(page.locator('#offline-size')).to_contain_text('MB')
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-idle.png'))
-                page.locator('#save-offline').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+                page.locator('#download-update').click();expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
                 expect(page.locator('#version-status')).to_have_text('Up to date. Downloaded and ready to use offline.')
                 expect(page.locator('#version-status')).to_be_visible();expect(page.locator('#offline-section')).to_be_hidden()
-                expect(page.locator('#check-update')).to_be_hidden();expect(page.locator('#save-offline')).to_be_hidden()
+                expect(page.locator('#check-update')).to_be_hidden();expect(page.locator('#download-update')).to_be_hidden()
                 assert page.locator('#app-status-dialog > section').count()==1
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloaded.png'))
                 Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible()
-                expect(page.locator('#download-update')).to_have_text('Download update')
+                expect(page.locator('#download-update')).to_have_text('Update course')
                 expect(page.locator('#version-detail')).to_contain_text('complete course for offline use')
                 before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
                 expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()

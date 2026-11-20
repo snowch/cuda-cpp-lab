@@ -68,10 +68,9 @@ function render() {
   $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||pending?'Update available':version==='Up to date'?'Up to date':downloaded?'Downloaded':'Check version';
   $('app-status-details').hidden=transferring;
   $('install-help').hidden=transferring;
-  $('download-update').hidden=locked||!available||Boolean(ready&&snapshot.pending===latest.id);
-  $('download-update').disabled=locked||!supported;
+  $('download-update').hidden=locked||!supported||failedCheck||(!available&&(downloaded||ready))||Boolean(available&&ready&&snapshot.pending===latest.id);
+  $('download-update').disabled=locked||Boolean(checking)||!(available?latest:runningRelease);
   $('download-update').classList.toggle('primary',!ready);
-  $('download-update').textContent=latest&&snapshot.partial===latest.id?'Resume update':'Download update';
   $('restart-update').hidden=!ready;$('later-update').hidden=!ready;
   $('restart-note').hidden=!ready;
   $('restart-update').disabled=restarting||locked;
@@ -82,21 +81,18 @@ function render() {
   $('retry-update').disabled=Boolean(checking)||retryingCheck;
   $('retry-update').textContent=retryingCheck?'Checking…':'Retry';
   const release=runningRelease;
-  $('save-offline').hidden=locked||Boolean(downloaded||ready||available)||!supported;
-  $('save-offline').disabled=locked||!release;
-  $('save-offline').textContent=unavailable?'Retry offline access':snapshot.partial===running?'Resume download':snapshot.saved&&!otherCourseDownloaded?'Repair offline copy':'Download for offline use';
-  $('retry-update').classList.toggle('primary',$('save-offline').hidden&&$('download-update').hidden&&$('restart-update').hidden);
-  $('offline-size').textContent=release?`${progressSize(release.bytes)} for the complete course, including recordings.`:'Connect to check the download size.';
-  $('offline-size').hidden=transferring||Boolean(downloaded||ready||available)||$('save-offline').hidden;
+  $('retry-update').classList.toggle('primary',$('download-update').hidden&&$('restart-update').hidden);
+  $('offline-size').textContent=release?`${progressSize(release.bytes)}. Update course saves the complete course, including recordings, for offline use.`:'Connect to check the download size.';
+  $('offline-size').hidden=transferring||Boolean(downloaded||ready||available)||$('download-update').hidden;
   $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
   $('remove-offline').disabled=locked;
   const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
-  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Resume to finish the download.':available?`${progressSize(latest.bytes)} download. Includes the complete course for offline use. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
+  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Click Update course to finish the download.':available?`${progressSize(latest.bytes)} download. Saves the complete course for offline use. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
   $('release-detail').textContent=latest?`Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}`:'';
   // State changes hide the previous action. Keep keyboard users at the next
   // useful control rather than dropping focus behind the modal.
   if(dialog.open&&dialog.contains(focused)&&!focused.getClientRects().length){
-    const next=focused.id==='retry-update'?$('course-status'):['restart-update','cancel-download','download-update','save-offline','retry-update','app-status-close'].map($).find(element=>element.getClientRects().length&&!element.disabled);
+    const next=focused.id==='retry-update'?$('course-status'):['restart-update','cancel-download','download-update','retry-update','app-status-close'].map($).find(element=>element.getClientRects().length&&!element.disabled);
     next?.focus({preventScroll:true});
   }
 }
@@ -386,7 +382,7 @@ async function performDownload(save, resume) {
       try {
         native=await registration.backgroundFetch.get(downloadId);
         if(!native&&!plan.existing)native=await registration.backgroundFetch.fetch(downloadId,plan.requests,{
-          title:save?'GPU Lab offline download':'GPU Lab update',downloadTotal:plan.downloadTotal,
+          title:'GPU Lab course update',downloadTotal:plan.downloadTotal,
           icons:[{src:new URL('assets/icon-192.png',base).href,sizes:'192x192',type:'image/png'}],
         });
       } catch(failure) {
@@ -441,8 +437,7 @@ $('retry-update').addEventListener('click',async()=>{
       (button.hidden?$('course-status'):button).focus({preventScroll:true});
   }
 });
-$('download-update').addEventListener('click', () => download(false));
-$('save-offline').addEventListener('click', () => download(true));
+$('download-update').addEventListener('click', () => download(!(latest&&latest.id!==running)));
 $('cancel-download').addEventListener('click', async () => {
   downloadCancelled=true;cancelling=true;clearTimeout(resumeTimer);const id=downloading?localDownloadId:snapshot.download?.id;
   render();
@@ -460,7 +455,7 @@ $('restart-update').addEventListener('click', async () => {
 $('remove-offline').addEventListener('click', () => { $('remove-confirmation').hidden = false; $('cancel-remove').focus(); });
 $('cancel-remove').addEventListener('click', () => { $('remove-confirmation').hidden = true; $('remove-offline').focus(); });
 $('confirm-remove').addEventListener('click', async () => {
-  try { await remembering; await rpc('REMOVE'); snapshot = {}; removed = true; $('remove-confirmation').hidden = true; error('Downloaded files removed. Your experiment work and preferences have been kept.'); render(); $('save-offline').focus(); }
+  try { await remembering; await rpc('REMOVE'); snapshot = {}; removed = true; $('remove-confirmation').hidden = true; error('Downloaded files removed. Your experiment work and preferences have been kept.'); render(); $('download-update').focus(); }
   catch (failure) { error(failure.message); }
 });
 navigator.serviceWorker?.addEventListener('message', ({ data }) => {

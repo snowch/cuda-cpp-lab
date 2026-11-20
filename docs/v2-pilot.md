@@ -34,14 +34,15 @@ References. Each official reference appears once beside its annotation, document
 question and answer comparison. Previous/next lesson cards
 follow the resource rows and stack on phones. Lessons 2–21 use original V2 recordings rather than V1
 recordings with different examples. See `assets/media/v2/README.md` for rebuilds.
-Header navigation uses the brand, V1 link and theme control; the lesson breadcrumb
-provides Contents and the current part. Editor drafts and existing model controls,
+Header navigation uses the linked brand, App status and theme control; the lesson breadcrumb
+provides Course and the current part. Editor drafts and existing model controls,
 results and restoration identifiers are preserved. Native recordings participate
 in the shared paused-state restart restoration.
 
-For the hosted course, open **App status** and choose **Download for offline use**
-or **Update**. Both save the complete course, including the CUDA compiler. After
-an update, choose **Restart to update**; no separate offline download is needed.
+For the hosted course, open **App status** and choose **Update course**. This saves
+the complete course, including the CUDA compiler, on first use and for later
+updates. Choose **Restart to update** when offered; there is no separate Download
+action.
 The displayed package size includes the compiler assets. A restart preserves
 editor drafts, console results, diagnostics and generated PTX. A compile/run in
 progress blocks the restart until it finishes.

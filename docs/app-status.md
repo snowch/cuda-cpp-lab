@@ -53,8 +53,7 @@ already-visited HTML and resource URLs are retained and verified as a small
 visited-page cache. Later visits are cached on demand. This pins the running
 release across refresh/reopen even for online-only tabs. It does not download
 unvisited lessons or claim that a partial copy is available offline. Initial retention can require a
-repeat request when the browser has no reusable HTTP response. Explicit Download for offline use
-or Update prepares the selected manifest, checks every file's length and SHA-256,
+repeat request when the browser has no reusable HTTP response. The single Update course action prepares the selected manifest, checks every file's length and SHA-256,
 and reports verified bytes. Cancellation/failure retains valid partial files for
 resume and leaves the previously selected complete release intact. The real
 browser quota test verifies the same failure path under storage pressure.
@@ -70,18 +69,20 @@ Concurrent completeness checks share one in-progress byte/hash verification per
 release, so a status broadcast to many tabs does not reread every recording once
 per tab. Results are discarded when the scan finishes, including on errors;
 subsequent checks still verify current cache contents and detect eviction.
-Preparing an update sets `pending`; only Restart to update changes `active`.
+Preparing a newer release sets `pending`; only Restart to update changes `active`.
 Closing all tabs, reopening the browser, visibility changes and ordinary refresh
 never select a pending release. Later dismisses the dialog, not its badge.
 
-Both download actions save a complete offline copy, including recordings and
-V2’s pinned CUDA compiler assets. The package byte count includes those assets;
-V2’s first compile/run needs no additional connection after a complete save.
-Update selects the latest release; Download for offline use selects the running
-release. A prepared update reports Available after restarting update when the
-running copy is incomplete, and hides the redundant save action. Restart selects
-the update and reports Available offline after verifying its cached file bodies.
-There is no second download or separate offline opt-in after Update.
+Update course saves a complete offline copy, including recordings and the pinned
+CUDA compiler assets. The same control handles the first save, resume, repair and
+new versions. It selects the latest published release when a newer version is
+known; otherwise it completes the running release. Metadata checks finish before
+the control is enabled, and failed checks offer Retry instead of a stale update.
+The package byte count includes the compiler; the first compile/run needs no
+additional connection after a complete save. A prepared new version offers
+Restart to update. A complete running copy shows the verified-ready status and
+hides Update course. There is no separate Download button or second offline opt-in.
+The worker's existing offline/update modes remain unchanged for pinned older clients.
 
 Earlier updates could leave a complete cache without its saved flag. On loading,
 the page checks whether every running-release file is already present, then asks
@@ -118,7 +119,7 @@ The previous worker's complete caches remain intact during migration. Its waitin
 worker can still require all old tabs/windows to be closed once before the new
 protocol controls the app. Reopen online to load the new App status interface.
 Legacy caches count as prior offline consent, but are not asserted to match the
-new running manifest. Repair offline copy verifies and completes the new release
+new running manifest. Update course verifies and completes the new release
 explicitly; an update also preserves that existing offline intent. The regression
 fixture is the actual worker from commit `4875086`, not a mock worker API.
 
