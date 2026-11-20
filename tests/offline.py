@@ -283,7 +283,12 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 start=len(CourseHandler.requests);page.locator('#download-update').click()
                 deadline=time.monotonic()+30
                 while CourseHandler.pause[0] not in CourseHandler.requests[start:] and time.monotonic()<deadline:time.sleep(.05)
-                assert CourseHandler.pause[0] in CourseHandler.requests[start:]
+                assert CourseHandler.pause[0] in CourseHandler.requests[start:],{
+                    'error':page.locator('#app-status-error').inner_text(),
+                    'status':page.locator('#version-status').inner_text(),
+                    'progress':page.locator('#progress-text').inner_text(),
+                    'recentRequests':CourseHandler.requests[start:][-12:],
+                }
                 progress=page.locator('#download-progress');expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter');CourseHandler.pause[1].set();CourseHandler.pause=None
                 expect(progress).to_be_hidden();expect(page.locator('#download-update')).to_be_enabled(timeout=30000);ready(page)

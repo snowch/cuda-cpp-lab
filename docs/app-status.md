@@ -84,7 +84,11 @@ already-visited HTML and resource URLs are retained and verified as a small
 visited-page cache. Later visits are cached on demand. It does not pin future
 online visits to that version and does not download
 unvisited lessons or claim that a partial copy is available offline. Initial retention can require a
-repeat request when the browser has no reusable HTTP response. The single Update course action prepares the selected manifest, checks every file's length and SHA-256,
+repeat request when the browser has no reusable HTTP response. A complete saved
+running copy needs no further page retention. An explicit update interrupts
+optional retention in another tab before taking its lock; it does not reject
+the update or interrupt an existing consented download. The single Update course
+action prepares the selected manifest, checks every file's length and SHA-256,
 and reports verified bytes. Cancellation/failure retains valid partial files for
 resume and leaves the previously selected complete release intact. The real
 browser quota test verifies the same failure path under storage pressure.
@@ -173,8 +177,9 @@ fixture is the actual worker from commit `4875086`, not a mock worker API.
   visits without full downloads, stable open editors, restored edits on reload,
   the unchanged saved offline copy, exact prepared restarts despite republishing,
   complete-copy recognition after busy startup, relative imports after verified
-  live-file recovery, six status layouts/themes and activation of an installed
-  former worker.
+  live-file recovery, explicit foreground/native updates during interrupted
+  page retention, six status layouts/themes and activation of an installed former
+  worker.
 - `python tests/browser.py`: all existing lesson flows, phone/desktop themes,
   keyboard navigation, no-JavaScript content, plus deployed metadata comparison,
   unchanged running identity, failed/malformed/cached responses, real timeout,

@@ -232,7 +232,9 @@ async function remember() {
   collect(window);
   const paths=[...visited];
   remembering = (async () => {
-    if (!remembered) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
+    // A verified saved running copy already contains this page. Avoid optional
+    // writes/status broadcasts from every tab when reading the saved course.
+    if (!remembered&&!currentCourseDownloaded()) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
     // Earlier updates cached the whole release without marking it available
     // offline. Recognise those copies through the existing worker protocol.
     // A visited-page cache with missing files must never trigger a book download.

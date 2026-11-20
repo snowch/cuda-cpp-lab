@@ -141,6 +141,37 @@ def recognition_after_busy_startup(browser,url):
             Handler.fail_metadata=False
             if Handler.pause:Handler.pause.set();Handler.pause=None
 
+def explicit_update_during_retention(browser,url):
+    for native in [False,True]:
+        Handler.revision='one';Handler.pause=None;Handler.requests=[]
+        with browser.new_context() as context:
+            if not native:context.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+            old=open_page(context,url);old.locator('#download-update').click()
+            expect(old.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+            one=rpc(old,'STATUS')['active'];Handler.revision='two';manual_check(old)
+            expect(old.locator('#version-status')).to_have_text('Update available')
+            release=json.loads((Handler.roots['two']/'release.json').read_text());Handler.pause=Event();before=payload_requests()
+            try:
+                old.evaluate('''async release=>{
+                    const r=await navigator.serviceWorker.ready,c=new MessageChannel();
+                    self.retentionDone=false;c.port1.onmessage=()=>self.retentionDone=true;
+                    r.active.postMessage({type:'REMEMBER_PAGE',release,paths:['zz-payload.bin'],running:document.querySelector('meta[name="gpu-release"]').content},[c.port2]);
+                }''',release)
+                until(lambda:payload_requests()>before)
+                old.locator('#download-update').click()
+                expect(old.locator('#download-progress')).to_be_visible()
+                first='releases/'+release['id']+'/'+release['files'][0]['path']
+                until(lambda:first in Handler.requests,timeout=10)
+                expect(old.locator('#app-status-error')).to_be_empty()
+                Handler.pause.set();Handler.pause=None
+                expect(old.locator('#restart-update')).to_be_visible(timeout=30000)
+                state=rpc(old,'STATUS');assert state['active']==one and state['pending']==release['id'] and state['pendingReady']
+                assert state['download']['state']=='ready'
+                until(lambda:old.evaluate('self.retentionDone'))
+            finally:
+                if Handler.pause:Handler.pause.set();Handler.pause=None
+        print(f'PASS explicit update pre-empts optional visited-page retention; saved copy unchanged; native={native}',flush=True)
+
 if __name__=='__main__':
     with TemporaryDirectory(prefix='gpu-online-navigation-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name,embed=True) for name in ['one','two','three']}
@@ -149,6 +180,6 @@ if __name__=='__main__':
             with sync_playwright() as p:
                 browser=launch(p)
                 try:
-                    online_cases(browser,url,False);online_cases(browser,url,True);recognition_after_busy_startup(browser,url);installed_worker(browser,url)
+                    online_cases(browser,url,False);online_cases(browser,url,True);recognition_after_busy_startup(browser,url);explicit_update_during_retention(browser,url);installed_worker(browser,url)
                 finally:browser.close()
         finally:server.shutdown()

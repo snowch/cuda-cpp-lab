@@ -9,12 +9,21 @@ const RESTART_NAVIGATION = new URL('__restart_navigation__', BASE).href;
 const cacheName = id => PREFIX + 'release-' + id;
 let operation = null, pruning = null, operationDownload = null;
 let operationFinished = Promise.resolve(), finishOperation;
-function beginOperation() {
+function beginOperation(purpose='download') {
   operation = new AbortController();
+  operation.purpose=purpose;
   operationFinished = new Promise(resolve => { finishOperation = resolve; });
 }
 function endOperation() {
   operation = null; operationDownload = null; finishOperation?.();
+}
+async function interruptPageRetention() {
+  // Optional retention must never reject a learner's explicit course update.
+  // Abort its network work and wait for the lock before starting the download.
+  if(operation?.purpose!=='remember')return;
+  const finished=operationFinished;
+  operation.abort();
+  await finished;
 }
 let restarting = false;
 let navigationGate, releaseNavigation;
@@ -119,7 +128,8 @@ async function status(running, justVerified, progress) {
     pendingReady: Boolean(pending && ((justVerified && pending.id === justVerified.id) || await complete(pending, progress))),
     busy: Boolean(operation || restarting || transfer.download?.busy) };
 }
-async function rememberPage(release, paths) {
+async function rememberPage(release, paths, signal) {
+  signal.throwIfAborted();
   validateRelease(release);
   const cache = await caches.open(cacheName(release.id));
   await cache.put(MANIFEST, new Response(JSON.stringify(release)));
@@ -127,14 +137,16 @@ async function rememberPage(release, paths) {
   // These files have already been loaded by this document. This is a visited-page
   // cache, not a background download of the rest of the app or offline consent.
   for (const file of release.files.filter(f => requested.has(f.path))) {
+    signal.throwIfAborted();
     const key = new URL(file.path, BASE);
     if (await verified(await cache.match(key), file)) continue;
-    const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), { cache: 'no-cache', signal: AbortSignal.timeout(8000) });
+    const response = await fetch(new URL(`releases/${release.id}/${file.path}`, BASE), { cache: 'no-cache', signal: AbortSignal.any([signal,AbortSignal.timeout(8000)]) });
     if (!await verified(response.clone(), file)) throw new Error('The running page could not be retained. Keep this tab open until you restart to update.');
     await cache.put(key, response);
   }
   // Re-read after I/O so a concurrent explicit download cannot lose its consent.
   const latest = await readState();
+  signal.throwIfAborted();
   if (!latest.active) latest.active = release.id;
   latest.visited = release.id;
   await writeState(latest);
@@ -256,6 +268,7 @@ async function failDownload(id, failure) {
   await changeDownload(id,job=>job.wanted?{state:'paused',wanted:retry,error:failure.name==='AbortError'?null:message}:null);
 }
 async function planDownload(data, port) {
+  await interruptPageRetention();
   if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
   beginOperation();
   let job;
@@ -429,8 +442,8 @@ self.addEventListener('message', event => {
       }
       else if (data.type === 'REMEMBER_PAGE') {
         if (operation || restarting) throw new Error('A download or restart is already in progress.');
-        beginOperation();
-        try { await pruning; await rememberPage(data.release, data.paths); result = {}; }
+        beginOperation('remember');
+        try { await pruning; await rememberPage(data.release, data.paths,operation.signal); result = {}; }
         finally { endOperation(); await broadcast({type:'STATUS_CHANGED'}); }
       } else if (data.type === 'DOWNLOAD_PLAN') {
         result=await planDownload(data,port);
@@ -441,6 +454,7 @@ self.addEventListener('message', event => {
       } else if (data.type === 'CANCEL') {
         await cancelDownload(data.id); result = {};
       } else if (data.type === 'PREPARE') {
+        if(!data.recogniseOnly)await interruptPageRetention();
         if (operation || restarting) throw new Error('Another window is downloading or restarting. Wait for it to finish.');
         beginOperation();
         let job;
