@@ -11,5 +11,5 @@ export const practicalLessons = [
   {slug:'measure-a-kernel', title:'Measure a GPU kernel fairly', practical:true,
     goal:'Separate correctness, kernel timing and profiling, then interpret recorded evidence.', focus:'execution'},
   {slug:'softmax-capstone', title:'Build and verify a stable softmax', practical:true, program:true,
-    goal:'Implement an independent row-wise kernel, verify unseen shapes and explain its bottleneck.', focus:'shared'},
+    goal:'Implement a row-wise kernel, check additional shapes and propose a bottleneck to test on a GPU.', focus:'shared'},
 ];

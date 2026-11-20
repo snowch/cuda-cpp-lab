@@ -7,6 +7,7 @@ from v2_context import check_v2_context
 from v2_browser import check_v2
 from version_check import check_version
 from current_appendices import check_current_appendices
+from v2_editor_ready import check_editor_ready
 # Copyright © 2026 Christopher Snow.
 """Browser checks against the built course, including the GitHub Pages subpath."""
 import os
@@ -44,6 +45,7 @@ try:
             options["executable_path"] = os.environ["CHROMIUM_PATH"]
         browser = playwright.chromium.launch(**options)
         errors = []
+        check_editor_ready(browser, ROOT)
         check_v2_practical(browser, URL, ROOT)
         check_v2(browser, URL)
         check_v2_context(browser, URL, ROOT)

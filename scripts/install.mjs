@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow.
 export const installHelp = `<details id="install-help"><summary>Add GPU Lab to your apps</summary>
-<p>Use your browser’s install option for an app icon and a separate window. Offline access above shows whether the course is saved.</p>
+<p>Use your browser’s install option for an app icon and a separate window. Course status shows whether the course is downloaded and ready to use offline.</p>
 <ul>
 <li><strong>Chrome on Android:</strong> open the browser menu and look for Install app or Add to Home screen.</li>
 <li><strong>Chrome or Edge on a computer:</strong> choose the install app icon in the address bar, or find Install GPU Lab in the browser menu.</li>

@@ -48,7 +48,7 @@ const traces = {
     return {
       answer: levels[1].length,
       summary: metrics([['Inputs', floats(inputs)], ['Final sum', float(result)]]),
-      frames: steps(trace, event => event.label, ['Shared word', 'Value after this step', 'Inputs in current partial'],
+      frames: steps(trace, event => event.label, ['Shared index', 'Value after this step', 'Inputs in current partial'],
         event => event.shared.map((value, index) => {
           const partial = levels.slice(0, event.level + 1).reverse().find(level => level[index])?.[index];
           return [index, value === null ? 'Unwritten' : float(value), value === null ? '—' : partial.threads.join(', ')];

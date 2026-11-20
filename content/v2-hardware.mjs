@@ -10,12 +10,13 @@ export function renderV2Hardware(slug, context = {}) {
   const detail = number >= 5;
   const node = (key, title, text) => `<div class="v2-hw-node${focus === key ? ' is-focus' : ''}" data-hardware="${key}">
     <strong>${escape(title)}${focus === key ? '<span class="v2-hw-focus">This lesson</span>' : ''}</strong><span>${escape(text)}</span></div>`;
-  const hardware = context.hardware ?? lessonContexts[slug]?.hardware ?? 'The CPU launches the kernel. An SM executes its thread instructions, and the result is stored in device memory before the CPU copies it to system RAM.';
+  const hardware = context.hardware ?? lessonContexts[slug]?.hardware ?? 'The CPU launches hello. An SM runs the thread that writes output[0] in GPU memory. The CPU copies the stored value into its own memory before printing.';
   return `<section class="book-section" aria-labelledby="v2-hardware-title">
     <h2 id="v2-hardware-title">Hardware context</h2>
     <p>${escape(hardware)}</p>
     ${detail ? `<details class="more-settings v2-hw-key"${[5,8,9,12].includes(number) ? ' open' : ''}><summary>Read the hardware key</summary><dl>
-      <dt>Resident warp</dt><dd>A group of 32 threads with resources allocated on an SM.</dd>
+      <dt>Resident warp</dt><dd>A warp has 32 lane positions; a small block can leave some unused. A resident warp has its state and required resources allocated on an SM. Its next instruction may still be waiting for data.</dd>
+      <dt>Instruction</dt><dd>One operation run by GPU hardware, such as a load, multiply or store.</dd>
       <dt>Warp scheduler</dt><dd>Selects ready warp instructions for available execution hardware.</dd>
       <dt>Registers</dt><dd>Hold working values associated with individual threads.</dd>
       <dt>Execution units</dt><dd>Perform arithmetic and other instructions for threads; they are shared hardware.</dd>
@@ -47,7 +48,7 @@ export function renderV2Hardware(slug, context = {}) {
                   ${node('global', 'Load/store units', 'Memory instructions and addresses.')}
                   <div class="v2-hw-peers">${node('l1', 'L1 cache', 'Recently used data.')}${number >= 8 ? node(focus === 'banks' ? 'banks' : 'shared', number >= 9 ? 'Shared memory · banks' : 'Shared memory', 'Per-block data exchange.') : ''}</div>` : '<div class="v2-hw-assigned">Assigned blocks → threads<br><small>Logical groups using this SM’s resources</small></div>'}
               </div>
-              <div class="v2-hw-other"><strong>Other SMs</strong><p>Have their own execution resources.</p><p>Blocks may be assigned to different SMs.</p></div>
+              <div class="v2-hw-other"><strong>Other SMs</strong><p>${detail ? 'Have their own execution hardware and registers.' : 'Can run other blocks.'}</p><p>Blocks may be assigned to different SMs.</p></div>
             </div>
             ${detail ? `<p class="v2-hw-link">Global-memory requests ↔ on-chip interconnect</p>
               ${node('l2', 'Shared L2 cache', 'Data cached for multiple SMs.')}` : ''}
@@ -57,7 +58,7 @@ export function renderV2Hardware(slug, context = {}) {
           ${node('memory', 'Device memory', 'GPU arrays; separate from the compute chip.')}
         </div>
       </div>
-      <p class="v2-hw-scope">Simplified NVIDIA-style architecture. Boundaries show containment; arrows name relationships. Unit counts, placement, issue widths and timings vary by GPU. ${detail ? 'A thread or warp is' : 'A thread is'} not a dedicated physical processor.</p>
+      <p class="v2-hw-scope">Simplified NVIDIA-style architecture. Boundaries show containment; arrows name relationships. Unit counts, block placement and timing vary by GPU. ${detail ? 'A thread or warp is' : 'A thread is'} not a dedicated physical processor.</p>
     </figure>
   </section>`;
 }

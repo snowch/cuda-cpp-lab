@@ -65,10 +65,10 @@ validate real GPU performance. See [setup and coverage](docs/run-cuda.md).
 
 ## Use offline
 
-Choose **Install** in the course header to add GPU Lab to your apps with its own GPU-chip
-icon and standalone window. Chrome and Edge offer a native install prompt when available;
-the dialog also explains Safari’s Add to Dock / Add to Home Screen options. Installed apps
-use the same offline course. Installation and shortcut placement are controlled by your browser.
+Open **App status** and expand **Add GPU Lab to your apps** for your browser’s
+installation instructions. Installing the app adds an icon and can open the course
+in a separate window; it does not save the complete course for offline use.
+Installation and shortcut placement are controlled by your browser.
 
 Online visits and reloads request the currently published pages. An already-open
 lesson stays stable, with its own version of scripts, editor and examples. Offline

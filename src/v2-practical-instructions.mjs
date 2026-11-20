@@ -8,24 +8,24 @@ export const practicalActivities = {
   },
   'grid-stride-loops': {
     title: 'Trace each thread’s visits',
-    instruction: 'Set Input elements and Blocks. Predict thread 0’s visit count, then click Run model. In Thread visits, inspect the input/output indices for thread 0. Change Blocks from 2 to 1 and predict again: does thread 0 visit more indices?',
+    instruction: 'Set Input elements to 70 and Blocks to 2. Predict thread 0’s visit count, then click Run model. In Thread visits, inspect the input/output indices for thread 0. Change Blocks from 2 to 1 and predict again: does thread 0 visit more indices?',
     ready: 'Enter a visit-count prediction, then click Run model.',
     optional: 'Explore grid-stride visits',
   },
   'multi-block-scan': {
     title: 'Combine block starts and local offsets',
-    instruction: 'Set Flag count and predict the last block’s start, then click Run model. In Cross-block prefix construction, compare Total and Start. Use Global offsets to check how a block start contributes to its first valid output. For zero flags, predict 0; no block is launched.',
+    instruction: 'Set Flag count to 97 and predict the last block’s start, then click Run model. In Cross-block prefix construction, compare Total and Start. Use Global offsets to check how a block start contributes to its first valid output. For zero flags, predict 0; no block is launched.',
     ready: 'Enter a block-start prediction, then click Run model.',
     optional: 'Explore cross-block offsets',
   },
   'resource-tradeoffs': {
     title: 'Compare SM resource limits',
-    instruction: 'Choose Threads per block, Registers per thread and Shared memory per block. Predict resident blocks, then click Run model. Find the smallest Maximum blocks from this resource value: it sets the residency bound. Change one resource and check whether that minimum changes.',
+    instruction: 'Set Threads per block to 256, Registers per thread to 32 and Shared memory per block to 16 KiB. Click Run model and find which row has the smallest Maximum blocks from this resource value. Keep the thread count and shared memory unchanged, set Registers per thread to 96 and predict resident blocks before running again. Does the limiting resource change?',
     ready: 'Enter a resident-block prediction, then click Run model.',
   },
   'measure-a-kernel': {
     title: 'Inspect your timing report',
-    instruction: 'Paste the complete report.json produced by the native benchmark into the report field and click Analyse report. Compare Separate and Fused using Median, Min and Max in milliseconds. Is the median ratio supported by distinct sample ranges, or do the ranges overlap?',
+    instruction: 'Paste the complete report.json produced by the native benchmark into the report field and click Analyse report. Compare Separate and Fused using Median, Min and Max in milliseconds. Do the sample ranges overlap? If they do, the median ratio alone is weak evidence for choosing the faster variant. Repeat the native benchmark with the same settings before drawing a timing conclusion.',
     ready: 'Paste your benchmark report, then click Analyse report.',
   },
   'softmax-capstone': {

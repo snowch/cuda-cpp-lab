@@ -177,7 +177,7 @@ test('editor introductions do not present synthetic model assumptions as CUDA ru
   for (const lesson of v2Course.filter(lesson => lessonContexts[lesson.slug]?.introduction)) {
     const page = renderV2Lesson(lesson, s => s + '.html', s => '../lessons/' + s + '.html', './cuda-source-workbench.html');
     const editor = page.indexOf('data-kernel-workbench=');
-    const model = page.indexOf('Explore the model:');
+    const model = page.indexOf('class="more-settings v2-starter-model"');
     const assumption = page.indexOf(guidedLessons[lesson.slug].before.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'));
     assert.ok(editor < model && model < assumption, lesson.slug);
   }

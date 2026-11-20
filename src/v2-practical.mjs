@@ -4,6 +4,7 @@ import { escape } from './continuation-ui.mjs';
 import { registerExperiment } from './experiment-state.mjs';
 import { practicalActivities } from './v2-practical-instructions.mjs';
 const f=v=>Number.isFinite(v)?(Number.isInteger(v)?v.toFixed(1):Number(v.toPrecision(6)).toString()):String(v);
+const resourceName={registers:'Registers',shared:'Shared memory',warps:'Warp slots',threads:'Thread slots',blocks:'Block slots'};
 const row=(values)=>'<tr>'+values.map(v=>`<td>${escape(v)}</td>`).join('')+'</tr>';
 const table=(caption,headers,rows)=>`<div class="v2-practical-table"><table class="v2-result-table"><caption>${caption}</caption><thead><tr>${headers.map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`;
 function calculate(slug,values) {
@@ -23,14 +24,14 @@ function calculate(slug,values) {
  }
  if(slug==='resource-tradeoffs') {
   const m=residency(Number(values.threads),Number(values.registers),Number(values.shared));
-  return {message:`${m.blocks} resident blocks, ${m.residentWarps} warps, ${m.occupancy*100}% model occupancy. Limiting: ${m.limiting.join(', ')}. Your prediction ${prediction===m.blocks?'matches.':'differs.'}`,html:table('Illustrative SM limits · no allocation granularity',['Resource','Maximum blocks from this resource'],Object.entries(m.limits))+'<p>This allocation bound supplies no execution time or spill prediction.</p>'};
+  return {message:`${m.blocks} resident blocks, ${m.residentWarps} warps, ${m.occupancy*100}% model occupancy. Limiting: ${m.limiting.map(key=>resourceName[key]).join(', ')}. Your prediction ${prediction===m.blocks?'matches.':'differs.'}`,html:table('Illustrative SM limits · no allocation granularity',['Resource','Maximum blocks from this resource'],Object.entries(m.limits).map(([key,limit])=>[resourceName[key],limit]))+'<p>This allocation bound supplies no execution time or spill prediction.</p>'};
  }
  if(slug==='softmax-capstone') {
   const m=checkSoftmax(values.kind,values.values);
   return {message:m.ok?'This row passes elementwise tolerance and row-sum checks. Continue with other shapes.':`Row comparison: ${m.actual.length} values for ${m.expected.length} columns; ${m.failures.length} element mismatches; sum = ${f(m.sum)}. Compare Your value with Stable reference.`,html:table('Softmax row · atol 1e-5, rtol 1e-4',['Column','Your value','Stable reference'],Array.from({length:Math.max(m.actual.length,m.expected.length)},(_,i)=>[i,i<m.actual.length?f(m.actual[i]):'Missing',i<m.expected.length?f(m.expected[i]):'No column']))+'<p>The row sum must be within 1e-4 of 1.0, and every column must pass its elementwise comparison.</p>'};
  }
  const m=analyseBenchmark(JSON.parse(values.report));
- return {message:`${m.gpu}: ${m.elements} checked elements. Separate/fused median ratio: ${m.ratio.toFixed(3)}. ${m.overlap?'Sample ranges overlap; investigate variability.':'Sample ranges do not overlap in this report.'}`,html:table('Imported kernel-only timings · milliseconds per variant',['Variant','Median (ms)','Min (ms)','Max (ms)'],m.rows.map(r=>[r.name,r.median.toPrecision(6),r.min.toPrecision(6),r.max.toPrecision(6)]))+'<p>Imported values are your report, not browser measurements. The schema checks report completeness; it cannot authenticate how the GPU run was performed.</p>'};
+ return {message:`${m.gpu}: ${m.elements} checked elements. Separate/fused median ratio: ${m.ratio.toFixed(3)}. ${m.overlap?'Sample ranges overlap; investigate variability.':'Sample ranges do not overlap in this report.'}`,html:table('Imported kernel-only timings · milliseconds per variant',['Variant','Median (ms)','Min (ms)','Max (ms)'],m.rows.map(r=>[r.name==='separate'?'Separate':'Fused',r.median.toPrecision(6),r.min.toPrecision(6),r.max.toPrecision(6)]))+'<p>Imported values are your report, not browser measurements. The schema checks report completeness; it cannot authenticate how the GPU run was performed.</p>'};
 }
 export function mountPractical(root=document) {
  for(const activity of root.querySelectorAll('[data-practical]')) {

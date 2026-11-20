@@ -56,7 +56,9 @@ def check_v2_navigation(browser, url, root):
     # Opening navigation must not add positional entries to saved lesson panels.
     context=browser.new_context(viewport={'width':390,'height':900})
     page=context.new_page();page.goto(url+'v2/scheduling.html')
-    page.locator('.v2-starter-model > summary').click()
+    model = page.locator('.v2-starter-model')
+    if not model.evaluate('e=>e.open'):
+        model.locator(':scope > summary').click()
     page.locator('#v2-choice').select_option('1')
     page.get_by_role('button',name='Run model',exact=True).click()
     page.locator('[data-v2-course-switcher] > summary').click()

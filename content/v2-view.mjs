@@ -29,7 +29,7 @@ const modelTopics = {
 
 const teaching = {
   scale: {
-    before: 'Now give the kernel five input values. Each thread reads one input and writes the result to the same index in the output array.',
+    before: 'The starter supplies five input values. Each thread reads one input and writes the multiplied value to the same index in the output array.',
     terms: [['FP32', 'A floating-point value stored in four bytes.']],
     inspect: 'In runKernel, the index i selects both the input and the output. The f on 2.0f makes the multiplier an FP32 value.',
     task: 'The model starts with Multiplier 2.0. Click Run model and find Thread index 2 in Modelled values. Set Multiplier to 3.0, predict the Output at that index and click Run model again. Which inputs or indices change?',
@@ -37,7 +37,7 @@ const teaching = {
     answer: 'No. The thread indices stay the same. The result at index 2 changes to 1.5 because its input is still 3.0.',
   },
   bounds: {
-    before: 'Keep the five input values and the same kernel. Now choose how many threads go in each block.',
+    before: 'The starter uses the same five input values and runKernel as lesson 2. Change the number of threads per block while keeping the input array unchanged.',
     terms: [['Block', 'A group of threads launched together.'],
       ['Bounds check', 'A condition that prevents a thread from accessing an array beyond its valid indices.']],
     inspect: 'blockIdx.x is the block number. blockDim.x is its size. threadIdx.x is the thread’s index within that block. Multiplying the block number by the block size and adding the local index gives i.',
@@ -46,11 +46,11 @@ const teaching = {
     answer: 'Both launches produce indices 0 through 7. The grouping changes, and the condition i < n still allows indices 0 through 4.',
   },
   copies: {
-    before: 'The input array x starts in CPU memory. The kernel reads from a GPU input array and writes to a separate GPU output array. Follow how the CPU sets up that work and gets the result back.',
+    before: 'The input array x starts in CPU memory. The CPU reserves separate GPU input and output arrays, copies x to the GPU input and launches runKernel. After the kernel writes the GPU output, the CPU copies those results into array y.',
     terms: [['Host', 'The CPU side of a CUDA program.'], ['Device', 'The GPU side of a CUDA program.'],
       ['Allocation', 'A request for enough storage to hold the data.']],
     inspect: 'n is the number of elements in x. sizeof(x) gives its size in bytes. cudaMalloc reserves storage, and cudaMemcpy moves the values between the host and device.',
-    task: 'With Number of inputs at its starting value of 5, click Run model. Use Next step to inspect the allocations, copies and launch. Set Number of inputs to 9 and predict bytes per GPU array and the block count. Click Run model again and use Next step until you reach those steps. Which quantities change with the input length?',
+    task: 'With Number of inputs set to 5, click Run model. Use Next step to inspect Allocate GPU arrays, Copy input to the GPU, Run the kernel and Copy results to the CPU. Set Number of inputs to 9 and predict bytes per GPU array and the block count. Click Run model again and step through the same phases. How do the allocation sizes, copy sizes and block count change?',
     transfer: 'With nine inputs, when can the CPU first read the results from y?',
     answer: 'After the device-to-host copy. The kernel has written nine results to the GPU output array before that copy fills the CPU array y.',
   },
@@ -60,7 +60,7 @@ export function renderV2Contents(href) {
   return `<header class="intro">
     <h1>Learn the GPU through CUDA C++</h1>
     <p class="lead">Run a small CUDA C++ program, predict what one edit will change and compare the results. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
-    <p>Before you start, be comfortable with basic programming and array indexing. The course introduces CUDA and GPU architecture.</p>
+    <p>Before you start, be comfortable with basic programming, reading Python and array indexing. The course introduces CUDA and GPU architecture.</p>
     <p>No installation or GPU required. The browser compiles CUDA C++ and runs the examples in a functional GPU simulator. The teaching models calculate specific details such as memory addresses and possible instruction schedules.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
   </header>
@@ -94,9 +94,9 @@ function renderFirstKernel(workbenchHref, program, href) {
 
   return `<section class="book-section" aria-labelledby="v2-first-kernel">
     <h2 id="v2-first-kernel">Which value does the CPU print?</h2>
-    <p>A kernel is a function that runs on the GPU. A GPU thread is one execution of its instructions. In CUDA C++, <code>__global__</code> declares a kernel. Each thread launched for <code>hello</code> runs its body once. The body stores a value at <code>output[0]</code> in GPU memory.</p>
+    <p>The program writes a value in GPU memory, copies the result to CPU memory and prints it. The function below, <code>hello</code>, performs the GPU write. In CUDA C++, <code>__global__</code> marks <code>hello</code> as a kernel—a GPU function the CPU can launch. The CPU launches one GPU thread to run <code>hello</code>. That thread writes <code>42.0f</code> to <code>output[0]</code>.</p>
     ${codePanel({id: 'v2-first-source', editorExcerpt: true, label: 'Read-only CUDA C++ · Kernel definition', source: kernel, explainedLocally: true})}
-    <p>In <code>float* output</code>, <code>output</code> holds the address of the GPU storage to write. The <code>f</code> in <code>42.0f</code> marks a <code>float</code> constant.</p>
+    <p>In <code>float* output</code>, <code>output</code> holds the address of the reserved GPU storage. <code>output[0]</code> is the <code>float</code> at that address. The <code>f</code> in <code>42.0f</code> marks a <code>float</code> constant.</p>
     <h3>Launch the kernel from main()</h3>
     <p>The CPU code in <code>main()</code> reserves space for one <code>float</code> in GPU memory. It launches <code>hello</code> and passes the address of that space as <code>output</code>.</p>
     ${codePanel({id: 'v2-first-launch', editorExcerpt: true, label: 'Read-only CUDA C++ · Launch inside main()', source: launch, explainedLocally: true})}
@@ -117,7 +117,7 @@ function renderFirstKernel(workbenchHref, program, href) {
   </section>
   <section class="book-section" aria-labelledby="v2-first-path">
     <h2 id="v2-first-path">Where does the kernel run?</h2>
-    <p>A <strong>streaming multiprocessor (SM)</strong> is a part of the GPU that executes thread instructions.</p>
+    <p>A <strong>streaming multiprocessor (SM)</strong> is a part of the GPU chip that runs GPU threads. Here, the SM runs the thread that writes <code>42.0f</code> in <code>hello</code>.</p>
     ${v2Diagram('first-kernel')}
   </section>
   ${renderV2Hardware('first-kernel')}
@@ -178,7 +178,7 @@ function renderActivity({mode, slug}, legacy, workbenchHref) {
     ${!workbenchHref ? renderContext(slug) : ''}
     ${workbenchHref ? '<h3>Trace the model inputs and outputs</h3>' : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">Run model calculates the selected case shown in this panel. ${workbenchHref ? 'It uses this selector and the source excerpt here.' : 'This preview runs the teaching model.'}</p>
+    <p class="chapter-browser-note">${workbenchHref ? 'These controls change only this model and its displayed source excerpt. They do not edit or run the CUDA program above.' : 'This preview runs the teaching model.'}</p>
     <noscript><p class="notice">Enable JavaScript to change and run the model. The starter source and explanation are readable below.</p></noscript>
     <div class="v2-workbench">
       <div>
@@ -226,12 +226,12 @@ function renderGuided(slug, workbenchHref) {
     ${workbenchEditor(slug, workbenchHref, 'Editable CUDA program and output')}
   </section>
   ${renderContext(slug)}
-  <details class="more-settings v2-starter-model"><summary>Explore the model: ${modelTopics[slug]}</summary>` : renderContext(slug)}
+  <details class="more-settings v2-starter-model"${slug === 'scheduling' ? ' open' : ''}><summary>${slug === 'scheduling' ? 'Compare ready and waiting warps' : 'Explore the model: ' + modelTopics[slug]}</summary>` : renderContext(slug)}
   <section class="book-section v2-experiment" data-v2-guided="${slug}" aria-labelledby="v2-activity">
     <h2 id="v2-activity">Predict and run</h2>
     ${lessonContexts[slug].introduction ? `<p>${escape(lesson.before)}</p>` : ''}
     ${readerTask(lesson.task, 'Try it')}
-    <p class="chapter-browser-note">This model calculates the case selected here using the stated assumptions. Enter a prediction to compare it with the model result.</p>
+    <p class="chapter-browser-note">These controls change only this model and its displayed excerpt; they do not edit the CUDA program above. Enter a prediction to compare with the model result.</p>
     <noscript><p class="notice">Enable JavaScript to change settings and run the model. You can still read the starter and compare the final explanation below.</p></noscript>
     <div class="v2-workbench">
       <div>

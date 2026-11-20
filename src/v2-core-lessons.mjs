@@ -3,7 +3,7 @@ import { kernelSource } from './model.mjs';
 
 export const coreLessons = {
   coalescing: {
-    before: 'A warp is a group of 32 threads; a lane is one logical position in that warp, numbered 0–31. Here each thread reads one FP32 value and writes it to a contiguous output. A stride is the distance in elements between neighbouring reads. Assume a 32-byte-aligned input and at least 993 input elements.',
+    before: 'A warp has 32 lane positions, numbered 0–31. This example launches a full warp, with one thread in every position. Here each thread reads one FP32 value and writes it to a contiguous output. A stride is the distance in elements between neighbouring reads. The starter supplies a 32-byte-aligned input with 993 elements. The largest supported read is element 31 × 32 = 992, so that allocation covers every lane.',
     terms: [['32-byte alignment', 'The first input address is a multiple of 32 bytes in this model.'], ['Memory sector', 'An aligned 32-byte region in this address model. Eight consecutive FP32 values fit in one sector.']],
     label: 'Input element stride',
     cases: [[1, '1 · contiguous'], [2, '2 · every other value'], [32, '32 · one lane per sector']],
@@ -16,7 +16,7 @@ export const coreLessons = {
   },
   scheduling: {
     before: 'The multiply depends on the loaded input. While a warp waits for its load, another warp on the same SM can issue an instruction if its own operands are ready. This teaching machine issues one instruction per slot and makes each load usable six slots after issue. Each warp handles two consecutive groups of 32 inputs.',
-    terms: [['Resident warp', 'A warp that already has the resources it needs on a streaming multiprocessor (SM).']],
+    terms: [['Resident warp', 'A warp whose state and required resources are allocated on a streaming multiprocessor (SM). Its next instruction may still be waiting for data.'], ['Issue slot', 'One opportunity in this model for the scheduler to start a ready instruction.']],
     label: 'Resident warps',
     cases: [[1, 'One warp'], [2, 'Two warps']],
     code: warps => `// Host launch: 1 block of ${warps * 32} threads, ${warps * 64} elements.
@@ -66,7 +66,7 @@ __global__ void sum(const float* input, float* out) {
   }
   if (t == 0) out[0] = scratch[0];
 }`,
-    inspect: 'The distance d identifies the word paired with the current thread. Only threads t < d add. The barrier is outside that condition so every thread reaches it.',
+    inspect: 'At distance d, thread t reads its partner at scratch[t + d] and adds that value to scratch[t]. Only threads t < d add. The barrier is outside that condition so every thread reaches it.',
     task: "Select Four threads and click Run model. Use Next step to pass the initial barrier and inspect the partner reads. Select Eight threads, predict how many threads add in the first stage, then run again. Use Inputs in current partial to track which original values each sum includes.",
     question: 'How many threads add in the first stage?',
     transfer: 'For eight inputs, which original indices have contributed to scratch[0] after the distance-2 stage?',
@@ -117,7 +117,7 @@ C[row * 4 + col] = total;`,
     inspect: 'The first barrier makes the tile available. The second protects it from being overwritten before the last reader finishes. Width 1 uses a 4 × 4 grid of one-thread blocks here for a direct comparison.',
     task: "Select 1 · separate outputs under Output tile width and click Run model. Read Global input element loads. Select 2 · shared input tiles and predict that count for all 16 outputs before running again. Use Next step to inspect which A and B values feed the first block’s partial C values.",
     question: 'How many global input values are loaded for the entire matrix?',
-    transfer: 'At width 2, which output positions in the first tile reuse b[1][0] during the first K tile?',
+    transfer: 'With Output tile width 2, consider output rows 0–1 and columns 0–1. During the first input tile (k0 = 0), which outputs reuse shared b[1][0], loaded from B[1,0]?',
     answer: 'C[0,0] and C[1,0] both multiply it against values from different A rows. They share a B word because they have the same output column.',
   },
   precision: {
@@ -170,7 +170,7 @@ w::store_matrix_sync(C, c, 16, w::mem_row_major);`,
 
 Object.assign(coreLessons, {
   attention: {
-    before: 'For each query, take a scaled dot product with every key to obtain scores. Softmax converts those scores to weights, and the output is the weighted sum of the value vectors. Here there are eight queries, eight keys, and four values per vector.',
+    before: 'For each query, take a scaled dot product with every key to obtain scores. Softmax converts those scores to weights, and the output is the weighted sum of the value vectors. The model supplies eight query vectors, eight key vectors and eight value vectors. Each vector contains four components. Divide each query–key dot product by sqrt(4) = 2 to scale the scores in this model.',
     terms: [['Softmax', 'Convert scores to positive weights: exponentiate each score minus the largest score, then divide by the sum. The weights sum to one.'], ['Online softmax', 'A running calculation that updates the maximum, denominator and weighted sum as each tile of scores arrives.']],
     label: 'Score handling',
     cases: [['materialised', 'Store full scores and probabilities'], [2, 'Online · two keys per tile'], [4, 'Online · four keys per tile']],
@@ -194,7 +194,7 @@ output[query] = acc / denominator;`,
     answer: 'Multiply both by exp(old maximum − new maximum). This puts the old terms on the same scale as the new terms.',
   },
   inference: {
-    before: 'During decoding, a model appends one key and one value per layer for the new token. It also reads previously cached keys and values for attention. Assume one sequence, 32 layers, 1,024 key values and 1,024 value values per layer and token, and a two-byte format.',
+    before: 'During decoding, a model appends one key and one value per layer for the new token. It also reads previously cached keys and values for attention. Assume one sequence and 32 layers. Each layer stores a 1,024-component key vector and a separate 1,024-component value vector for each token, using two bytes per component.',
     terms: [['Key-value cache', 'Stored attention keys and values from earlier tokens, reused when decoding the next token.']],
     label: 'Tokens already cached',
     cases: [[128, '128 tokens'], [512, '512 tokens'], [2048, '2,048 tokens']],
@@ -225,7 +225,7 @@ constexpr int T = ${tile};
 dim3 block(T, T), grid(8 / T, 8 / T);
 tiled<T><<<grid, block>>>(A, B, C, 8);
 // The tiled kernel uses two shared float[T][T] arrays.`,
-    inspect: 'The model charges 16 registers per thread and one warp slot per block. The resident block limit is per SM assuming enough blocks are available. The displayed example grid may contain fewer blocks.',
+    inspect: 'The model charges 16 registers per thread and one warp slot per block. For each resource, divide capacity per SM by use per block and round down. The smallest result, capped at eight blocks, bounds resident blocks. The resident block limit is per SM assuming enough blocks are available. The displayed example grid may contain fewer blocks.',
     task: "Select 2 · tiled under Compile-time tile width and predict blocks per teaching SM. Click Run model and inspect each resource’s capacity and use per block. Repeat with 4 · tiled. Which resource gives the smaller limit? These calculations do not select the faster real GPU kernel.",
     question: 'How many blocks fit per teaching SM?',
     transfer: 'How would you test whether a width that needs fewer global loads actually finishes faster on a real GPU?',

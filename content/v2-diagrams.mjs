@@ -52,7 +52,7 @@ function tileReuse() {
 const diagrams = {
   'first-kernel': () => flow('Follow the result from launch to console', [
     ['CPU · main()', 'Reserve space in GPU memory and launch hello.'],
-    ['GPU · one thread', 'A streaming multiprocessor executes the kernel instructions.'],
+    ['GPU · one thread', 'An SM runs hello and performs the assignment.'],
     ['GPU memory · output[0]', 'The kernel stores one float.'],
     ['CPU · console', 'main() copies back the float and prints it.'],
   ], 'Which operation in main() moves the result across the CPU–GPU boundary?'),
@@ -70,7 +70,7 @@ const diagrams = {
     ['Multiply', 'A can issue when its value arrives.'],
   ], 'This dependency belongs to warp A. It need not stop warp B.'),
   reduction: () => flow('From shared inputs to the next reduction stage', [
-    ['Write inputs', 'Each thread writes its own shared word.'],
+    ['Write inputs', 'Each thread writes one shared array element.'],
     ['Block barrier', 'All threads arrive before any partner read.'],
     ['Read and add', 'Selected threads write partial sums.'],
     ['Block barrier', 'All threads arrive before the next stage reads.'],

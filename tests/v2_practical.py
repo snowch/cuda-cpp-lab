@@ -55,6 +55,16 @@ def check_v2_practical(browser, url, root):
                         submit.click()
                 else:
                     expect(result).to_be_visible()
+                    if slug == 'resource-tradeoffs':
+                        expect(activity.locator('[name=threads]')).to_have_value('256')
+                        expect(activity.locator('[name=registers]')).to_have_value('32')
+                        expect(feedback).to_contain_text('4 resident blocks, 32 warps, 50%')
+                        activity.locator('[name=registers]').select_option('96')
+                        expect(result).to_be_hidden()
+                        activity.locator('[name=prediction]').fill('2')
+                        submit.focus(); page.keyboard.press('Enter')
+                        expect(feedback).to_contain_text('2 resident blocks, 16 warps, 25%')
+                        expect(feedback).to_contain_text('Your prediction matches.')
                 # Actual preceding explanation -> controls/results -> application.
                 for label, target in [('opening',page.locator('.intro')), ('activity',activity), ('references',page.locator('.v2-resources'))]:
                     target.evaluate('el=>scrollTo({top:Math.max(0,el.getBoundingClientRect().top+scrollY-140),behavior:"instant"})')
