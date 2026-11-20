@@ -39,7 +39,8 @@ provides Course and the current part. Editor drafts and existing model controls,
 results and restoration identifiers are preserved. Native recordings participate
 in the shared paused-state restart restoration.
 
-For the hosted course, open **App status** and choose **Update course**. This saves
+Online visits load the currently published course; an open lesson stays stable.
+Offline visits use the saved copy. In **App status**, **Update course** saves
 the complete course, including the CUDA compiler, on first use and for later
 updates. Choose **Restart to update** when offered; there is no separate Download
 action.

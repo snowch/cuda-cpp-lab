@@ -70,23 +70,28 @@ icon and standalone window. Chrome and Edge offer a native install prompt when a
 the dialog also explains Safari’s Add to Dock / Add to Home Screen options. Installed apps
 use the same offline course. Installation and shortcut placement are controlled by your browser.
 
-Open **App status → Offline access** and choose **Download for offline use**.
-The panel shows the exact file bytes before saving every lesson, simulator, diagram
-and CUDA/PyTorch example, including lessons you have not visited. Wait for
-**Available offline** before disconnecting. External links need internet access;
+Online visits and reloads request the currently published pages. An already-open
+lesson stays stable, with its own version of scripts, editor and examples. Offline
+visits use the saved course; reading current content online needs no full download.
+
+Open **App status** and choose **Update course** to save the complete offline copy.
+The panel shows the package size before saving every lesson, recording, simulator,
+diagram and CUDA/PyTorch example, including lessons you have not visited. Wait for
+**Downloaded and ready to use offline** before disconnecting. External links need internet access;
 running downloaded examples requires their usual local tools. Installing the app
 and checking for updates do not automatically download the offline course.
 
-App status compares the running build with the deployed release. Choose **Update**
-to prepare it, then **Restart to update** when ready. All open GPU Lab windows save
+App status distinguishes the current online page from its saved offline copy.
+Choose **Restart to update** when a prepared offline update is ready. Open GPU Lab windows save
 their experiment state before restarting together; a busy or non-responsive window
 blocks the restart. **Later** keeps the pending badge visible. Closing all windows
-or refreshing does not apply a prepared update automatically.
+or refreshing does not select a prepared offline copy automatically; online visits
+can independently read the published version.
 
 Cancelled downloads can resume from verified files. Failed replacements leave the
 previous complete copy usable. App status detects missing/evicted files and offers
 repair. **Remove offline copy** asks for confirmation and preserves learner work,
-preferences and other apps. HTTPS (or localhost) and browser storage are required.
+preferences and other apps. Offline access requires HTTPS (or localhost) and browser storage.
 See [the release contract, migration notes and validation](docs/app-status.md).
 
 ## Develop

@@ -2,7 +2,11 @@
 // Per-tab restart snapshots; no localStorage.clear and no replay of user actions.
 const hooks = new Map();
 let composing = false, lock = null, unlockTimer;
-const snapshotKey = () => 'gpu-lab:restart:' + location.pathname + location.search;
+const snapshotKey = () => {
+  const url=new URL(location.href);
+  url.searchParams.delete('gpu-release');
+  return 'gpu-lab:restart:' + url.pathname + url.search;
+};
 // Read the incoming route before a page migrates its URL; saves still use the live route.
 const incomingSnapshotKey = snapshotKey();
 export function registerExperiment(name, save, restore) { hooks.set(name, { save, restore }); }
@@ -26,15 +30,15 @@ function releaseLock() {
 }
 // Navigation disclosures are ephemeral and must not shift saved lesson panels.
 const readingDetails = () => [...document.querySelectorAll('main details')].filter(el => !el.closest('[data-transient-navigation]'));
-function snapshot() {
+function snapshot(kind='restart') {
   const key = snapshotKey();
   const required = document.querySelector('[data-book-experiment]') ? [...document.querySelectorAll('[data-book-experiment]')].map(el=>el.dataset.bookExperiment) : document.querySelector('.hello-section') ? ['hello-0','hello-1','hello-2','hello-3','hello-4','hello-launch','hello-bounds','hello-transfer'] : document.getElementById('sm-recording') ? ['sm-recording'] : document.getElementById('sm-explorer') ? ['sm-hardware'] : document.getElementById('kernel-editor') ? ['kernel'] : document.getElementById('tensor-diagram') ? ['memory','tensor-layout'] : document.body.dataset.lesson ? ['lesson'] : document.getElementById('gpu-map') ? ['gpu-map'] : document.getElementById('work-map') ? ['overview'] : [];
   if(document.getElementById('sm-explorer'))required.push('sm-hardware');
   if (required.some(name => !hooks.has(name))) throw new Error('An experiment has not finished loading. Wait or reload that window before restarting.');
   if (composing || document.readyState !== 'complete' || document.querySelector('main [aria-busy="true"],main [contenteditable="true"]')) throw new Error('Finish the current input or operation in each GPU Lab window, then try again.');
-  const guard = { reason: '' }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
+  const guard = { reason: '', kind }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
-  const data = { schema: 1, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
+  const data = { schema: 1, kind, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
     details: readingDetails().map(el => el.open),
     messages: Object.fromEntries([...document.querySelectorAll('main [id]')].filter(el => /(?:feedback|kernel-status|prediction-feedback|challenge-feedback)$/.test(el.id)).map(el => [el.id, el.textContent])),
     focus: document.activeElement?.closest('main') ? document.activeElement.id : null, scroll: [scrollX, scrollY] };
@@ -43,6 +47,12 @@ function snapshot() {
   if (sessionStorage.getItem(key) !== encoded) throw new Error('This window could not save its experiment. Allow browser storage and retry.');
 }
 export const saveReadingState=snapshot;
+// Normal navigation/reload can open a newer online lesson. Preserve completed
+// work without automatically reloading, or overwriting a coordinated snapshot.
+addEventListener('pagehide',event=>{
+  if(lock||event.persisted)return;
+  try{snapshot('navigation');}catch{/* Durable editor drafts remain; busy work is never replayed. */}
+});
 // Back/forward cache already preserves the live document and its scroll position.
 addEventListener('pageshow',event=>{if(event.persisted){try{sessionStorage.removeItem(snapshotKey());}catch{/* The live document already retains its state. */}}});
 addEventListener('compositionstart', () => { composing = true; });
@@ -101,6 +111,16 @@ function restore() {
       const el = document.getElementById(id); if (el) el.textContent = text;
     }
     requestAnimationFrame(() => {
+      const navigation=performance.getEntriesByType('navigation')[0]?.type;
+      if(data.kind==='navigation'&&navigation!=='reload'){
+        // A new link owns its destination; history owns back/forward scroll.
+        // Restore exercise values without jumping to a previous reading place.
+        if(navigation==='navigate'&&location.hash){
+          let id=location.hash.slice(1);try{id=decodeURIComponent(id);}catch{}
+          document.getElementById(id)?.scrollIntoView({behavior:'instant'});
+        }
+        return;
+      }
       if(data.focus)document.getElementById(data.focus)?.focus({preventScroll:true});
       scrollTo({ left: data.scroll[0], top: data.scroll[1], behavior: 'instant' });
     });

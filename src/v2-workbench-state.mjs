@@ -14,6 +14,11 @@ const outputCells = () => [...document.querySelectorAll('#values tr')].map(row =
 
 addEventListener('gpu-lab:before-restart', ({detail}) => {
   if (editor.readOnly) detail.reason = 'Wait for the CUDA compile/run to finish in this window, then restart to update.';
+  // The editor owns its durable/tab fallback and Undo restore copies. An
+  // automatic reading snapshot must not override that recovery policy when
+  // storage cannot retain a draft or its recovery copy safely.
+  else if(detail.kind==='navigation'&&!document.getElementById('draft-warning').hidden)
+    detail.reason='Automatic reading state defers to the editor’s saved recovery copies while storage is constrained.';
 });
 
 registerExperiment('v2-cuda-workbench', () => ({

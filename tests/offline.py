@@ -32,6 +32,7 @@ class CourseHandler(BaseHTTPRequestHandler):
     legacy = False
     corrupt = None
     pause = None
+    unreachable = False
     def log_message(self, *_): pass
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
@@ -39,6 +40,13 @@ class CourseHandler(BaseHTTPRequestHandler):
         if path.endswith('/'): path += 'index.html'
         path = path.lstrip('/')
         self.requests.append(path)
+        if self.unreachable:
+            # A cold persistent worker can start before Playwright applies its
+            # offline emulation to the worker target. Drop real connections too
+            # so this case verifies a genuinely unreachable host, not cache-first
+            # behaviour masking a service-worker request that still got online.
+            self.close_connection = True
+            return
         root = self.roots[self.revision]
         # A real static release directory. Both versions are retained for this
         # test deployment, just as documented for durable immutable assets.
@@ -141,9 +149,12 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             expect(tab.locator('#offline-status')).to_have_text('Downloaded update is ready after restarting.')
             expect(tab.locator('#download-update')).to_be_hidden()
             expect(tab.locator('#offline-size')).to_be_hidden()
-            tab.locator('#later-update').click();tab.reload()
-            expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
-            tab.close();tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html')
+            tab.locator('#later-update').click()
+            online=ctx.new_page();online.goto(url+'v2/first-kernel.html')
+            expect(online.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'])
+            expect(online.frame_locator('[data-kernel-workbench="hello"]').locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['two']['id'])
+            online.close()
+            # The fresh online visit does not reload the already-open lesson.
             expect(tab.locator('meta[name="gpu-release"]')).to_have_attribute('content',releases['one']['id'])
             hello=tab.frame_locator('[data-kernel-workbench="hello"]')
             editor=hello.get_by_role('textbox',name='CUDA source')
@@ -272,7 +283,12 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 start=len(CourseHandler.requests);page.locator('#download-update').click()
                 deadline=time.monotonic()+30
                 while CourseHandler.pause[0] not in CourseHandler.requests[start:] and time.monotonic()<deadline:time.sleep(.05)
-                assert CourseHandler.pause[0] in CourseHandler.requests[start:]
+                assert CourseHandler.pause[0] in CourseHandler.requests[start:],{
+                    'error':page.locator('#app-status-error').inner_text(),
+                    'status':page.locator('#version-status').inner_text(),
+                    'progress':page.locator('#progress-text').inner_text(),
+                    'recentRequests':CourseHandler.requests[start:][-12:],
+                }
                 progress=page.locator('#download-progress');expect(page.locator('#update-download-feedback #download-progress')).to_be_visible()
                 page.locator('#cancel-download').focus();page.keyboard.press('Enter');CourseHandler.pause[1].set();CourseHandler.pause=None
                 expect(progress).to_be_hidden();expect(page.locator('#download-update')).to_be_enabled(timeout=30000);ready(page)
@@ -344,6 +360,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
             tab.locator('#download-update').click();update_ready(tab)
             tab.locator('#later-update').click();ctx.close()
+            CourseHandler.unreachable=True
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options));ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'index.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
@@ -364,6 +381,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 raise
             print(f'Cold offline restart completed in {time.monotonic()-started:.2f}s',flush=True)
             ctx.close()
+            CourseHandler.unreachable=False
             print('PASS persistent profile: no activation on closing all windows; cold offline reopen, deferred badge and explicit offline restart')
             # Exercise the actual former worker and its automatically saved cache.
             CourseHandler.revision='one';CourseHandler.legacy=True
