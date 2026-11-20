@@ -30,7 +30,7 @@ function releaseLock() {
 }
 // Navigation disclosures are ephemeral and must not shift saved lesson panels.
 const readingDetails = () => [...document.querySelectorAll('main details')].filter(el => !el.closest('[data-transient-navigation]'));
-function snapshot() {
+function snapshot(kind='restart') {
   const key = snapshotKey();
   const required = document.querySelector('[data-book-experiment]') ? [...document.querySelectorAll('[data-book-experiment]')].map(el=>el.dataset.bookExperiment) : document.querySelector('.hello-section') ? ['hello-0','hello-1','hello-2','hello-3','hello-4','hello-launch','hello-bounds','hello-transfer'] : document.getElementById('sm-recording') ? ['sm-recording'] : document.getElementById('sm-explorer') ? ['sm-hardware'] : document.getElementById('kernel-editor') ? ['kernel'] : document.getElementById('tensor-diagram') ? ['memory','tensor-layout'] : document.body.dataset.lesson ? ['lesson'] : document.getElementById('gpu-map') ? ['gpu-map'] : document.getElementById('work-map') ? ['overview'] : [];
   if(document.getElementById('sm-explorer'))required.push('sm-hardware');
@@ -38,7 +38,7 @@ function snapshot() {
   if (composing || document.readyState !== 'complete' || document.querySelector('main [aria-busy="true"],main [contenteditable="true"]')) throw new Error('Finish the current input or operation in each GPU Lab window, then try again.');
   const guard = { reason: '' }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
-  const data = { schema: 1, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
+  const data = { schema: 1, kind, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
     details: readingDetails().map(el => el.open),
     messages: Object.fromEntries([...document.querySelectorAll('main [id]')].filter(el => /(?:feedback|kernel-status|prediction-feedback|challenge-feedback)$/.test(el.id)).map(el => [el.id, el.textContent])),
     focus: document.activeElement?.closest('main') ? document.activeElement.id : null, scroll: [scrollX, scrollY] };
@@ -51,7 +51,7 @@ export const saveReadingState=snapshot;
 // work without automatically reloading, or overwriting a coordinated snapshot.
 addEventListener('pagehide',event=>{
   if(lock||event.persisted)return;
-  try{snapshot();}catch{/* Durable editor drafts remain; busy work is never replayed. */}
+  try{snapshot('navigation');}catch{/* Durable editor drafts remain; busy work is never replayed. */}
 });
 // Back/forward cache already preserves the live document and its scroll position.
 addEventListener('pageshow',event=>{if(event.persisted){try{sessionStorage.removeItem(snapshotKey());}catch{/* The live document already retains its state. */}}});
@@ -111,6 +111,16 @@ function restore() {
       const el = document.getElementById(id); if (el) el.textContent = text;
     }
     requestAnimationFrame(() => {
+      const navigation=performance.getEntriesByType('navigation')[0]?.type;
+      if(data.kind==='navigation'&&navigation!=='reload'){
+        // A new link owns its destination; history owns back/forward scroll.
+        // Restore exercise values without jumping to a previous reading place.
+        if(navigation==='navigate'&&location.hash){
+          let id=location.hash.slice(1);try{id=decodeURIComponent(id);}catch{}
+          document.getElementById(id)?.scrollIntoView({behavior:'instant'});
+        }
+        return;
+      }
       if(data.focus)document.getElementById(data.focus)?.focus({preventScroll:true});
       scrollTo({ left: data.scroll[0], top: data.scroll[1], behavior: 'instant' });
     });

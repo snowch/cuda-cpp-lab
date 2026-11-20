@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from threading import Thread
+from threading import Thread,Event
 from http.server import ThreadingHTTPServer
 from urllib.parse import urlsplit
 from playwright.sync_api import sync_playwright,expect
@@ -40,6 +40,16 @@ def online_cases(browser,url,saved):
         assert rpc(fresh,'STATUS')['active']==one
         until(lambda:rpc(fresh,'STATUS').get('visited')==two)
         assert payload_requests()==before,'Online navigation must not download an unvisited course payload'
+        if saved:
+            # Simulate a removed immutable file. The identical live entry module
+            # must retain its release context for a version-specific dependency.
+            module=Handler.roots['two']/'releases'/two/'src/frame-version.mjs'
+            unavailable=module.with_suffix('.unavailable');module.rename(unavailable)
+            try:
+                fresh.evaluate('''async id=>{const base=new URL('./',location.href),cache=await caches.open('gpu-lab:'+base.href+':release-'+id);await cache.delete(new URL('src/frame-version.mjs',base));}''',two)
+                fresh.locator('iframe').evaluate('f=>new Promise(resolve=>{f.addEventListener("load",()=>resolve(),{once:true});f.contentWindow.location.reload()})')
+                version(fresh,'two')
+            finally:unavailable.rename(module)
         fresh.screenshot(path=str(RESULTS/f'online-two-saved-{saved}.png'))
         if saved:
             for width in [390,820,1440]:
@@ -98,6 +108,39 @@ def installed_worker(browser,url):
         print('PASS installed former worker activates after its tabs close; next online visit is fresh and prior offline copy remains saved',flush=True)
     Handler.previous_native_worker=False
 
+def recognition_after_busy_startup(browser,url):
+    Handler.revision='one';Handler.pause=None;Handler.requests=[]
+    with browser.new_context() as context:
+        context.add_init_script("Object.defineProperty(ServiceWorkerRegistration.prototype,'backgroundFetch',{get:()=>undefined})")
+        old=open_page(context,url);old.locator('#download-update').click()
+        expect(old.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+        release=json.loads((Handler.roots['one']/'release.json').read_text());job_id=rpc(old,'STATUS')['download']['id']
+        Handler.pause=Event();before=payload_requests()
+        old.evaluate('''async release=>{
+            const base=new URL('./',location.href),meta=await caches.open('gpu-lab:'+base.href+':status-v1'),key=new URL('__app_status_state__',base),state=await(await meta.match(key)).json();
+            state.saved=false;await meta.put(key,new Response(JSON.stringify(state)));
+            await(await caches.open('gpu-lab:'+base.href+':release-'+release.id)).delete(new URL('zz-payload.bin',base));
+            self.retentionFinished=false;
+            const r=await navigator.serviceWorker.ready,c=new MessageChannel();
+            c.port1.onmessage=({data})=>{if(!data.progress){self.retentionFinished=true;self.retentionError=data.error;}};
+            r.active.postMessage({type:'REMEMBER_PAGE',release,paths:['zz-payload.bin'],running:release.id},[c.port2]);
+        }''',release)
+        until(lambda:payload_requests()>before)
+        Handler.fail_metadata=True
+        try:
+            reopened=open_page(context,url)
+            assert rpc(reopened,'STATUS')['busy'],'The recognition test must meet a genuinely busy worker'
+            Handler.pause.set();Handler.pause=None
+            expect(reopened.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
+            until(lambda:old.evaluate('self.retentionFinished'))
+            assert not old.evaluate('self.retentionError')
+            assert rpc(reopened,'STATUS')['download']['id']==job_id
+            assert payload_requests()==before+1,'Recognition verifies the completed cache; it cannot fetch the course again'
+            print('PASS complete-copy recognition retries after busy startup with unavailable metadata; no new download or consent',flush=True)
+        finally:
+            Handler.fail_metadata=False
+            if Handler.pause:Handler.pause.set();Handler.pause=None
+
 if __name__=='__main__':
     with TemporaryDirectory(prefix='gpu-online-navigation-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name,embed=True) for name in ['one','two','three']}
@@ -106,6 +149,6 @@ if __name__=='__main__':
             with sync_playwright() as p:
                 browser=launch(p)
                 try:
-                    online_cases(browser,url,False);online_cases(browser,url,True);installed_worker(browser,url)
+                    online_cases(browser,url,False);online_cases(browser,url,True);recognition_after_busy_startup(browser,url);installed_worker(browser,url)
                 finally:browser.close()
         finally:server.shutdown()

@@ -16,10 +16,11 @@ from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results/background-updates';RESULTS.mkdir(parents=True,exist_ok=True)
 class Handler(BaseHTTPRequestHandler):
-    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False;previous_native_worker=False
+    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False;previous_native_worker=False;fail_metadata=False
     def log_message(self,*args):pass
     def do_GET(self):
         path=unquote(urlsplit(self.path).path).removeprefix('/gpu-lab/').lstrip('/') or 'index.html'
+        if self.fail_metadata and (path=='release.json' or path.endswith('/release.json')):self.send_error(503);return
         if path.endswith('/'):path+='index.html'
         root=self.roots[self.revision]
         if path.startswith('releases/'):
@@ -51,7 +52,8 @@ def fixture(temp,name,previous_client=False,embed=False):
     if embed:
         page=folder/'index.html'
         page.write_text(page.read_text().replace('</main>','<iframe src="./editor.html?embed=test" title="Versioned editor"></iframe></main>'))
-        (folder/'src/frame-version.mjs').write_text(f'document.documentElement.dataset.executedVersion={json.dumps(name)};')
+        (folder/'src/frame-version.mjs').write_text("import {version} from './frame-dependency.mjs';document.documentElement.dataset.executedVersion=version;")
+        (folder/'src/frame-dependency.mjs').write_text('export const version='+json.dumps(name)+';')
         (folder/'editor.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Editor {name}</title><script type="module" src="./src/frame-version.mjs"></script></head><body><header><div class="top-actions"></div></header><main><label>Editor state<input id="frame-draft" value="prepared {name}"></label></main><footer><span class="build-info">{name}</span></footer></body></html>''')
     if previous_client:
         # Recreate the removed control before a frozen older controller runs.

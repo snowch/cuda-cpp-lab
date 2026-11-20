@@ -61,6 +61,9 @@ copy or download unvisited lessons, recordings or compiler files.
 
 Completed per-tab state is saved on ordinary navigation/reload and restored
 when the route opens again. Editor version pins do not change snapshot keys.
+Ordinary link navigation restores exercise values while honouring the requested
+section and browser history position. Reloads and coordinated restarts also
+restore their saved reading position and focus.
 Back/forward cache preserves its existing live document; busy operations are
 never replayed. Explicit coordinated restarts retain their stronger save guards.
 
@@ -113,8 +116,12 @@ The worker's existing offline/update modes remain unchanged for pinned older cli
 Earlier updates could leave a complete cache without its saved flag. On loading,
 the page checks whether every running-release file is already present, then asks
 the existing worker to verify and retain that copy using the same save protocol.
-This works offline with an already-installed worker. Partial visited-page caches
-do not pass the presence check and never trigger a background book download.
+Recognition retries after busy worker operations finish, including when online
+metadata is unavailable. Its verification-only request cannot download missing
+files or replace a selected or cancelled update. Older explicit first-save
+requests keep their original behaviour. This works offline with an
+already-installed worker. Partial visited-page caches do not pass the presence
+check and never trigger a background book download.
 Focus/reopen still rechecks completeness; eviction becomes Offline download
 incomplete with a repair action.
 
@@ -162,7 +169,9 @@ fixture is the actual worker from commit `4875086`, not a mock worker API.
 - `python tests/online_navigation.py`: independently built releases, fresh online
   visits without full downloads, stable open editors, restored edits on reload,
   the unchanged saved offline copy, exact prepared restarts despite republishing,
-  six status layouts/themes and activation of an installed former worker.
+  complete-copy recognition after busy startup, relative imports after verified
+  live-file recovery, six status layouts/themes and activation of an installed
+  former worker.
 - `python tests/browser.py`: all existing lesson flows, phone/desktop themes,
   keyboard navigation, no-JavaScript content, plus deployed metadata comparison,
   unchanged running identity, failed/malformed/cached responses, real timeout,

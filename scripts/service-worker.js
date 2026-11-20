@@ -430,7 +430,8 @@ self.addEventListener('message', event => {
       else if (data.type === 'REMEMBER_PAGE') {
         if (operation || restarting) throw new Error('A download or restart is already in progress.');
         beginOperation();
-        try { await pruning; await rememberPage(data.release, data.paths); result = {}; } finally { endOperation(); }
+        try { await pruning; await rememberPage(data.release, data.paths); result = {}; }
+        finally { endOperation(); await broadcast({type:'STATUS_CHANGED'}); }
       } else if (data.type === 'DOWNLOAD_PLAN') {
         result=await planDownload(data,port);
       } else if (data.type === 'BACKGROUND_STARTED') {
@@ -451,8 +452,21 @@ self.addEventListener('message', event => {
           // Older pages recognise complete running copies through PREPARE. That
           // best-effort promotion must not replace another update's selection,
           // even if the page checked status before a competing request began.
-          if(retaining&&(state.pending||(state.partial&&state.partial!==data.release.id)||
+          if(retaining&&data.recogniseOnly){
+            const protectedSelection=state.pending||state.partial||(state.active&&state.active!==data.release.id)||
+              existing?.wanted||(existing&&existing.state!=='ready');
+            // Recognition is verification-only. A cache eviction between the
+            // page's presence check and this lock must never start a download.
+            const verifiedCopy=!protectedSelection&&await complete(data.release,progress);
+            if(verifiedCopy){
+              await(await caches.open(cacheName(data.release.id))).put(MANIFEST,new Response(JSON.stringify(data.release)));
+              state.active=data.release.id;state.saved=true;await writeState(state);
+            }
+            result=await status(data.running,verifiedCopy?data.release:null,progress);
+          }else if(retaining&&(state.pending||(state.partial&&state.partial!==data.release.id)||
               (existing?.wanted&&existing.release!==data.release.id))){
+            // Older clients also use PREPARE for an explicit first save. Keep
+            // that contract while protecting another selected/resumable update.
             result=await status(data.running,null,progress);
           }else{
             if(existing?.wanted && await nativeDownload(existing))throw new Error('The browser is already downloading this course.');
@@ -547,6 +561,9 @@ self.addEventListener('fetch', event => {
           // from the live root is safe only when its original hash still matches.
           try{response=await fetch(new URL(path,BASE),{cache:'no-store'});}catch{/* Report unavailable bytes below. */}
           if(!response||!await verified(response.clone(),file))return new Response('This release file could not be verified. Reload the lesson online, or use App status to repair the saved copy.',{status:503,headers:{'Content-Type':'text/plain'}});
+          // A live alias has a different response URL. Strip it so relative
+          // module/CSS imports still resolve against the requested release URL.
+          response=new Response(response.body,{status:response.status,statusText:response.statusText,headers:response.headers});
         }
         try{await cache?.put(new URL(path, BASE), response.clone());}catch{/* Optional on-demand cache; explicit downloads report storage errors. */}
       }

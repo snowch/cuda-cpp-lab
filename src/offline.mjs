@@ -124,7 +124,7 @@ async function refresh() {
     if (generation !== refreshGeneration) return;
     snapshot = result; unavailable = false;
     runningRelease ||= snapshot.runningRelease;
-    render();
+    render();remember();
   } catch (failure) {
     if (generation !== refreshGeneration) return;
     unavailable = true; error(failure.message); render();
@@ -214,7 +214,7 @@ function connect() {
   return connecting;
 }
 async function remember() {
-  if (window!==window.top || remembered || remembering || downloading || restarting || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
+  if (window!==window.top || remembering || downloading || restarting || snapshot.busy || !connected || !worker || !runningRelease || removed || document.readyState !== 'complete') return remembering;
   const prefix = new URL(`releases/${running}/`, base).href;
   const visited=new Set();
   // The lesson owns retention for its embedded editors too. Separate frame
@@ -232,7 +232,7 @@ async function remember() {
   collect(window);
   const paths=[...visited];
   remembering = (async () => {
-    if (snapshot.active !== running) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
+    if (!remembered) await rpc('REMEMBER_PAGE', { release: runningRelease, paths });
     // Earlier updates cached the whole release without marking it available
     // offline. Recognise those copies through the existing worker protocol.
     // A visited-page cache with missing files must never trigger a book download.
@@ -249,7 +249,7 @@ async function remember() {
           const current=await rpc('STATUS');
           if(!current.saved&&!current.offlineReady&&!current.busy&&!current.partial&&!current.pending&&
               !current.download?.wanted&&(!current.active||current.active===running)){
-            const result = await rpc('PREPARE', { release: runningRelease, save: true });
+            const result = await rpc('PREPARE', { release: runningRelease, save: true, recogniseOnly: true });
             ++refreshGeneration; snapshot = result; render();
           }
         }

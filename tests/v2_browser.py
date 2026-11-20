@@ -79,7 +79,7 @@ def check_v2(browser, url):
         for route in routes[1:]:
             page.goto(route)
             model = page.locator('.v2-starter-model > summary')
-            if model.count():
+            if model.count() and not model.evaluate('e=>e.parentElement.open'):
                 model.click()
             activity = page.locator('.v2-experiment')
             run = activity.get_by_role('button', name='Run model')
@@ -103,7 +103,8 @@ def check_v2(browser, url):
             expect(page.get_by_text('Compare your explanation')).to_be_visible()
 
         page.goto(url + 'v2/reduction.html')
-        page.locator('.v2-starter-model > summary').click()
+        model=page.locator('.v2-starter-model > summary')
+        if not model.evaluate('e=>e.parentElement.open'):model.click()
         expect(page.locator('.v2-diagram')).to_contain_text('All threads arrive before any partner read.')
         choice = page.locator('#v2-choice')
         choice.select_option('0')
@@ -129,7 +130,8 @@ def check_v2(browser, url):
     expect(page.locator('h1')).to_have_text('Learn the GPU through CUDA C++')
     expect(page.get_by_role('link', name='GPU Lab V1', exact=True)).to_have_count(0)
     page.goto(url + 'v2/reduction.html')
-    page.locator('.v2-starter-model > summary').click()
+    model=page.locator('.v2-starter-model > summary')
+    if not model.evaluate('e=>e.parentElement.open'):model.click()
     expect(page.locator('#v2-source')).to_be_visible()
     expect(page.get_by_role('button', name='Run model')).to_be_disabled()
     expect(page.locator('#v2-result')).to_be_hidden()

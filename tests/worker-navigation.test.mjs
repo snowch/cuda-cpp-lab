@@ -30,7 +30,12 @@ async function machine({state={active:A,saved:true},network=()=>new Response('la
  // Node cannot construct navigation Requests. The worker clones the request for
  // network fetch; supply an equivalent request there while preserving event mode.
  context.Request=class extends Request{constructor(input,init){super(input?.url||input,init);}};
- return {request,put,stores,requests,context,caches};
+ async function rpc(type,data={}){
+  let work;const messages=[];
+  handlers.get('message')({source:{id:'reader',url:base+'index.html'},ports:[{postMessage(value){messages.push(value);}}],data:{type,running:A,...data},waitUntil(value){work=value;}});
+  await work;const message=messages.at(-1);if(message.error)throw Error(message.error);return message.result;
+ }
+ return {request,put,stores,requests,context,caches,rpc};
 }
 
 test('online navigation reads current pages while saved and open document assets remain versioned',async()=>{
@@ -69,12 +74,15 @@ test('an open version can recover unchanged live files but never substitutes cha
  const body='unchanged original script',path='src/app.mjs';
  const file={path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')};
  for(const current of [body,'different current script']){
-  const m=await machine({network:url=>new Response(url.includes('/releases/')?'removed':current,{status:url.includes('/releases/')?404:200})});
+  const m=await machine({network:url=>{
+   const response=new Response(url.includes('/releases/')?'removed':current,{status:url.includes('/releases/')?404:200});
+   Object.defineProperty(response,'url',{value:url});return response;
+  }});
   await m.put(prefix+'release-'+A,'__release_manifest__',{schema:1,id:A,commit:null,date:null,files:[{path:'index.html',bytes:0,sha256:createHash('sha256').update('').digest('hex')},file],bytes:file.bytes});
   const response=await m.request('releases/'+A+'/'+path,{destination:'script',mode:'cors'});
   assert.equal(response.status,current===body?200:503);
   const stored=await(await m.caches.open(prefix+'release-'+A)).match(base+path);
-  if(current===body){assert.equal(await response.text(),body);assert.equal(await stored.text(),body);}
+  if(current===body){assert.equal(response.url,'','Relative imports must use the original versioned request, not the live alias URL');assert.equal(await response.text(),body);assert.equal(await stored.text(),body);}
   else assert.equal(stored,undefined,'Changed bytes cannot enter an older version');
  }
 });
@@ -86,4 +94,19 @@ test('pruning keeps saved, recently visited and open versions plus legacy/siblin
  vm.runInContext(`seen.set('open','${B}')`,m.context);await vm.runInContext('prune()',m.context);
  for(const id of [A,B,C])assert.ok(m.stores.has(prefix+'release-'+id));
  assert.ok(!m.stores.has(prefix+'release-'+D));assert.ok(m.stores.has(prefix+'legacy-complete'));assert.ok(m.stores.has('sibling-app'));
+});
+
+test('recognising a complete copy never downloads missing bytes or overrides a cancelled selection',async()=>{
+ const file=(path,body)=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
+ const release={schema:1,id:A,commit:null,date:null,files:[file('index.html','page'),file('example.cu','code')],bytes:8};
+ const m=await machine({state:{active:A,saved:false}});
+ await m.put(prefix+'release-'+A,'__release_manifest__',release);await m.put(prefix+'release-'+A,'index.html','page');
+ const incomplete=await m.rpc('PREPARE',{release,save:true,recogniseOnly:true});assert.equal(incomplete.offlineReady,false);assert.equal(m.requests.length,0);
+ await m.put(prefix+'release-'+A,'example.cu','code');
+ const complete=await m.rpc('PREPARE',{release,save:true,recogniseOnly:true});assert.equal(complete.offlineReady,true);assert.equal(m.requests.length,0);
+ await m.put(prefix+'status-v1','__app_status_state__',{active:A,saved:false,partial:A});
+ const cancelled=await m.rpc('PREPARE',{release,save:true,recogniseOnly:true});assert.equal(cancelled.saved,false);assert.equal(cancelled.partial,A);assert.equal(m.requests.length,0);
+ const legacy=await machine({state:{active:A,saved:false},network:()=>new Response('code')});
+ await legacy.put(prefix+'release-'+A,'index.html','page');
+ const saved=await legacy.rpc('PREPARE',{release,save:true});assert.equal(saved.offlineReady,true);assert.equal(legacy.requests.length,1,'An older explicit Save request must still fetch its missing file');
 });
