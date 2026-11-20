@@ -42,6 +42,11 @@ def save(page):
 def close_panel(page):
     if page.locator('#app-status-dialog').is_visible():page.keyboard.press('Escape')
 
+def fill_editor(page,value):
+    editor=page.frame_locator('iframe').locator('#frame-draft')
+    editor.click();expect(editor).to_be_focused();editor.fill(value)
+    expect(editor).to_have_value(value)
+
 def next_page(page):
     with page.expect_navigation() as result:page.get_by_role('link',name='Next lesson',exact=True).click()
     return result.value
@@ -62,7 +67,8 @@ def no_saved_copy(browser,url):
                 page.locator('#app-status-details > summary').click()
                 page.screenshot(path=str(RESULTS/f'unsaved-{width}-{theme}.png'))
                 close_panel(page);page.locator('#draft').fill('keep my lesson work')
-                page.frame_locator('iframe').locator('#frame-draft').fill('keep my editor work')
+                fill_editor(page,'keep my editor work')
+                expect(page.locator('#draft')).to_have_value('keep my lesson work')
                 offline(context,True);page.locator('#app-status-open').click()
                 expect(page.locator('#offline-status')).to_be_visible()
                 expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
@@ -147,7 +153,8 @@ def pending_copy_and_multiple_windows(browser,url):
     context,page=start(browser,url)
     try:
         close_panel(page);page.locator('#draft').fill('draft before restart')
-        page.frame_locator('iframe').locator('#frame-draft').fill('editor before restart')
+        fill_editor(page,'editor before restart')
+        expect(page.locator('#draft')).to_have_value('draft before restart')
         Handler.revision='two';page.locator('#app-status-open').click();manual_check(page)
         expect(page.locator('#download-update')).to_have_text('Save offline copy')
         page.locator('#download-update').click();expect(page.locator('#restart-update')).to_be_visible(timeout=30000)
@@ -173,7 +180,7 @@ def newer_online_with_saved_copy(browser,url):
         save(page);close_panel(page);old=rpc(page,'STATUS')['active'];before=payload_requests()
         Handler.revision='two';fresh=context.new_page();fresh.goto(url)
         expect(fresh.locator('html')).to_have_attribute('data-test-release','two')
-        fresh.frame_locator('iframe').locator('#frame-draft').fill('edited while reading online')
+        fill_editor(fresh,'edited while reading online')
         fresh.locator('#app-status-open').click()
         expect(fresh.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.')
         expect(fresh.get_by_role('button',name='Update offline copy',exact=True)).to_be_enabled()

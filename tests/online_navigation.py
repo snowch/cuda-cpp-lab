@@ -31,7 +31,13 @@ def online_cases(browser,url,saved):
             old.locator('#download-update').click()
             expect(old.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
         old.locator('#app-status-close').click();old.locator('#draft').fill('keep my edits')
-        old.frame_locator('iframe').locator('#frame-draft').fill('keep editor state')
+        expect(old.locator('#draft')).to_have_value('keep my edits')
+        editor=old.frame_locator('iframe').locator('#frame-draft')
+        # Native text insertion targets the browser's focused frame. Establish
+        # that target and validate both inputs before testing navigation/restore.
+        editor.click();expect(editor).to_be_focused();editor.fill('keep editor state')
+        expect(editor).to_have_value('keep editor state')
+        expect(old.locator('#draft')).to_have_value('keep my edits')
         before=payload_requests();Handler.revision='two'
         fresh=context.new_page();fresh.goto(url);two=version(fresh,'two')
         assert one!=two;version(old,'one')
