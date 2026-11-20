@@ -86,6 +86,27 @@ value. The scheduling disclosure keeps its existing position and identity; only
 its initial open state and label change. No additional disclosure or control is
 introduced.
 
+## Editor readiness and preservation of early edits
+
+The background-download check exposed an editor-startup timing problem. A
+deterministic slow-response probe reproduced it: the textarea was editable while
+the document was still loading; releasing the starter initialisation replaced an
+edit made during that interval. This was a functional issue, not a reason to relax
+the requirement to retain drafts.
+
+The textarea is now read-only and source actions are disabled while the editor
+says **Preparing the CUDA source editor…**. Editing is enabled after load, when
+the starter, draft handlers and restoration hooks have loaded. Saved drafts and
+their recovery policy remain unchanged. A delayed-response browser check verifies
+the initial guard, the complete starter, and preservation of the first subsequent
+edit across closing and reopening.
+
+Navigation and offline checks now open the scheduling comparison only when it is
+closed. Their previous unconditional click closed the newly visible comparison
+before attempting to use its controls. Draft checks wait for an editable complete
+starter before reading/changing it, and assert restored values with browser-aware
+waiting rather than sampling an unfinished document.
+
 ## Remaining diagram and recording work
 
 The five earlier concept-diagram specifications remain separate work: numerical

@@ -65,14 +65,14 @@ pre{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(-
 <h2 id="editor-title"><label for="source">CUDA source</label></h2>
 <details class="kernel-tools" id="editor-tools"><summary>Editor tools</summary>
 <div class="kernel-tool-actions">
-<button id="reset" type="button">Restore starter</button>
-<button id="undo-reset" type="button" hidden>Undo restore</button>
-<button id="export-source" type="button">Export .cu</button>
+<button id="reset" type="button" disabled>Restore starter</button>
+<button id="undo-reset" type="button" hidden disabled>Undo restore</button>
+<button id="export-source" type="button" disabled>Export .cu</button>
 </div>
 <p class="note">The first run downloads about 127 MiB of compiler assets.</p>
 </details>
 </div>
-<textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="12">extern "C" __global__
+<textarea id="source" readonly spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" rows="12">extern "C" __global__
 void runKernel(
     const float* input,
     float* output,
@@ -86,11 +86,11 @@ void runKernel(
 }
 </textarea>
 <div class="controls">
-<button id="run" class="primary" type="button">Compile and run</button>
+<button id="run" class="primary" type="button" disabled>Compile and run</button>
 <button id="stop" type="button" hidden>Stop</button>
 </div>
 <p id="draft-warning" role="status" hidden></p>
-<p id="status" role="status">Ready to compile the CUDA source.</p>
+<p id="status" role="status">Preparing the CUDA source editor…</p>
 <details id="compiler-messages" hidden><summary>Compiler and execution messages</summary><pre id="diagnostics" hidden aria-label="Compiler diagnostics"></pre></details>
 </section>
 <section class="card" aria-labelledby="output-title">
@@ -1697,6 +1697,17 @@ editor.addEventListener('gpu-lab:result-restored', ({detail}) => {
   provenance.hidden = !detail.previous;
 });
 showValues();
+// Do not accept input before the starter, draft listeners and restart restore
+// hooks have finished loading. Otherwise the initial program can replace an
+// edit made while this document is still arriving over a slow connection.
+function editorReady() {
+  if (status.textContent === 'Preparing the CUDA source editor…')
+    status.textContent = 'Ready to compile the CUDA source.';
+  busy(false);
+  document.querySelector('#export-source').disabled = false;
+}
+if (document.readyState === 'complete') editorReady();
+else addEventListener('load', editorReady, { once: true });
 </script>
 </body>
 </html>

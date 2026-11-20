@@ -273,7 +273,10 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 second.locator('.v2-starter-model > summary').click();second.locator('#v2-choice').select_option('8');second.locator('#v2-run').click()
                 bounds_result=second.locator('#v2-result').inner_text()
                 schedule=context.new_page();schedule.goto(url+'v2/scheduling.html')
-                schedule.locator('.v2-starter-model > summary').click();schedule.locator('#v2-choice').select_option('1')
+                model = schedule.locator('.v2-starter-model')
+                if not model.evaluate('e=>e.open'):
+                    model.locator(':scope > summary').click()
+                schedule.locator('#v2-choice').select_option('1')
                 schedule.locator('#v2-prediction').fill('7');schedule.get_by_role('button',name='Run model',exact=True).click()
                 schedule.get_by_role('button',name='Next step',exact=True).click()
                 scheduling_trace=schedule.locator('[data-trace]').inner_text()

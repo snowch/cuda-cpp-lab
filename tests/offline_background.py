@@ -4,7 +4,7 @@
 Uses the production builder, worker, UI and CacheStorage. Mobile OS suspension
 is not emulated: page closure and worker termination are tested in Chromium.
 """
-import json,os,shutil,subprocess,time
+import json,os,re,shutil,subprocess,time
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -231,17 +231,19 @@ def full_course_native(browser,update_root):
                 raise
             page.locator('#app-status-close').click()
             editor=page.frame_locator('[data-kernel-workbench="hello"]').locator('#source')
+            expect(editor).to_be_editable()
+            expect(editor).to_have_value(re.compile(r'output\[0\] = 42\.0f;'))
             draft=editor.input_value().replace('42.0f','7.0f');editor.fill(draft)
             page.close()
             page=c.new_page();page.goto(url);page.locator('#app-status-open').click()
             expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=120000)
             expect(page.locator('#app-status-error')).to_be_empty()
             assert job(page)['state']=='ready'
-            assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
+            expect(page.frame_locator('[data-kernel-workbench="hello"]').locator('#source')).to_have_value(draft)
             page.screenshot(path=str(RESULTS/'full-course-native-ready.png'))
             c.set_offline(True);page.reload();page.locator('#app-status-open').click()
             expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.',timeout=30000)
-            assert page.frame_locator('[data-kernel-workbench="hello"]').locator('#source').input_value()==draft
+            expect(page.frame_locator('[data-kernel-workbench="hello"]').locator('#source')).to_have_value(draft)
             # Cancellation must also release the page's request lock when its
             # existing complete cache contains every recording/compiler asset.
             c.set_offline(False);Handler.revision='two';Handler.pause=Event()
