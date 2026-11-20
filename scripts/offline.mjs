@@ -43,7 +43,17 @@ export async function buildOffline(directory, identity = { commit: null, date: n
       .replace('</body>', `${panel}</body>`)
       .replace('</head>', `<meta name="gpu-base" content="${base}"><meta name="gpu-release" content="__BUILD_ID__"><script type="module" src="${base}src/offline.mjs"></script></head>`);
     // Pin executable assets to this release even before a worker controls the page.
-    html = html.replace(/((?:src|href|poster)=")(\.\/|\.\.\/)?(src\/|assets\/)/g, `$1${base}releases/__BUILD_ID__/$3`);
+    html = html.replace(/((?:src|href|poster)=")(\.\/|\.\.\/)?(src\/|assets\/|examples\/)/g, `$1${base}releases/__BUILD_ID__/$3`);
+    // Keep an embedded editor on its parent lesson's release. Query pinning
+    // preserves the document's normal base URL for its relative assets/metadata.
+    html=html.replace(/(<iframe\b[^>]*\bsrc=")([^"]+)"/g,(whole,prefix,source)=>{
+      const decoded=source.replaceAll('&amp;','&');
+      const target=new URL(decoded,new URL(path,'https://build.invalid/'));
+      if(target.origin!=='https://build.invalid'||!files.includes(target.pathname.slice(1)))return whole;
+      target.searchParams.set('gpu-release','__BUILD_ID__');
+      const pinned=decoded.split(/[?#]/)[0]+target.search+target.hash;
+      return prefix+pinned.replaceAll('&','&amp;')+'"';
+    });
     await writeFile(`${directory}/${path}`, html);
   }
   const worker = await readFile(new URL('./service-worker.js', import.meta.url), 'utf8');

@@ -34,6 +34,7 @@ jobs:
       - run: python -m playwright install chromium
         timeout-minutes: 10
       - run: python tests/offline_background.py
+      - run: python tests/online_navigation.py
       - run: python tests/offline.py
       - run: python tests/recordings.py
       - run: python tests/browser.py
@@ -47,6 +48,7 @@ jobs:
             test-results/*.png
             test-results/recording-context/*.png
             test-results/background-updates/*.png
+            test-results/online-navigation/*.png
           if-no-files-found: ignore
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

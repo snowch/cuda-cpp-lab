@@ -36,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
         try:self.wfile.write(data)
         except (BrokenPipeError,ConnectionResetError):pass
 
-def fixture(temp,name,previous_client=False):
+def fixture(temp,name,previous_client=False,embed=False):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
     for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
@@ -48,6 +48,11 @@ def fixture(temp,name,previous_client=False):
     shutil.copy2(ROOT/'manifest.webmanifest',folder/'manifest.webmanifest')
     (folder/'zz-payload.bin').write_bytes((b'one' if name=='one' else b'two')*350000)
     (folder/'index.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/style.css"><title>GPU Lab lifecycle test</title></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Course {name}</h1><label for="draft">Saved learner draft</label><input id="draft" value="7"><p>The current lesson stays open while an update downloads.</p></main><footer><span class="build-info"><a href="#">{name}</a></span></footer><script>const d=document.querySelector('#draft');d.value=localStorage.getItem('fixture-draft')||d.value;d.addEventListener('input',()=>localStorage.setItem('fixture-draft',d.value));</script></body></html>''')
+    if embed:
+        page=folder/'index.html'
+        page.write_text(page.read_text().replace('</main>','<iframe src="./editor.html?embed=test" title="Versioned editor"></iframe></main>'))
+        (folder/'src/frame-version.mjs').write_text(f'document.documentElement.dataset.executedVersion={json.dumps(name)};')
+        (folder/'editor.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Editor {name}</title><script type="module" src="./src/frame-version.mjs"></script></head><body><header><div class="top-actions"></div></header><main><label>Editor state<input id="frame-draft" value="prepared {name}"></label></main><footer><span class="build-info">{name}</span></footer></body></html>''')
     if previous_client:
         # Recreate the removed control before a frozen older controller runs.
         # This parser-ordered module precedes the controller injected in <head>.
@@ -115,7 +120,7 @@ def fallback_resume(browser,url):
         page.screenshot(path=str(RESULTS/'fallback-downloading.png'))
         before=list(Handler.requests);session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
         page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
-        assert page.locator('html').get_attribute('data-test-release')=='one','A finished download must not reload the learner.'
+        assert page.locator('html').get_attribute('data-test-release')=='two','A new online visit reads the published version; the prior open page was not reloaded automatically.'
         assert page.locator('#draft').input_value()=='saved during update'
         resumed=Handler.requests[len(before):]
         assert sum(p.endswith('zz-payload.bin') for p in resumed)==1
@@ -143,10 +148,10 @@ def cancelled_request(browser,url,native=True,browser_cancel=False):
         until(lambda:not job(page)['wanted'] and not job(page)['busy'])
         count=payload_requests();page.close();page=open_page(c,url);page.wait_for_timeout(300)
         assert payload_requests()==count,'Cancel must not turn into an automatic retry when returning.'
-        assert not job(page)['wanted'];assert page.locator('html').get_attribute('data-test-release')=='one'
+        assert not job(page)['wanted'];assert page.locator('html').get_attribute('data-test-release')=='two'
         if native and not browser_cancel:page.screenshot(path=str(RESULTS/'cancelled-update.png'))
         page.locator('#download-update').click();expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
-        assert page.locator('html').get_attribute('data-test-release')=='one'
+        assert page.locator('html').get_attribute('data-test-release')=='two'
     print(f'PASS Cancel survives reopening: {"native" if native else "fallback"}, {"browser control" if browser_cancel else "app control"}; explicit resume succeeds',flush=True)
 
 
@@ -187,7 +192,7 @@ def previous_worker_recovery(browser,url):
         session=c.new_cdp_session(page);session.send('ServiceWorker.enable');session.send('ServiceWorker.stopAllWorkers');page.close();Handler.pause.set();Handler.pause=None
         page=open_page(c,url);expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         assert rpc(page,'STATUS')['downloadVersion']==1
-        assert page.locator('html').get_attribute('data-test-release')=='one'
+        assert page.locator('html').get_attribute('data-test-release')=='two'
     Handler.previous_worker=False
     print('PASS an actual previous-production worker honours Cancel and hands a durable partial request to the naturally activated new worker',flush=True)
 
@@ -438,7 +443,7 @@ def no_completed_cache_downgrade(browser,url):
             rpc(page,'PREPARE',release=candidate,save=True,requestDownload=True,mode=mode,running=running if mode=='offline' else '0'*64)
             page.evaluate("async id=>{const name=(await caches.keys()).find(n=>n.endsWith('status-v1'));await (await caches.open(name)).put(new URL('__app_status_state__',location.href),new Response(JSON.stringify({active:id,saved:true}))) }",candidate['id'])
             before=payload_requests();manual_check(page)
-            expect(page.locator('#version-status')).to_have_text('Up to date',timeout=30000)
+            expect(page.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.',timeout=30000)
             expect(page.locator('#restart-update')).to_be_hidden()
             expect(page.locator('#download-update')).to_have_text('Update course')
             expect(page.locator('#download-update')).to_be_visible()

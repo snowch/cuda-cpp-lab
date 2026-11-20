@@ -2,7 +2,11 @@
 // Per-tab restart snapshots; no localStorage.clear and no replay of user actions.
 const hooks = new Map();
 let composing = false, lock = null, unlockTimer;
-const snapshotKey = () => 'gpu-lab:restart:' + location.pathname + location.search;
+const snapshotKey = () => {
+  const url=new URL(location.href);
+  url.searchParams.delete('gpu-release');
+  return 'gpu-lab:restart:' + url.pathname + url.search;
+};
 // Read the incoming route before a page migrates its URL; saves still use the live route.
 const incomingSnapshotKey = snapshotKey();
 export function registerExperiment(name, save, restore) { hooks.set(name, { save, restore }); }
@@ -43,6 +47,12 @@ function snapshot() {
   if (sessionStorage.getItem(key) !== encoded) throw new Error('This window could not save its experiment. Allow browser storage and retry.');
 }
 export const saveReadingState=snapshot;
+// Normal navigation/reload can open a newer online lesson. Preserve completed
+// work without automatically reloading, or overwriting a coordinated snapshot.
+addEventListener('pagehide',event=>{
+  if(lock||event.persisted)return;
+  try{snapshot();}catch{/* Durable editor drafts remain; busy work is never replayed. */}
+});
 // Back/forward cache already preserves the live document and its scroll position.
 addEventListener('pageshow',event=>{if(event.persisted){try{sessionStorage.removeItem(snapshotKey());}catch{/* The live document already retains its state. */}}});
 addEventListener('compositionstart', () => { composing = true; });

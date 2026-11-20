@@ -26,9 +26,9 @@ styles and images under that release ID, including on an uncontrolled first
 visit. Publish the whole built `dist/` atomically, as the Pages workflow does.
 Do not rewrite immutable files in place. Retaining older immutable directories
 on other hosting platforms allows repairs of older releases; Pages publishes
-only the current snapshot. If an old uncached file is no longer on the host,
-its download fails honestly and the learner can prepare the current release.
-A missing old file never falls through to an incompatible new root asset.
+only the current snapshot. A missing old file can be recovered from the live
+root only if its byte count and original hash still match. Changed bytes are
+rejected; the learner can reload the lesson online to use the current release.
 
 Checks use an eight-second deadline, a unique URL, `cache: no-store`, a no-cache
 request header and strict metadata validation. GitHub Pages legitimately returns
@@ -46,12 +46,37 @@ No version check prepares app assets. Static hosting cannot prove freshness
 against a misconfigured intermediary that ignores cache directives and lies
 about response age; the deployment must honour the network-only contract.
 
+## Online visits and offline access
+
+Normal top-level navigation and reload request the published page from the
+network, bypassing the browser HTTP cache. Network failure, an eight-second
+connection deadline or a server error falls back to the selected saved course.
+A genuine HTTP 404 remains a 404, so a retired online page is not resurrected
+from an old cache. An active lesson is never automatically reloaded.
+
+Each document retains immutable script, style, media and source-download URLs. Embedded editors
+carry a `gpu-release` query pin, preserving both the parent's version and the
+editor's normal base URL. Ordinary online visits do not select another offline
+copy or download unvisited lessons, recordings or compiler files.
+
+Completed per-tab state is saved on ordinary navigation/reload and restored
+when the route opens again. Editor version pins do not change snapshot keys.
+Back/forward cache preserves its existing live document; busy operations are
+never replayed. Explicit coordinated restarts retain their stronger save guards.
+
+App status distinguishes the current online page from a different saved offline
+version. Update course prepares the complete offline copy. Reading current
+content online requires no complete-course download.
+When a newer published version is known, an older prepared copy is not offered
+as a restart target in that page's panel. The complete current copy can be saved
+instead. Metadata checks finish before a restart control is enabled.
+
 ## Downloads and activation
 
 Worker installation fetches no course assets. Once a document has loaded, its
 already-visited HTML and resource URLs are retained and verified as a small
-visited-page cache. Later visits are cached on demand. This pins the running
-release across refresh/reopen even for online-only tabs. It does not download
+visited-page cache. Later visits are cached on demand. It does not pin future
+online visits to that version and does not download
 unvisited lessons or claim that a partial copy is available offline. Initial retention can require a
 repeat request when the browser has no reusable HTTP response. The single Update course action prepares the selected manifest, checks every file's length and SHA-256,
 and reports verified bytes. Cancellation/failure retains valid partial files for
@@ -71,7 +96,8 @@ per tab. Results are discarded when the scan finishes, including on errors;
 subsequent checks still verify current cache contents and detect eviction.
 Preparing a newer release sets `pending`; only Restart to update changes `active`.
 Closing all tabs, reopening the browser, visibility changes and ordinary refresh
-never select a pending release. Later dismisses the dialog, not its badge.
+never select a pending offline release. Online navigation can independently
+read the published version. Later dismisses the dialog, not its badge.
 
 Update course saves a complete offline copy, including recordings and the pinned
 CUDA compiler assets. The same control handles the first save, resume, repair and
@@ -105,11 +131,18 @@ wait during that transaction. Assets are pinned per document, so a delayed windo
 cannot accidentally load a different release's JavaScript. Snapshot failures on
 restore retain a downloadable JSON recovery copy instead of discarding inputs.
 
+Restart records a bounded set of participating navigation IDs before committing
+the selection. Its reloads open the exact verified release even if the host has
+published another version. The record and selection share a transaction token;
+an aborted selection cannot make a ticket effective. Later ordinary navigation
+is network-first again. This also works when the worker process restarts.
+
 The stable worker protocol is separate from the app release. Future incompatible
 protocol changes require a migration; do not use unconditional `skipWaiting`.
-Caches are scoped to the exact registration base URL. Cleanup keeps the active,
-previous, pending and resumable snapshots and only removes obsolete caches when
-all known course windows report the selected release. Remove offline copy asks
+Caches are scoped to the exact registration base URL. Cleanup keeps the saved,
+previous, pending, resumable, recently visited and currently open versions. It
+waits for arriving windows to identify themselves and retains legacy copies.
+Remove offline copy asks
 for confirmation, unregisters this app only, and deletes its scoped caches. It
 never clears localStorage, sessionStorage, learner work or sibling app caches.
 
@@ -126,6 +159,10 @@ fixture is the actual worker from commit `4875086`, not a mock worker API.
 ## Validation and review
 
 - `npm run check`: dependency-free Node model/build tests and production build.
+- `python tests/online_navigation.py`: independently built releases, fresh online
+  visits without full downloads, stable open editors, restored edits on reload,
+  the unchanged saved offline copy, exact prepared restarts despite republishing,
+  six status layouts/themes and activation of an installed former worker.
 - `python tests/browser.py`: all existing lesson flows, phone/desktop themes,
   keyboard navigation, no-JavaScript content, plus deployed metadata comparison,
   unchanged running identity, failed/malformed/cached responses, real timeout,

@@ -43,8 +43,9 @@ function render() {
   else if($('app-status-error').dataset.source==='download')error('');
   if($('app-status-error').dataset.source?.startsWith('download')&&$('app-status-error').parentElement!==feedback)feedback.append($('app-status-error'));
   const pending = snapshot.pending && (snapshot.pending !== running || snapshot.active !== running);
+  const relevantPending = pending && (!latest || snapshot.pending===latest.id);
   const available = latest && latest.id !== running;
-  const ready = pending && snapshot.pendingReady;
+  const ready = relevantPending && snapshot.pendingReady;
   const incomplete=available&&snapshot.partial===latest.id;
   const transferring=active||requested||cancelling;
   const downloaded=currentCourseDownloaded();
@@ -55,6 +56,7 @@ function render() {
   let status=stopping?'Stopping download':active?verifying?(mode==='update'?'Checking update':'Checking download'):(mode==='update'?'Downloading update':'Downloading course'):requested?(mode==='update'?'Update download paused':'Download paused'):ready?'Update downloaded and checked':incomplete?'Update download incomplete':version;
   if(!transferring&&!ready&&!available){
     if(downloaded)status=version==='Up to date'?'Up to date. Downloaded and ready to use offline.':'Downloaded and ready to use offline.';
+    else if(otherCourseDownloaded&&version==='Up to date')status='Up to date online. The offline copy is a different version.';
     else if(!otherCourseDownloaded&&(snapshot.saved||snapshot.partial))status=version==='Up to date'?'Up to date. Offline download incomplete.':'Offline download incomplete';
   }
   // Keep the existing update/offline status slots for older pinned clients,
@@ -65,7 +67,7 @@ function render() {
   $('offline-status').dataset.state=downloaded?'ready':'unavailable';
   $('update-section').hidden=offlineTransfer;
   $('offline-section').hidden=!offlineTransfer;
-  $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||pending?'Update available':version==='Up to date'?'Up to date':downloaded?'Downloaded':'Check version';
+  $('app-status-summary').textContent=ready?'Update ready':transferring?status:available||relevantPending?'Update available':version==='Up to date'?'Up to date':downloaded?'Downloaded':'Check version';
   $('app-status-details').hidden=transferring;
   $('install-help').hidden=transferring;
   $('download-update').hidden=locked||!supported||failedCheck||(!available&&(downloaded||ready))||Boolean(available&&ready&&snapshot.pending===latest.id);
@@ -73,7 +75,7 @@ function render() {
   $('download-update').classList.toggle('primary',!ready);
   $('restart-update').hidden=!ready;$('later-update').hidden=!ready;
   $('restart-note').hidden=!ready;
-  $('restart-update').disabled=restarting||locked;
+  $('restart-update').disabled=restarting||locked||Boolean(checking);
   $('check-update').disabled=Boolean(checking);
   $('check-update').hidden=transferring;
   $('check-update').textContent='Check for updates';
@@ -87,7 +89,7 @@ function render() {
   $('remove-offline').hidden=!supported||!(snapshot.saved||snapshot.partial||snapshot.active||snapshot.pending);
   $('remove-offline').disabled=locked;
   const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
-  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Click Update course to finish the download.':available?`${progressSize(latest.bytes)} download. Saves the complete course for offline use. Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
+  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?'Completed files are kept. Click Update course to finish the download.':available?`Reload this page to read the latest published course online. Update course saves the complete course for offline use (${progressSize(latest.bytes)}). Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
   $('release-detail').textContent=latest?`Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Complete download: ${bytes(latest.bytes)}.${cacheNote}`:'';
   // State changes hide the previous action. Keep keyboard users at the next
   // useful control rather than dropping focus behind the modal.
