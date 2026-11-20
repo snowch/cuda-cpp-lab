@@ -16,10 +16,11 @@ from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 RESULTS=ROOT/'test-results/background-updates';RESULTS.mkdir(parents=True,exist_ok=True)
 class Handler(BaseHTTPRequestHandler):
-    revision='one';roots={};requests=[];pause=None;corrupt=False;previous_worker=False;previous_native_worker=False;fail_metadata=False
+    revision='one';roots={};requests=[];pause=None;pause_path='zz-payload.bin';unreachable=False;corrupt=False;previous_worker=False;previous_native_worker=False;fail_metadata=False
     def log_message(self,*args):pass
     def do_GET(self):
         path=unquote(urlsplit(self.path).path).removeprefix('/gpu-lab/').lstrip('/') or 'index.html'
+        if self.unreachable:self.close_connection=True;return
         if self.fail_metadata and (path=='release.json' or path.endswith('/release.json')):self.send_error(503);return
         if path.endswith('/'):path+='index.html'
         root=self.roots[self.revision]
@@ -33,7 +34,7 @@ class Handler(BaseHTTPRequestHandler):
         mime={'.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.woff2':'font/woff2','.html':'text/html'}.get(file.suffix,'application/octet-stream')
         self.send_response(200);self.send_header('Content-Type',mime);self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(data)));self.end_headers()
         pause=self.pause
-        if pause and path.endswith('zz-payload.bin'):pause.wait(12)
+        if pause and path.endswith(self.pause_path):pause.wait(12)
         try:self.wfile.write(data)
         except (BrokenPipeError,ConnectionResetError):pass
 
@@ -51,10 +52,12 @@ def fixture(temp,name,previous_client=False,embed=False):
     (folder/'index.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/style.css"><title>GPU Lab lifecycle test</title></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Course {name}</h1><label for="draft">Saved learner draft</label><input id="draft" value="7"><p>The current lesson stays open while an update downloads.</p></main><footer><span class="build-info"><a href="#">{name}</a></span></footer><script>const d=document.querySelector('#draft');d.value=localStorage.getItem('fixture-draft')||d.value;d.addEventListener('input',()=>localStorage.setItem('fixture-draft',d.value));</script></body></html>''')
     if embed:
         page=folder/'index.html'
-        page.write_text(page.read_text().replace('</main>','<iframe src="./editor.html?embed=test" title="Versioned editor"></iframe></main>'))
+        page.write_text(page.read_text().replace('</main>','<iframe data-kernel-workbench="fixture" src="./editor.html?embed=test" title="Versioned editor"></iframe></main>'))
         (folder/'src/frame-version.mjs').write_text("import {version} from './frame-dependency.mjs';document.documentElement.dataset.executedVersion=version;")
         (folder/'src/frame-dependency.mjs').write_text('export const version='+json.dumps(name)+';')
         (folder/'editor.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Editor {name}</title><script type="module" src="./src/frame-version.mjs"></script></head><body><header><div class="top-actions"></div></header><main><label>Editor state<input id="frame-draft" value="prepared {name}"></label></main><footer><span class="build-info">{name}</span></footer></body></html>''')
+        page.write_text(page.read_text().replace('</main>','<a href="./next.html">Next lesson</a></main>'))
+        (folder/'next.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Next lesson</title><link rel="stylesheet" href="./src/style.css"></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Next lesson</h1><a href="./index.html">Previous lesson</a></main><footer><span class="build-info">{name}</span></footer></body></html>''')
     if previous_client:
         # Recreate the removed control before a frozen older controller runs.
         # This parser-ordered module precedes the controller injected in <head>.
@@ -447,9 +450,9 @@ def no_completed_cache_downgrade(browser,url):
             before=payload_requests();manual_check(page)
             expect(page.locator('#version-status')).to_have_text('Up to date online. The offline copy is a different version.',timeout=30000)
             expect(page.locator('#restart-update')).to_be_hidden()
-            expect(page.locator('#download-update')).to_have_text('Update course')
+            expect(page.locator('#download-update')).to_have_text('Update offline copy')
             expect(page.locator('#download-update')).to_be_visible()
-            expect(page.locator('#offline-status')).to_have_text('Not downloaded for offline use')
+            expect(page.locator('#offline-status')).to_have_text('A different version is saved and ready to use offline.')
             assert rpc(page,'STATUS').get('pending') is None
             assert payload_requests()==before
             assert page.locator('meta[name="gpu-release"]').get_attribute('content')==running
@@ -483,10 +486,10 @@ def dialog_states(browser,url):
                 expect(dialog.get_by_role('heading',name='Updates',exact=True)).to_have_count(0)
                 expect(page.locator('#check-update')).to_be_hidden()
                 expect(page.locator('#download-update')).to_be_visible()
-                expect(dialog.get_by_role('button',name='Update course',exact=True)).to_have_count(1)
+                expect(dialog.get_by_role('button',name='Save offline copy',exact=True)).to_have_count(1)
                 expect(page.locator('#save-offline')).to_have_count(0)
                 expect(page.locator('#retry-update')).to_be_hidden()
-                expect(page.locator('#version-status')).to_have_text('Up to date')
+                expect(page.locator('#version-status')).to_have_text('Up to date online. Not saved for offline use.')
                 expect(page.locator('#app-status-details')).not_to_have_attribute('open','')
                 expect(page.locator('#running-version')).to_be_hidden()
                 expect(page.locator('#offline-size')).to_contain_text('MB')
@@ -498,7 +501,7 @@ def dialog_states(browser,url):
                 assert page.locator('#app-status-dialog > section').count()==1
                 page.screenshot(path=str(RESULTS/f'dialog-{width}-{theme}-downloaded.png'))
                 Handler.revision='two';Handler.pause=Event();manual_check(page);expect(page.locator('#download-update')).to_be_visible()
-                expect(page.locator('#download-update')).to_have_text('Update course')
+                expect(page.locator('#download-update')).to_have_text('Update offline copy')
                 expect(page.locator('#version-detail')).to_contain_text('complete course for offline use')
                 before=payload_requests();page.locator('#download-update').focus();page.keyboard.press('Enter')
                 expect(page.locator('#download-progress')).to_be_visible();expect(page.locator('#cancel-download')).to_be_focused()

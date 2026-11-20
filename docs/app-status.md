@@ -71,11 +71,29 @@ than overriding their selection. Explicit coordinated restarts retain their
 stronger save guards.
 
 App status distinguishes the current online page from a different saved offline
-version. Update course prepares the complete offline copy. Reading current
+version. Saving or updating the offline copy prepares the complete course. Reading current
 content online requires no complete-course download.
 When a newer published version is known, an older prepared copy is not offered
 as a restart target in that page's panel. The complete current copy can be saved
 instead. Metadata checks finish before a restart control is enabled.
+
+An up-to-date online page without a complete saved copy says **Up to date online.
+Not saved for offline use.** Package size is labelled **Offline copy size**, uses
+the same MB units as progress, and is never described as a completed download.
+Removal says **Clear saved files** when only partial/visited files are retained;
+**Remove offline copy** requires a verified complete saved or pending copy.
+
+Missing offline navigation returns a self-contained recovery page with a return
+link, retry and instructions for saving, repairing or opening a verified pending
+update. It needs no cached scripts or styles, is never cached in place of the
+lesson, and participates in guarded multi-window restart without storing any
+learner inputs. Ordinary asset failures still fail verification. Cached document
+HTML is checked against its manifest before use; corrupt HTML follows recovery.
+An observed invalid file invalidates any overlapping completeness scan before it
+can report ready. Explicit saves/updates/repairs request persistent browser
+storage where supported; denial or an unavailable API does not skip verification
+or block the existing saving path. Reading and metadata checks never request it.
+The `download=1` status-opening flag is excluded from reading-state snapshot keys.
 
 ## Downloads and activation
 
@@ -87,8 +105,7 @@ unvisited lessons or claim that a partial copy is available offline. Initial ret
 repeat request when the browser has no reusable HTTP response. A complete saved
 running copy needs no further page retention. An explicit update interrupts
 optional retention in another tab before taking its lock; it does not reject
-the update or interrupt an existing consented download. The single Update course
-action prepares the selected manifest, checks every file's length and SHA-256,
+the update or interrupt an existing consented download. The single action for saving or updating the offline copy prepares the selected manifest, checks every file's length and SHA-256,
 and reports verified bytes. Cancellation/failure retains valid partial files for
 resume and leaves the previously selected complete release intact. The real
 browser quota test verifies the same failure path under storage pressure.
@@ -109,15 +126,15 @@ Closing all tabs, reopening the browser, visibility changes and ordinary refresh
 never select a pending offline release. Online navigation can independently
 read the published version. Later dismisses the dialog, not its badge.
 
-Update course saves a complete offline copy, including recordings and the pinned
-CUDA compiler assets. The same control handles the first save, resume, repair and
-new versions. It selects the latest published release when a newer version is
+Save offline copy saves the complete course, including recordings and the pinned
+CUDA compiler assets. The same control resumes partial saves, becomes Update offline copy for a newer
+version, and becomes Repair offline copy for an incomplete saved current version. It selects the latest published release when a newer version is
 known; otherwise it completes the running release. Metadata checks finish before
 the control is enabled, and failed checks offer Retry instead of a stale update.
 The package byte count includes the compiler; the first compile/run needs no
 additional connection after a complete save. A prepared new version offers
 Restart to update. A complete running copy shows the verified-ready status and
-hides Update course. There is no separate Download button or second offline opt-in.
+hides the save/update action. There is no separate Download button or second offline opt-in.
 The worker's existing offline/update modes remain unchanged for pinned older clients.
 
 Earlier updates could leave a complete cache without its saved flag. On loading,
@@ -166,13 +183,19 @@ The previous worker's complete caches remain intact during migration. Its waitin
 worker can still require all old tabs/windows to be closed once before the new
 protocol controls the app. Reopen online to load the new App status interface.
 Legacy caches count as prior offline consent, but are not asserted to match the
-new running manifest. Update course verifies and completes the new release
+new running manifest. Saving the offline copy verifies and completes the new release
 explicitly; an update also preserves that existing offline intent. The regression
 fixture is the actual worker from commit `4875086`, not a mock worker API.
 
 ## Validation and review
 
 - `npm run check`: dependency-free Node model/build tests and production build.
+- `python tests/offline_journeys.py`: unsaved Next/Back/reload/reconnect, cancelled
+  saves and resume, missing/corrupt lessons and repair, saved pending first copies
+  with recovery windows during restart, newer online pages with an older offline
+  copy, metadata failure, six layouts/themes, keyboard actions and retained edits.
+  Its unreachable-host mode drops actual HTTP connections as well as setting
+  browser offline emulation.
 - `python tests/online_navigation.py`: independently built releases, fresh online
   visits without full downloads, stable open editors, restored edits on reload,
   the unchanged saved offline copy, exact prepared restarts despite republishing,

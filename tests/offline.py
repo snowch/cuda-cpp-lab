@@ -181,6 +181,15 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             hello.locator('#run').click()
             expect(hello.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
             expect(hello.locator('#program-output')).to_contain_text('7.0')
+            # Use the real learner navigation while disconnected, including a
+            # return to the edited source/results rather than just route fetches.
+            with tab.expect_navigation() as next_page:tab.locator('.v2-pager a').last.click()
+            assert next_page.value.ok and next_page.value.from_service_worker
+            expect(tab).to_have_url(url+'v2/one-thread-one-element.html')
+            with tab.expect_navigation() as previous_page:tab.locator('.v2-pager a').first.click()
+            assert previous_page.value.ok and previous_page.value.from_service_worker
+            expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
+            expect(hello.locator('#program-output')).to_contain_text('7.0')
             tab.goto(url+'v2/more-threads-than-elements.html')
             bounds=tab.frame_locator('[data-kernel-workbench="bounds"]');bounds.locator('#run').click()
             expect(bounds.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
@@ -243,7 +252,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                 expect(page.locator('#download-progress')).to_be_visible()
                 assert page.locator('#download-progress').evaluate('e=>e.closest("section").id')=='course-status'
                 page.wait_for_function('document.getElementById("asset-progress").value>0')
-                page.locator('#cancel-download').click();expect(page.locator('#download-update')).to_have_text('Update course')
+                page.locator('#cancel-download').click();expect(page.locator('#download-update')).to_have_text('Save offline copy')
                 CourseHandler.slow=False
                 before=CourseHandler.requests.count(f"releases/{releases['one']['id']}/assets/apple-touch-icon.png")
                 page.locator('#download-update').click();ready(page);expect(page.locator('#course-ready-icon')).to_be_visible()
@@ -355,6 +364,10 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             profile=temp/'profile'
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options))
             tab=ctx.pages[0];tab.goto(url+'index.html');panel(tab);tab.locator('#download-update').click();ready(tab)
+            tab.locator('#app-status-close').click();tab.goto(url+'v2/first-kernel.html')
+            travel_editor=tab.frame_locator('[data-kernel-workbench="hello"]').locator('#source')
+            travel_draft=travel_editor.input_value().replace('42.0f','7.0f');travel_editor.fill(travel_draft)
+            tab.goto(url+'index.html')
             manifest=ctx.new_cdp_session(tab).send('Page.getAppManifest')
             assert not manifest['errors'],manifest
             CourseHandler.revision='two';check(tab);expect(tab.locator('#version-status')).to_have_text('Update available')
@@ -364,6 +377,23 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options));ctx.set_offline(True)
             tab=ctx.pages[0];tab.goto(url+'index.html')
             expect(tab.locator('html')).to_have_attribute('data-test-release','one')
+            # Plane journey: the browser was closed while connected and the
+            # host is unreachable before this cold launch. Exercise real Next,
+            # Back, edited compilation and a recording before any update.
+            tab.goto(url+'v2/first-kernel.html')
+            with tab.expect_navigation() as travel_next:tab.locator('.v2-pager a').last.click()
+            assert travel_next.value.ok and travel_next.value.from_service_worker
+            expect(tab).to_have_url(url+'v2/one-thread-one-element.html')
+            tab.locator('.v2-pager a').first.click()
+            travel=tab.frame_locator('[data-kernel-workbench="hello"]')
+            expect(travel.locator('#source')).to_have_value(travel_draft)
+            travel.locator('#run').click()
+            expect(travel.locator('#status')).to_have_text('Ran main() and the kernel in GPGPU-Sim.',timeout=90000)
+            expect(travel.locator('#program-output')).to_contain_text('7.0')
+            tab.locator('#v2-video > summary').click();film=tab.locator('video')
+            film.evaluate('v=>{v.muted=true;v.load()}');expect(film).to_have_js_property('readyState',4,timeout=30000)
+            film.evaluate('v=>{v.currentTime=5;return v.play()}');expect(film).to_have_js_property('paused',False);film.evaluate('v=>v.pause()')
+            print('PASS plane journey: cold browser with unreachable host, real Next/Back, retained edited source, offline7.0 compilation and recording playback',flush=True)
             panel(tab);ready(tab);expect(tab.locator('#version-status')).to_have_text('Update downloaded and checked')
             started=time.monotonic();tab.locator('#restart-update').click()
             try:
@@ -379,6 +409,8 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
                     'storage':tab.evaluate('navigator.storage.estimate()'),
                 },flush=True)
                 raise
+            expect(tab.frame_locator('[data-kernel-workbench="hello"]').locator('#source')).to_have_value(travel_draft)
+            expect(tab.frame_locator('[data-kernel-workbench="hello"]').locator('#program-output')).to_contain_text('7.0')
             print(f'Cold offline restart completed in {time.monotonic()-started:.2f}s',flush=True)
             ctx.close()
             CourseHandler.unreachable=False

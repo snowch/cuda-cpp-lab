@@ -29,6 +29,10 @@ let restarting = false;
 let navigationGate, releaseNavigation;
 const seen = new Map();
 const verifying = new Map();
+function invalidateVerification(id){
+  const scan=verifying.get(id);
+  if(scan){scan.invalidated=true;verifying.delete(id);}
+}
 async function readState() {
   const cache = await caches.open(META);
   return (await cache.match(STATE))?.json() ?? {};
@@ -88,7 +92,7 @@ async function complete(release, progress) {
       try { progress({ bytes: scan.bytes, total: release.bytes }); } catch { /* The requester may have closed. */ }
     }
   }
-  try { return await scan.work; }
+  try { const result=await scan.work;return result&&!scan.invalidated; }
   finally { scan.listeners.delete(progress); }
 }
 async function broadcast(message) {
@@ -514,6 +518,56 @@ self.addEventListener('message', event => {
     } catch (error) { port.postMessage({ error: error.name === 'AbortError' ? 'Download cancelled. Verified files can be resumed.' : error.message }); }
   })());
 });
+async function offlineNavigationResponse(request,state={}) {
+  const escape=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  let previous;
+  try{
+    const referrer=new URL(request.referrer);
+    if(referrer.origin===BASE.origin&&referrer.pathname.startsWith(BASE.pathname)&&referrer.href!==request.url)previous=referrer.href;
+  }catch{/* A direct visit may have no previous course page. */}
+  let pendingReady=false;
+  try{pendingReady=Boolean(state.pendingSaved&&await complete(await manifest(state.pending)));}catch{/* Recovery must work even when storage is unavailable. */}
+  let saved=state.saved,unknownPage=false;
+  try{
+    saved||=(await caches.keys()).some(name=>name.startsWith(PREFIX)&&name!==META&&!name.startsWith(PREFIX+'release-'));
+    const release=await manifest(state.active||state.visited);
+    const path=new URL(request.url).pathname.slice(BASE.pathname.length).replace(/^releases\/[a-f0-9]{64}\//,'')||'index.html';
+    unknownPage=Boolean(saved&&release&&!release.files.some(file=>file.path===path));
+  }catch{/* Unavailable metadata must not prevent recovery. */}
+  const title=pendingReady?'Your saved update is ready':unknownPage?'This page isn’t in the saved course':saved?'This offline copy needs repair':'This lesson isn’t saved offline';
+  const explanation=pendingReady?'The saved update has not been opened yet.':unknownPage?'This address is not included in the offline copy.':saved?'The saved files for this lesson are missing or incomplete.':'The whole course has not been saved for offline use.';
+  const instruction=pendingReady?'Return to a course page and open App status. Choose Restart to update to open the saved course.':unknownPage?'Reconnect and try this address again, or return to a saved lesson.':saved?'Reconnect, return to a course page and open App status. Choose Repair offline copy, or Update offline copy if a newer version is offered. Wait for “Downloaded and ready to use offline”.':'Reconnect, return to a course page and open App status. Choose Save offline copy, then wait for “Downloaded and ready to use offline” before disconnecting.';
+  const backLink=`<a id="recovery-back"${previous?' class="primary"':''} href="${escape(previous||BASE.href)}">${previous?'Back to previous lesson':'Course overview'}</a>`;
+  const retryLink=`<a${previous?'':' class="primary"'} href="${escape(request.url)}">Try again</a>`;
+  const fontId=state.active||state.visited;
+  const fontFace=/^[a-f0-9]{64}$/.test(fontId||'')?`@font-face{font-family:Plex;src:url('${new URL(`releases/${fontId}/assets/fonts/plex-sans.woff2`,BASE)}') format('woff2');font-display:swap}`:'';
+  return new Response(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="data:,"><title>${title} · GPU Lab</title>
+<script>
+try{const saved=localStorage.getItem('gpu-lab-theme');document.documentElement.dataset.theme=['light','dark'].includes(saved)?saved:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch{}
+// This page has no editable work, but must participate safely when another
+// course window restarts a saved update. It cannot depend on cached scripts.
+let restartToken,restartTimer;
+function unlock(){clearTimeout(restartTimer);restartToken=null;document.body.inert=false;}
+navigator.serviceWorker?.addEventListener('message',({data,ports})=>{
+  if(data?.type==='PREPARE_RESTART'){
+    if(restartToken||document.readyState!=='complete'){ports[0].postMessage({ready:false,error:'Wait for the recovery page to finish loading, then retry.'});return;}
+    restartToken=data.token;document.body.inert=true;restartTimer=setTimeout(unlock,12000);ports[0].postMessage({ready:true});
+  }
+  if(data?.type==='ABORT_RESTART'&&data.token===restartToken)unlock();
+  if(data?.type==='COMMIT_RESTART'&&data.token===restartToken)location.reload();
+  if(data?.type==='OPEN_APP_STATUS'){
+    const target=new URL(document.getElementById('recovery-back').href);target.searchParams.set('download','1');location.assign(target.href);
+  }
+});
+</script>
+<style>
+${fontFace}
+:root{color-scheme:light;--bg:#f7faf9;--ink:#193237;--muted:#536e71;--line:#d5e2e1;--accent:#146653}
+:root[data-theme=dark]{color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.65 Plex,system-ui,sans-serif}header{border-bottom:1px solid var(--line);padding:20px max(20px,calc((100% - 720px)/2))}.brand{color:var(--ink);font-size:24px;font-weight:700;text-decoration:none}header small{display:block;color:var(--muted);font-size:14px}main{max-width:760px;padding:clamp(24px,6vw,48px) 20px;margin:auto}h1{font-size:clamp(30px,5vw,40px);line-height:1.2;margin:0 0 24px;max-width:24ch}p{max-width:64ch}nav{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0}nav a{display:inline-block;min-height:48px;padding:10px 18px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);text-underline-offset:4px}.primary{background:var(--accent);color:var(--bg);font-weight:650;text-decoration:none}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.instruction{border-top:1px solid var(--line);padding-top:24px}
+</style></head><body><header><a class="brand" href="${escape(BASE.href)}">GPU Lab</a><small>CUDA C++</small></header><main><h1>${title}</h1><p>${explanation}</p><nav aria-label="Continue reading">${previous?backLink+retryLink:retryLink+backLink}</nav><p class="instruction">${instruction}</p></main></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+}
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
@@ -557,7 +611,11 @@ self.addEventListener('fetch', event => {
     if (pinned) path = pinned[2];
     if (id) {
       const cache = await caches.open(cacheName(id)).catch(()=>null);
-      const cached = await cache?.match(new URL(path, BASE)).catch(()=>null);
+      let cached = await cache?.match(new URL(path, BASE)).catch(()=>null);
+      if(cached&&event.request.mode==='navigate'){
+        const original=(await manifest(id).catch(()=>null))?.files.find(file=>file.path===path);
+        if(original&&!await verified(cached.clone(),original)){cached=null;invalidateVerification(id);await broadcast({type:'STATUS_CHANGED'});}
+      }
       if (cached) return mediaRangeResponse(event.request.headers.get('Range'),cached);
       if(topNavigation&&!explicit&&!restartTarget&&!state.saved&&state.visited&&state.visited!==id){
         const visited=await (await caches.open(cacheName(state.visited))).match(new URL(path,BASE));
@@ -574,16 +632,20 @@ self.addEventListener('fetch', event => {
           // Pages may remove an older immutable directory. An unchanged file
           // from the live root is safe only when its original hash still matches.
           try{response=await fetch(new URL(path,BASE),{cache:'no-store'});}catch{/* Report unavailable bytes below. */}
-          if(!response||!await verified(response.clone(),file))return new Response('This release file could not be verified. Reload the lesson online, or use App status to repair the saved copy.',{status:503,headers:{'Content-Type':'text/plain'}});
+          if(!response||!await verified(response.clone(),file)){
+            invalidateVerification(id);await broadcast({type:'STATUS_CHANGED'});
+            return topNavigation?offlineNavigationResponse(event.request,state):new Response('This release file could not be verified. Reload the lesson online, or use App status to repair the saved copy.',{status:503,headers:{'Content-Type':'text/plain'}});
+          }
           // A live alias has a different response URL. Strip it so relative
           // module/CSS imports still resolve against the requested release URL.
           response=new Response(response.body,{status:response.status,statusText:response.statusText,headers:response.headers});
         }
         try{await cache?.put(new URL(path, BASE), response.clone());}catch{/* Optional on-demand cache; explicit downloads report storage errors. */}
       }
+      if(topNavigation&&!response?.ok)return offlineNavigationResponse(event.request,state);
       return mediaRangeResponse(event.request.headers.get('Range'),response);
     }
-    try { return await fetch(event.request); }
+    try { const response=await fetch(event.request);return topNavigation&&response.status>=500?offlineNavigationResponse(event.request,state):response; }
     catch (error) {
       // Preserve old complete installations during the protocol migration.
       for (const name of await caches.keys()) {
@@ -594,5 +656,8 @@ self.addEventListener('fetch', event => {
       }
       throw error;
     }
-  })());
+  })().catch(async failure=>{
+    if(event.request.mode==='navigate'&&event.request.destination==='document')return offlineNavigationResponse(event.request,await readState().catch(()=>({})));
+    throw failure;
+  }));
 });

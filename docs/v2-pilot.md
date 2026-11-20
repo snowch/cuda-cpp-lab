@@ -40,10 +40,10 @@ results and restoration identifiers are preserved. Native recordings participate
 in the shared paused-state restart restoration.
 
 Online visits load the currently published course; an open lesson stays stable.
-Offline visits use the saved copy. In **App status**, **Update course** saves
-the complete course, including the CUDA compiler, on first use and for later
-updates. Choose **Restart to update** when offered; there is no separate Download
-action.
+Offline visits use the saved copy. In **App status**, **Save offline copy** saves
+the complete course, including the CUDA compiler. The same control becomes
+**Update offline copy** for newer versions or **Repair offline copy** when saved
+files are incomplete. Choose **Restart to update** when offered.
 The displayed package size includes the compiler assets. A restart preserves
 editor drafts, console results, diagnostics and generated PTX. A compile/run in
 progress blocks the restart until it finishes.

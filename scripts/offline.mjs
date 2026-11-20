@@ -22,7 +22,7 @@ const panel = `<dialog id="app-status-dialog" aria-labelledby="app-status-title"
 <div id="offline-section"><p id="offline-status" role="status"></p></div>
 <p id="version-detail"></p>
 <p id="offline-size"></p>
-<div class="status-actions"><button id="restart-update" class="primary" type="button" hidden>Restart to update</button><button id="download-update" class="primary" type="button" hidden>Update course</button><button id="later-update" type="button" hidden>Later</button><button id="retry-update" type="button" hidden>Retry</button></div>
+<div class="status-actions"><button id="restart-update" class="primary" type="button" hidden>Restart to update</button><button id="download-update" class="primary" type="button" hidden>Save offline copy</button><button id="later-update" type="button" hidden>Later</button><button id="retry-update" type="button" hidden>Retry</button></div>
 <div id="update-download-feedback"></div>
 <div id="offline-download-feedback"><div id="download-progress" hidden><label id="download-progress-label" for="asset-progress">Checking files</label><progress id="asset-progress"></progress><p id="progress-text" role="status"></p><p id="download-behaviour"></p><button id="cancel-download" type="button">Cancel download</button></div></div>
 <p id="restart-note" hidden>Restart reloads your open GPU Lab windows and restores their lessons and saved work. Finish any running experiment first.</p></section>

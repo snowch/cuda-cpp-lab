@@ -74,7 +74,8 @@ Online visits and reloads request the currently published pages. An already-open
 lesson stays stable, with its own version of scripts, editor and examples. Offline
 visits use the saved course; reading current content online needs no full download.
 
-Open **App status** and choose **Update course** to save the complete offline copy.
+Open **App status** and choose **Save offline copy** to save the complete course.
+**Up to date online** describes the page version; it does not mean the course is saved offline.
 The panel shows the package size before saving every lesson, recording, simulator,
 diagram and CUDA/PyTorch example, including lessons you have not visited. Wait for
 **Downloaded and ready to use offline** before disconnecting. External links need internet access;
@@ -82,6 +83,8 @@ running downloaded examples requires their usual local tools. Installing the app
 and checking for updates do not automatically download the offline course.
 
 App status distinguishes the current online page from its saved offline copy.
+Use **Update offline copy** for a newer version, or **Repair offline copy** if saved files are incomplete.
+If an offline lesson is unavailable, its recovery page explains how to return or retry; it does not replace the cached lesson with an error page.
 Choose **Restart to update** when a prepared offline update is ready. Open GPU Lab windows save
 their experiment state before restarting together; a busy or non-responsive window
 blocks the restart. **Later** keeps the pending badge visible. Closing all windows
