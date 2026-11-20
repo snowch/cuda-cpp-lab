@@ -1,5 +1,9 @@
 # Learner wording and interface review
 
+> Historical review from before the V1 pages were retired. See the
+> [current course clarity and concept diagram review](course-clarity-and-diagram-review.md)
+> for the 27-lesson course, current appendices and shared interface.
+
 Copyright © 2026 Christopher Snow.
 
 The current CUDA course assumes basic programming and array indexing. It introduces CUDA and
