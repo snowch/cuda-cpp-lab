@@ -6,10 +6,9 @@ import {saveReadingState,setReadingRoute,replaceReadingContext,restoreReadingSta
 export function installCourseSession(runner) {
   const release=document.querySelector('meta[name="gpu-release"]')?.content;
   const base=new URL(document.querySelector('meta[name="gpu-base"]').content,location.href);
-  let navigating=false,sequence=0,currentURL=location.href,index=0,suppressPop=false,navigationAbort,leaving=false;
+  let navigating=false,sequence=0,currentURL=location.href,index=0,suppressPop=false,navigationAbort,leaving=false,historyReady=false,pendingHash;
   setReadingRoute();
-  const session=crypto.randomUUID();
-  window.history.replaceState({...window.history.state,gpuLabSession:session,gpuLabIndex:index},'',location.href);
+  let session=crypto.randomUUID();
   const position=new Map();
   const eligible=url=>url.origin===base.origin&&url.pathname.startsWith(base.pathname)&&
     (url.pathname===base.pathname||url.pathname===base.pathname+'index.html'||/^v2\/(?!cuda-source-workbench)[a-z0-9-]+\.html$/.test(url.pathname.slice(base.pathname.length)))&&
@@ -26,15 +25,17 @@ export function installCourseSession(runner) {
     if(!p){p=document.createElement('p');p.id='course-navigation-status';p.setAttribute('role','status');document.querySelector('main').prepend(p);}
     p.textContent=message;p.scrollIntoView({block:'center'});
   }
+  function cancelNavigation() { sequence++;navigationAbort?.abort();navigating=false; }
   async function navigate(url,{history=false,targetIndex=index}={}) {
-    if(navigating)return;navigating=true;const serial=++sequence;
-    navigationAbort=new AbortController();const deadline=setTimeout(()=>navigationAbort.abort(),12000);
+    if(navigating)cancelNavigation();navigating=true;const serial=++sequence;
+    if(!historyReady)currentURL=location.href;
+    const controller=new AbortController();navigationAbort=controller;const deadline=setTimeout(()=>controller.abort(),12000);
     try {
       save();position.set(currentURL,[scrollX,scrollY]);
       // Fetch the normal URL so online reads still follow current published HTML
       // and the service worker can select verified HTML when offline.
       const requestURL=new URL(url);if(requestURL.pathname.endsWith('/'))requestURL.pathname+='index.html';
-      const response=await fetch(requestURL.href,{cache:'no-store',headers:{'X-Lab-Navigation':'1'},signal:navigationAbort.signal});
+      const response=await fetch(requestURL.href,{cache:'no-store',headers:{'X-Lab-Navigation':'1'},signal:controller.signal});
       if(!response.ok)throw new Error('Use normal navigation for this response.');
       if(navigator.serviceWorker?.controller&&response.headers.get('X-Lab-Navigation')!=='1') {location[history?'replace':'assign'](url.href);return;}
       const html=await response.text();if(leaving||serial!==sequence)return;
@@ -53,6 +54,7 @@ export function installCourseSession(runner) {
       for(const el of document.querySelectorAll('head [href],head [src],.topbar [href],.topbar [src]'))for(const attr of ['href','src']) {
         const value=el.getAttribute(attr);if(value!=null)el.setAttribute(attr,new URL(value,location.href).href);
       }
+      if(!historyReady){index=0;window.history.replaceState({...window.history.state,gpuLabSession:session,gpuLabIndex:index},'',currentURL);historyReady=true;}
       if(!history)window.history.pushState({gpuLabSession:session,gpuLabIndex:++index},'',url.href);
       else index=targetIndex;
       currentURL=url.href;
@@ -80,17 +82,35 @@ export function installCourseSession(runner) {
       else location[history?'replace':'assign'](url.href);
     } finally {clearTimeout(deadline);if(serial===sequence)navigating=false;}
   }
-  addEventListener('pagehide',()=>{leaving=true;sequence++;navigating=false;navigationAbort?.abort();});
+  addEventListener('pagehide',()=>{leaving=true;cancelNavigation();});
   addEventListener('pageshow',()=>{leaving=false;});
   document.addEventListener('click',event=>{
-    if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||!runner.worker)return;
+    if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||(!runner.worker&&!historyReady))return;
     const link=event.target.closest('a[href]');if(!link||link.target||link.hasAttribute('download'))return;
     const url=new URL(link.href);
-    if(!eligible(url)||url.pathname===location.pathname)return;
+    if(!eligible(url))return;
+    if(url.pathname===location.pathname&&url.search===location.search){
+      if(navigating)cancelNavigation();
+      if(historyReady&&url.hash!==location.hash)pendingHash={href:url.href,index:index+1};
+      return;
+    }
+    if(!runner.worker)return;
     event.preventDefault();navigate(url);
   });
+  function hashHistory(state) {
+    const url=new URL(location.href),previous=new URL(currentURL);
+    if(url.pathname!==previous.pathname||url.search!==previous.search)return false;
+    if(pendingHash?.href===url.href){
+      index=pendingHash.index;pendingHash=null;window.history.replaceState({gpuLabSession:session,gpuLabIndex:index},'',url.href);
+    } else if(state?.gpuLabSession===session)index=state.gpuLabIndex;
+    else {historyReady=false;session=crypto.randomUUID();index=0;}
+    currentURL=url.href;return true;
+  }
+  addEventListener('hashchange',()=>{if(historyReady&&pendingHash)hashHistory(window.history.state);});
   addEventListener('popstate',event=>{
+    if(!historyReady)return;
     if(suppressPop){suppressPop=false;return;}
+    if(hashHistory(event.state))return;
     if(event.state?.gpuLabSession!==session||!eligible(new URL(location.href))||navigating){location.reload();return;}
     // history already changed the address; save the outgoing lesson under its
     // own route before mounting the destination, not under the incoming URL.

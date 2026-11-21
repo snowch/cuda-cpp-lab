@@ -66,15 +66,21 @@ def check_code_runner(browser,url,root):
     assert page.locator('.v2-brand').get_attribute('href')==url
     page.locator('.v2-list a[href$="/first-kernel.html"]').click();page.wait_for_url('**/first-kernel.html')
     expect(editor()).to_have_value(edited);assert page.evaluate('gpuLabCodeRunner.boots')==1
+    # Native fragment navigation retains browser scrolling/history and the
+    # warm document; Back must not reload the lesson or lose the edited source.
+    page.get_by_role('link',name='Skip to content',exact=True).focus();page.keyboard.press('Enter')
+    expect(page).to_have_url(url+'v2/first-kernel.html#main')
+    page.go_back();page.wait_for_url(url+'v2/first-kernel.html')
+    assert page.evaluate('window.__runnerDocumentToken')==origin;expect(editor()).to_have_value(edited)
     # Actual header actions preserve the editor and result while destroying/restarting WASM.
     page.locator('#code-runner-open').click();page.get_by_role('button',name='Free memory',exact=True).click()
     expect(page.locator('#code-runner-summary')).to_have_text('Stopped');expect(editor()).to_have_value(edited)
     expect(frame().locator('#program-output')).to_have_text('7.0\n')
     page.get_by_role('button',name='Start code runner',exact=True).click()
-    expect(page.locator('#code-runner-summary')).to_have_text('Ready',timeout=120000)
-    assert page.evaluate('gpuLabCodeRunner.boots')==2
+    expect(page.locator('#code-runner-summary')).to_have_text('Starting')
     expect(frame().locator('#program-output')).to_have_text('7.0\n')
-    page.keyboard.press('Escape');run('7.0','run after manual warmup')
+    page.keyboard.press('Escape');run('7.0','compile requested during manual startup')
+    assert page.evaluate('gpuLabCodeRunner.boots')==2
     page.clock.fast_forward(300001);expect(page.locator('#code-runner-summary')).to_have_text('Stopped')
     expect(editor()).to_have_value(edited);expect(frame().locator('#program-output')).to_have_text('7.0\n')
     run('7.0','automatic restart after idle');assert page.evaluate('gpuLabCodeRunner.boots')==3

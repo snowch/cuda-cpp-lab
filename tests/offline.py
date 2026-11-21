@@ -390,6 +390,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # host is unreachable before this cold launch. Exercise real Next,
             # Back, edited compilation and a recording before any update.
             tab.goto(url+'v2/first-kernel.html')
+            assert tab.evaluate('!window.gpuLabCodeRunner.worker'),'Cold offline navigation must not rely on a resident runtime.'
             with tab.expect_navigation() as travel_next:tab.locator('.v2-pager a').last.click()
             assert travel_next.value.ok and travel_next.value.from_service_worker
             expect(tab).to_have_url(url+'v2/one-thread-one-element.html')

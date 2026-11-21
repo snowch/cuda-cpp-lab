@@ -34,3 +34,20 @@ test('manual startup prepares without running code, and compile errors keep the 
  const {runner:r,workers:w}=fixture();r.configure('worker',{assets:{verified:true}});r.start();assert.equal(w[0].sent[0].type,'prepare');w[0].reply({prepared:true});assert.equal(r.state,'ready');
  r.execute({},'worker',{},()=>{});w[0].reply({compileError:true,diagnostics:'bad source'});assert.equal(r.state,'ready');assert.equal(r.boots,1);
 });
+
+test('Compile during manual startup waits, then runs automatically on the same worker',()=>{
+ const {runner:r,workers:w}=fixture(),client={},replies=[];r.configure('worker',{assets:{}});r.start();
+ r.execute(client,'worker',{source:'queued'},d=>replies.push(d));assert.equal(w[0].sent.length,1);assert.match(replies[0].stage,/Waiting/);
+ w[0].reply({prepared:true});assert.equal(w[0].sent.length,2);assert.equal(w[0].sent[1].source,'queued');assert.equal(r.boots,1);
+ w[0].reply({stdout:'7'});assert.equal(replies.at(-1).stdout,'7');assert.equal(r.state,'ready');
+});
+test('stopping or detaching a queued compile cancels startup without running that code',()=>{
+ for(const detach of [false,true]){
+  const {runner:r,workers:w}=fixture(),client={},replies=[];r.configure('worker',{});r.start();r.execute(client,'worker',{source:'never run'},d=>replies.push(d));
+  if(detach)r.detach(client);else r.release();assert.equal(replies.at(-1).cancelled,true);assert.equal(w[0].sent.length,1);assert.equal(r.state,'stopped');
+ }
+});
+test('startup errors reach the queued compile without leaving an editor waiting',()=>{
+ const {runner:r,workers:w}=fixture(),replies=[];r.configure('worker',{});r.start();r.execute({},'worker',{source:'queued'},d=>replies.push(d));w[0].reply({error:'missing binary'});
+ assert.equal(replies.at(-1).error,'missing binary');assert.equal(r.state,'stopped');assert.equal(r.pending,null);
+});

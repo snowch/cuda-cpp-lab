@@ -79,8 +79,10 @@ one another’s jobs. Multiple tabs that run code can each consume memory.
 | Running | Compiled host code and GPU simulation are executing | Stop run |
 | Ready | Compiler/module caches remain, no active job | Compile and run, or Free memory |
 
-One active job owns its reply callback. Reject competing submissions without
-replacing that job. Detaching a finished editor must not terminate the shared
+One active job owns its reply callback. A compile requested during manual startup
+waits for preparation and runs automatically; stop/detach cancels both preparation
+and the pending compile. Startup errors also reach the waiting editor. Reject other
+competing submissions without replacing the active job. Detaching a finished editor must not terminate the shared
 worker. Detaching an editor with an active job cancels that job. Explicit stop,
 startup/runtime errors and timeout terminate the worker and clear timers. Late
 messages from a terminated worker are ignored by worker identity. Compilation
@@ -108,6 +110,11 @@ that have not initialised cannot contain new edits and need not block navigation
 
 Abort an in-flight lesson request when the document leaves or reloads, and reject
 its stale continuation. It must not later replace content in a resumed document.
+
+Initial static visits leave browser history untouched. Mark entries only when
+enhanced navigation is used. Preserve native fragment scrolling; track clicked
+fragment entries without reloading the lesson. Unknown history uses the native
+fallback rather than guessing which lesson a history entry represents.
 
 History changes the URL before `popstate` runs. Keep the outgoing reading route
 explicitly so its snapshot cannot be stored under the destination’s key. Remount

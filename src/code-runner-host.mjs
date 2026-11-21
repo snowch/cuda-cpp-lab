@@ -13,7 +13,7 @@ if(!embedded&&!window.gpuLabCodeRunner) {
     document.body.append(dialog);runner.openControls=()=>dialog.showModal();button.addEventListener('click',runner.openControls);
     dialog.querySelector('[data-runner-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('close',()=>button.focus({preventScroll:true}));
     dialog.querySelector('[data-runner-start]').addEventListener('click',()=>runner.start());
-    dialog.querySelector('[data-runner-stop]').addEventListener('click',()=>runner.release(runner.job?.preparing?'Startup stopped. Compile and run starts the code runner again.':'Run stopped. Your code and previous results are kept.'));
+    dialog.querySelector('[data-runner-stop]').addEventListener('click',()=>runner.release(runner.job?.preparing&&!runner.pending?'Startup stopped. Compile and run starts the code runner again.':'Run stopped. Your code and previous results are kept.'));
     dialog.querySelector('[data-runner-free]').addEventListener('click',()=>runner.release());
     const names={stopped:'Stopped',starting:'Starting',compiling:'Compiling',running:'Running',ready:'Ready'};
     const render=()=>{
@@ -22,7 +22,7 @@ if(!embedded&&!window.gpuLabCodeRunner) {
       dialog.querySelector('[data-runner-start]').hidden=runner.state!=='stopped';
       dialog.querySelector('[data-runner-start]').disabled=!runner.config;
       dialog.querySelector('[data-runner-stop]').hidden=!runner.busy;
-      dialog.querySelector('[data-runner-stop]').textContent=runner.job?.preparing?'Stop startup':'Stop run';
+      dialog.querySelector('[data-runner-stop]').textContent=runner.job?.preparing&&!runner.pending?'Stop startup':'Stop run';
       dialog.querySelector('[data-runner-free]').hidden=runner.state!=='ready';
     };
     runner.addEventListener('change',render);render();
