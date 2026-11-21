@@ -10,10 +10,6 @@ export function installCourseSession(runner) {
   setReadingRoute();
   const session=crypto.randomUUID();
   window.history.replaceState({...window.history.state,gpuLabSession:session,gpuLabIndex:index},'',location.href);
-  // Keep shared chrome correct when moving between / and /v2/ routes.
-  for(const el of document.querySelectorAll('head [href],head [src],.topbar [href],.topbar [src]'))for(const attr of ['href','src']) {
-    const value=el.getAttribute(attr);if(value!=null)el.setAttribute(attr,new URL(value,location.href).href);
-  }
   const position=new Map();
   const eligible=url=>url.origin===base.origin&&url.pathname.startsWith(base.pathname)&&
     (url.pathname===base.pathname||url.pathname===base.pathname+'index.html'||/^v2\/(?!cuda-source-workbench)[a-z0-9-]+\.html$/.test(url.pathname.slice(base.pathname.length)))&&
@@ -50,6 +46,10 @@ export function installCourseSession(runner) {
       save();if(serial!==sequence)return;
       for(const element of main.querySelectorAll('[src],[href],[poster]'))for(const name of ['src','href','poster']) {
         const value=element.getAttribute(name);if(value!=null)element.setAttribute(name,new URL(value,url.href).href);
+      }
+      // Keep shared chrome correct when moving between / and /v2/ routes.
+      for(const el of document.querySelectorAll('head [href],head [src],.topbar [href],.topbar [src]'))for(const attr of ['href','src']) {
+        const value=el.getAttribute(attr);if(value!=null)el.setAttribute(attr,new URL(value,location.href).href);
       }
       if(!history)window.history.pushState({gpuLabSession:session,gpuLabIndex:++index},'',url.href);
       else index=targetIndex;
