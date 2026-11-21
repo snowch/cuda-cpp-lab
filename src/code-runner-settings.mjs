@@ -2,7 +2,7 @@
 export const idleChoices=[5,15,30,60];
 export const defaultIdleMinutes=30;
 export const idlePreference='gpu-lab:code-runner-idle-minutes';
-export const toastPreference='gpu-lab:code-runner-intro:2';
+export const introPreference='gpu-lab:code-runner-intro:3';
 export function idleMinutes(value) {
   const minutes=Number(value);
   return idleChoices.includes(minutes)?minutes:defaultIdleMinutes;

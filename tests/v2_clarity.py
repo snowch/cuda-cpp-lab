@@ -5,6 +5,8 @@ from playwright.sync_api import expect
 
 def check_v2_clarity(browser, url, root):
     context = browser.new_context(viewport={'width': 390, 'height': 1000}, color_scheme='dark')
+    # First-run onboarding is covered by code_runner_browser.py.
+    context.add_init_script("try{localStorage.setItem('gpu-lab:code-runner-intro:3','1')}catch{}")
     page = context.new_page()
     page.goto(url + 'v2/first-kernel.html')
     frame = page.frame_locator('[data-kernel-workbench="hello"]')

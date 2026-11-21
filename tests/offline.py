@@ -75,6 +75,8 @@ class CourseHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError): pass
 
 def foreground(context):
+    # First-run onboarding is covered by code_runner_browser.py.
+    context.add_init_script("try{localStorage.setItem('gpu-lab:code-runner-intro:3','1')}catch{}")
     # This suite verifies the unsupported-browser foreground path. Playwright's
     # minimal headless shell advertises Background Fetch but never transfers its
     # jobs. offline_background.py uses full Chromium for real native downloads,

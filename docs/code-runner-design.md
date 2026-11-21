@@ -24,11 +24,21 @@ saved course files and a running WebAssembly toolchain have different lifetimes.
   immediately. If storage is unavailable, explain that the choice applies only
   to this tab. A running compile/simulation is never cancelled by the
   idle policy; the separate execution deadline still applies.
-- After the first completed run, a short toast explains reuse and the selected
-  idle interval. It stays until **Dismiss** or **Manage runner**, never takes
-  focus automatically, and is remembered per browser/course. Preparation and
-  compiler errors do not trigger it. The lesson keeps the Run → result progression;
-  optional resource management belongs in the header. Later lessons omit the toast.
+- The first **Compile and run** opens a compact introductory modal immediately,
+  including when waiting for manual startup. Dim the page, move focus into the
+  dialog and keep the lesson inert until **Back to lesson**, **Runner settings**
+  or Escape. Compilation continues behind the dialog: opening it must not delay
+  the accepted run or require a second Run click. Do not wait for a result before
+  showing the introduction, auto-expire it, or hide it on a backdrop click.
+- Explain device CPU/memory use, reuse between lessons and the selected idle
+  interval. Keep detailed measurements and preferences in the header controls.
+  Manual preparation alone does not trigger the introduction. Returning to the
+  lesson restores editor focus; **Runner settings** closes the introduction and
+  opens the normal nonmodal controls. Remember acknowledgement per browser/course
+  only after an explicit dismissal. Keep a separate presentation flag within the
+  reading window so progress updates cannot reopen the modal. A reload without
+  acknowledgement offers it again on the next Run. Preserve previous preference
+  keys and all saved learner work when changing this introductory pattern.
 - Each run receives fresh simulated program state. Compiler reuse must never
   carry simulated allocations, streams, events, output or errors into another run.
 
@@ -38,10 +48,51 @@ runtime will survive backgrounding or release physical RAM at an exact second.
 When a worker ends, its WASM heaps become reclaimable; the browser controls actual
 memory reclamation. The next run starts the tools again.
 
+## Findings from the first-run introduction
+
+The initial implementation used a persistent corner notice after the first
+completed run. A learner reported on Android that it took too long to appear
+and was easy to miss. Their screenshot showed the notice overlapping the lower
+Console area without dimming the lesson. This is direct usability feedback from
+one learner, not evidence of a general learning-effectiveness improvement.
+
+Two decisions caused the mismatch: completion was the wrong trigger for an
+introduction, and a corner notification did not give it enough prominence.
+Removing an expiry timer made the notice persistent but did not fix either issue.
+
+Use a **one-time modal introduction** at the first accepted Run request. A real
+native modal supplies a dimmed backdrop and makes the background inert; a grey
+overlay alone would leave misleading keyboard and pointer interactions possible.
+Focus the heading initially so a short screen starts at the explanation, then
+keep Tab/Shift+Tab within the two actions. **Back to lesson** returns focus to the
+editor; **Runner settings** opens the usual nonmodal controls. Escape acknowledges
+and closes the introduction. Clicking the backdrop does not acknowledge it.
+
+The modal explains an operation already requested by the learner. It must not
+hold the compile until a second confirmation. Let startup/compilation/simulation
+continue, keep the introduction open after completion, and direct the learner
+back to the result or execution message. Manual startup alone stays quiet; a Run
+queued during that startup still opens the introduction immediately.
+
+Store acknowledgement only after an explicit return, settings choice or Escape,
+not merely after displaying the dialog. Keep a per-document presentation flag
+so progress events cannot reopen it. An unread introduction can appear again on
+the next Run after reload. The former corner-notice preference remains untouched;
+its presence does not prove that the learner acknowledged the new introduction.
+Never reset source, results, completion marks or timeout preferences to deliver it.
+
+Verify timing by holding a real compiler request: the introduction must already
+be modal before any result exists. Check the backdrop, inert background, keyboard
+cycle, explicit dismissal, no expiry, execution continuing behind the modal,
+short-screen scrolling, both themes, acknowledgement across reload and an unread
+reload retaining an edited source. Verify routine header controls separately: they
+remain nonmodal and should not interrupt every experiment. These functional checks
+establish behaviour; they do not establish that learners understood the message.
+
 ## Controls and resource measurements
 
-The header opens a compact **nonmodal** popover rather than blocking the lesson
-with a modal. Close and Escape return focus to the invoking control; clicking
+The header opens a compact **nonmodal** popover for repeated resource management
+after the one-time introduction. Close and Escape return focus to the invoking control; clicking
 outside dismisses it without moving focus from the newly selected content.
 Keep controls keyboard accessible, at least 44 CSS pixels high, scrollable on
 short screens and usable in both themes. An explicit Close/Escape/outside-click
@@ -188,7 +239,7 @@ being warm is an optimisation, never a condition for offline readiness.
 | File | Responsibility |
 | --- | --- |
 | [src/code-runner.mjs](../src/code-runner.mjs) | Worker ownership, serial jobs, cancellation, deadlines and idle release |
-| [src/code-runner-host.mjs](../src/code-runner-host.mjs) | Parent owner, header popover/toast, saved preferences, restart guard and visibility checks |
+| [src/code-runner-host.mjs](../src/code-runner-host.mjs) | Parent owner, header popover/first-run modal, saved preferences, restart guard and visibility checks |
 | [src/code-runner-client.mjs](../src/code-runner-client.mjs) | Same-release editor attachment and worker facade |
 | [src/course-session.mjs](../src/course-session.mjs) | Same-release navigation, URL handling, state guards, remounting and history |
 | [src/experiment-state.mjs](../src/experiment-state.mjs) | Existing snapshots plus explicit reading-route context for remounts |
@@ -217,8 +268,10 @@ Verify these journeys using real workers and real code:
 - Default and changed idle intervals, shortening an expired deadline, persistence
   across reload/tabs, unavailable storage, delayed background timers and a running
   operation crossing an idle deadline.
-- Toast after a completed run without focus theft, explicit dismissal, no repetition
-  between lessons, popover keyboard/light dismissal and measured heaps after release.
+- Introduction before any result with a held startup request, native modal focus
+  containment, dimmed/inert background, no auto-expiry, explicit return/settings/Escape,
+  remembered acknowledgement and no repetition between lessons. Verify normal
+  popover keyboard/light dismissal and measured heaps after release separately.
 - Basic and advanced allocation samples, memory unavailable rather than guessed,
   and elapsed time including a run queued during preparation.
 - New tab, reload, full page load, missing runtime APIs and a blocked owner startup.

@@ -42,22 +42,45 @@ def check_code_runner(browser,url,root):
     expect(page.locator('#code-runner-dialog')).not_to_be_visible();expect(editor()).to_be_focused()
     page.set_viewport_size({'width':390,'height':1000})
     source=editor().input_value();edited=source.replace('42.0f','7.0f',1)
-    run('42.0','first run')
-    toast=page.locator('#code-runner-toast');expect(toast).to_be_visible();expect(toast).to_contain_text('30 minutes without a run')
-    expect(editor()).to_be_focused();expect(page.locator('#code-runner-dialog')).not_to_be_visible()
-    expect(frame().locator('#code-runner-intro')).to_have_count(0)
-    assert page.evaluate('gpuLabCodeRunner.wasmBytes')>0
-    assert page.evaluate('gpuLabCodeRunner.lastRunMs')>0
+    # Hold real startup: onboarding must appear before compilation can finish.
+    held=[];context.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    start=time.perf_counter();frame().locator('#run').click()
+    intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
+    assert intro.evaluate("e=>e.matches(':modal')"),'The introduction must dim and disable the page behind it.'
+    assert intro.evaluate("e=>parseFloat(getComputedStyle(e,'::backdrop').backgroundColor.split(',').at(-1))>0.4")
+    expect(page.locator('#code-runner-summary')).to_have_text('Starting');expect(frame().locator('#program-output')).to_be_empty()
+    assert page.evaluate('gpuLabCodeRunner.completedRuns')==0
+    expect(intro.get_by_role('heading')).to_be_focused()
+    page.keyboard.press('Tab');expect(intro.get_by_role('button',name='Back to lesson')).to_be_focused()
+    page.keyboard.press('Shift+Tab');expect(intro.get_by_role('button',name='Runner settings')).to_be_focused()
+    page.keyboard.press('Tab');expect(intro.get_by_role('button',name='Back to lesson')).to_be_focused()
+    assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')") is None
     for width in [390,820,1440]:
         for theme in ['light','dark']:
             page.set_viewport_size({'width':width,'height':1000});page.evaluate('v=>document.documentElement.dataset.theme=v',theme)
-            assert toast.bounding_box()['width']<=width
-            page.screenshot(path=str(results/f'toast-{width}-{theme}.png'))
-    page.set_viewport_size({'width':390,'height':1000});page.clock.fast_forward(60000);expect(toast).to_be_visible()
-    page.get_by_role('button',name='Manage runner',exact=True).click()
+            assert intro.bounding_box()['width']<=width
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.screenshot(path=str(results/f'intro-{width}-{theme}.png'))
+    page.set_viewport_size({'width':390,'height':360});assert intro.bounding_box()['height']<=328
+    page.set_viewport_size({'width':390,'height':1000});page.mouse.click(3,3);expect(intro).to_be_visible()
+    page.clock.fast_forward(60000);expect(intro).to_be_visible()
+    for _ in range(50):
+        if held:break
+        page.wait_for_timeout(100)
+    assert held,'The compiler request must still be blocked while the introduction is visible.'
+    for route in list(held):route.continue_()
+    context.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
+    expect(frame().locator('#run')).to_be_enabled(timeout=120000)
+    expect(frame().locator('#program-output')).to_contain_text('42.0');expect(intro).to_be_visible()
+    expect(intro.locator('[data-intro-status]')).to_contain_text('inspect the result')
+    assert page.evaluate('gpuLabCodeRunner.wasmBytes')>0
+    assert page.evaluate('gpuLabCodeRunner.lastRunMs')>0
+    timings.append({'case':'first run with intro open','seconds':round(time.perf_counter()-start,3)})
+    intro.get_by_role('button',name='Runner settings',exact=True).click();expect(intro).not_to_be_visible()
     expect(page.locator('#code-runner-dialog')).to_be_visible()
     expect(page.locator('#code-runner-timeout')).to_have_value('30')
     expect(page.locator('[data-runner-memory]')).to_contain_text('MiB')
+    assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')")=='1'
     page.keyboard.press('Escape');expect(page.locator('#code-runner-open')).to_be_focused()
     editor().fill(edited);run('7.0','same lesson repeat')
     compiler_requests=lambda:len([r for r in requests if '/assets/v2-compiler/' in r])
@@ -72,7 +95,7 @@ def check_code_runner(browser,url,root):
     run('[2, 4, 6, 8, 10]','next lesson')
     assert compiler_requests()==count,'Warm navigation must not reload compiler binary/data parts.'
     assert page.evaluate('gpuLabCodeRunner.boots')==1
-    expect(page.locator('#code-runner-toast')).not_to_be_visible()
+    expect(page.locator('#code-runner-intro-dialog')).not_to_be_visible()
     navigate('scheduling');run('128.0','advanced adapter first run')
     assert compiler_requests()==count,'The advanced adapter shares the existing Clang instance.'
     navigate('first-kernel');expect(page.locator('video[data-recording]')).to_have_js_property('paused',True);expect(editor()).to_have_value(edited);expect(frame().locator('#program-output')).to_have_text('7.0\n')
@@ -143,7 +166,7 @@ def check_code_runner(browser,url,root):
     # Simulate a new-release HTML response: the client must load a full page,
     # rather than adopt its markup into an older execution environment.
     run('[2, 4, 6, 8, 10]','fresh document after older-worker fallback')
-    expect(page.locator('#code-runner-toast')).not_to_be_visible()
+    expect(page.locator('#code-runner-intro-dialog')).not_to_be_visible()
     page.locator('#code-runner-open').click();expect(page.locator('#code-runner-timeout')).to_have_value('5');page.keyboard.press('Escape')
     previous=page.evaluate('window.__runnerDocumentToken=crypto.randomUUID()')
     page.evaluate("""() => {const original=fetch;window.fetch=async(...args)=>{const response=await original(...args);if(args[1]?.headers?.['X-Lab-Navigation']==='1'){const doc=new DOMParser().parseFromString(await response.text(),'text/html');doc.querySelector('meta[name="gpu-release"]').content='e'.repeat(64);return new Response('<!doctype html>'+doc.documentElement.outerHTML,{headers:response.headers});}return response;};}""")
@@ -161,12 +184,24 @@ def check_code_runner(browser,url,root):
     assert not errors,errors
     (results/'timings.json').write_text(json.dumps(timings,indent=2)+'\n')
     context.close()
-    # A separate learner can dismiss the notice; it must not return after reload.
+    # Manual preparation alone is quiet; an accepted queued Run introduces the runner.
     fresh=browser.new_context(viewport={'width':390,'height':700});page=fresh.new_page();page.goto(url+'v2/first-kernel.html')
-    expect(editor()).to_be_editable();run('42.0','new learner toast dismissal')
-    page.get_by_role('button',name='Dismiss',exact=True).click();expect(page.locator('#code-runner-open')).to_be_focused()
-    expect(page.locator('#code-runner-toast')).not_to_be_visible();page.reload();expect(editor()).to_be_editable()
-    run('42.0','notice remains dismissed after reload');expect(page.locator('#code-runner-toast')).not_to_be_visible()
+    expect(editor()).to_be_editable();held=[]
+    fresh.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    page.locator('#code-runner-open').click();page.get_by_role('button',name='Start code runner',exact=True).click()
+    intro=page.locator('#code-runner-intro-dialog');expect(intro).not_to_be_visible();page.keyboard.press('Escape')
+    frame().locator('#run').click();expect(intro).to_be_visible()
+    assert page.evaluate('!!gpuLabCodeRunner.pending'),'The introduction should also appear while Run waits for manual startup.'
+    page.keyboard.press('Escape');expect(intro).not_to_be_visible();expect(editor()).to_be_focused()
+    for _ in range(50):
+        if held:break
+        page.wait_for_timeout(100)
+    assert held
+    for route in list(held):route.continue_()
+    fresh.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
+    expect(frame().locator('#run')).to_be_enabled(timeout=120000);expect(frame().locator('#program-output')).to_contain_text('42.0')
+    page.reload();expect(editor()).to_be_editable()
+    run('42.0','introduction stays acknowledged after reload');expect(intro).not_to_be_visible()
     # Blocked settings storage still allows an in-tab choice and explains its scope.
     page.evaluate("() => {Storage.prototype.setItem=function(){throw new DOMException('Blocked','SecurityError')};}")
     page.locator('#code-runner-open').click();page.locator('#code-runner-timeout').select_option('60')
@@ -174,7 +209,22 @@ def check_code_runner(browser,url,root):
     assert page.evaluate('gpuLabCodeRunner.idleMs')==3600000
     page.set_viewport_size({'width':390,'height':360});panel=page.locator('#code-runner-dialog');assert panel.bounding_box()['height']<=344
     page.keyboard.press('Escape');expect(panel).not_to_be_visible();fresh.close()
-    print('PASS: one real worker across basic/advanced lessons and Back/Forward; no repeated compiler download; editor/results retained through manual and idle release; stop during startup; first-use guidance; six layouts/themes.',flush=True)
+    # Seeing the old passive notice is not acknowledgement of the new introduction.
+    # Reloading an unread dialog must offer it again on the next Run, keeping edits.
+    unread=browser.new_context(viewport={'width':390,'height':700})
+    unread.add_init_script("localStorage.setItem('gpu-lab:code-runner-intro:2','1')")
+    unread.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:route.abort())
+    page=unread.new_page();page.goto(url+'v2/first-kernel.html');expect(editor()).to_be_editable()
+    draft=editor().input_value().replace('42.0f','7.0f',1);editor().fill(draft);frame().locator('#run').click()
+    intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
+    assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')") is None
+    page.reload();expect(editor()).to_have_value(draft);expect(intro).not_to_be_visible()
+    frame().locator('#run').click();expect(intro).to_be_visible()
+    intro.get_by_role('button',name='Back to lesson',exact=True).click();expect(intro).not_to_be_visible();expect(editor()).to_be_focused()
+    assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:2')")=='1'
+    assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')")=='1'
+    unread.close()
+    print('PASS: one real worker across basic/advanced lessons and Back/Forward; no repeated compiler download; editor/results retained through manual and idle release; stop during startup; immediate first-run modal during held/queued startup, dimmed/inert background, focus containment, no expiry, explicit return/settings/Escape, acknowledgement and saved edits; six layouts/themes.',flush=True)
 
 if __name__=='__main__':
     from v2_editor import serve

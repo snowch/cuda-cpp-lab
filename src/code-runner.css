@@ -15,7 +15,9 @@
 .runner-timeout { display:grid; gap:6px; font-weight:600; margin-top:14px; }
 .runner-timeout select { width:100%; min-height:44px; font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:8px; }
 .runner-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.code-runner-panel button,#code-runner-toast button { min-height:44px; }
-#code-runner-toast { position:fixed; right:max(16px,env(safe-area-inset-right)); bottom:max(16px,env(safe-area-inset-bottom)); z-index:70; width:min(420px,calc(100vw - 32px)); box-sizing:border-box; padding:16px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px; box-shadow:0 6px 24px #0002; }
-#code-runner-toast p { margin:0 0 10px; font-size:.9rem; line-height:1.5; }
+.code-runner-panel button,#code-runner-intro-dialog button { min-height:44px; }
+#code-runner-intro-dialog { position:fixed; inset:0; margin:auto; width:min(480px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; box-sizing:border-box; padding:24px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 40px #0004; }
+#code-runner-intro-dialog::backdrop { background:#0009; }
+#code-runner-intro-dialog h2 { margin:0 0 16px; font-size:1.3rem; line-height:1.3; }
+#code-runner-intro-dialog p { margin:0 0 16px; line-height:1.5; }
 #course-navigation-status { padding:12px; border-left:3px solid var(--accent); }

@@ -91,6 +91,8 @@ CHECKS = {
 
 def lesson_context(browser, compiler_url):
     context = browser.new_context(viewport={'width': 820, 'height': 1080})
+    # First-run onboarding is covered by code_runner_browser.py.
+    context.add_init_script("try{localStorage.setItem('gpu-lab:code-runner-intro:3','1')}catch{}")
     if compiler_url:
         def redirect_compiler(route):
             filename = route.request.url.rsplit('/', 1)[-1]
