@@ -2,9 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CodeRunner} from '../src/code-runner.mjs';
-function fixture(){
+function fixture(options={}){
  let now=0,id=0;const jobs=new Map(),workers=[];
- const runner=new CodeRunner({makeWorker:()=>{const worker={sent:[],postMessage(data){this.sent.push(data);},terminate(){this.dead=true;},reply(data){this.onmessage({data});}};workers.push(worker);return worker;},now:()=>now,later:(fn,ms)=>{jobs.set(++id,{fn,at:now+ms});return id;},cancel:id=>jobs.delete(id)});
+ const runner=new CodeRunner({makeWorker:()=>{const worker={sent:[],postMessage(data){this.sent.push(data);},terminate(){this.dead=true;},reply(data){this.onmessage({data});}};workers.push(worker);return worker;},idleMs:300_000,...options,now:()=>now,later:(fn,ms)=>{jobs.set(++id,{fn,at:now+ms});return id;},cancel:id=>jobs.delete(id)});
  return {runner,workers,advance:ms=>{now+=ms;for(const [id,job]of [...jobs])if(jobs.has(id)&&job.at<=now){jobs.delete(id);job.fn();}}};
 }
 test('reuses one worker across clients, while messages/results belong to each current run',()=>{
@@ -50,4 +50,20 @@ test('stopping or detaching a queued compile cancels startup without running tha
 test('startup errors reach the queued compile without leaving an editor waiting',()=>{
  const {runner:r,workers:w}=fixture(),replies=[];r.configure('worker',{});r.start();r.execute({},'worker',{source:'queued'},d=>replies.push(d));w[0].reply({error:'missing binary'});
  assert.equal(replies.at(-1).error,'missing binary');assert.equal(r.state,'stopped');assert.equal(r.pending,null);
+});
+
+test('default idle policy is thirty minutes and settings keep the last completion as the deadline origin',()=>{
+ assert.equal(new CodeRunner().idleMs,1800000);
+ const {runner:r,workers:w,advance}=fixture();r.execute({},'worker',{},()=>{});w[0].reply({stdout:'done'});advance(240000);
+ r.setIdleMinutes(30);advance(1560000-1);assert.equal(r.state,'ready');advance(1);assert.equal(r.state,'stopped');
+});
+test('shortening an expired idle policy releases memory; changing it during a run does not interrupt code',()=>{
+ const {runner:r,workers:w,advance}=fixture({idleMs:1800000,timeoutMs:3600000});r.execute({},'worker',{},()=>{});r.setIdleMinutes(5);advance(600000);assert.equal(w[0].dead,undefined);
+ w[0].reply({stdout:'done'});r.setIdleMinutes(30);advance(600000);r.setIdleMinutes(5);assert.equal(r.state,'stopped');assert.equal(r.wasmBytes,0);
+});
+test('telemetry updates allocation without completing a job; elapsed time includes queued startup and survives memory release',()=>{
+ const {runner:r,workers:w,advance}=fixture();r.configure('worker',{});r.start();advance(1000);r.execute({},'worker',{source:'queued'},()=>{});advance(2000);
+ w[0].reply({telemetry:{wasmBytes:67108864}});assert.ok(r.busy);assert.equal(r.wasmBytes,67108864);assert.equal(r.lastRunMs,null);
+ w[0].reply({prepared:true,wasmBytes:67108864});advance(1500);w[0].reply({stdout:'done',wasmBytes:67108864});assert.equal(r.lastRunMs,3500);assert.equal(r.completedRuns,1);
+ r.release();assert.equal(r.wasmBytes,0);assert.equal(r.lastRunMs,3500);
 });

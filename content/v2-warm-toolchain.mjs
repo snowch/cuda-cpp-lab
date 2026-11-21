@@ -9,6 +9,27 @@ export function warmToolchain(html) {
   const end=worker.indexOf('\nfunction compileModule(source)',start);
   if(start<0||end<0)throw new Error('Review the vendored worker initialisation before updating it.');
   worker=worker.slice(0,start)+`const toolchains = new Map();
+const compilerMemories = new Set(), nvptxMemories = new Set(), activeMemories = new Set();
+let unknownAllocation = false;
+function allocatedWasm() {
+  if (unknownAllocation || !compilerMemories.size || (nvptxCompiler && !nvptxMemories.size)) return null;
+  return [...new Set([...compilerMemories, ...nvptxMemories, ...activeMemories])]
+    .reduce((total, memory) => total + memory.buffer.byteLength, 0);
+}
+function allocationSample(instance, module, imports = {}, kind = 'active') {
+  try {
+    // Inspect only declared memory imports: enumerating Emscripten's GOT
+    // proxies would resolve unrelated symbols and change dynamic linking.
+    const memories = [
+      ...WebAssembly.Module.exports(module).filter(entry => entry.kind === 'memory').map(entry => instance.exports[entry.name]),
+      ...WebAssembly.Module.imports(module).filter(entry => entry.kind === 'memory').map(entry => imports[entry.module]?.[entry.name]),
+    ].filter(value => value instanceof WebAssembly.Memory);
+    if (!memories.length) unknownAllocation = true;
+    const target = kind === 'compiler' ? compilerMemories : kind === 'nvptx' ? nvptxMemories : activeMemories;
+    for (const memory of memories) target.add(memory);
+    postMessage({ telemetry: { wasmBytes: allocatedWasm() } });
+  } catch { unknownAllocation = true; }
+}
 async function initialise(assets, advanced) {
   const cached = toolchains.get(advanced);
   if (cached) { simulatorModule = cached; return; }
@@ -18,7 +39,7 @@ async function initialise(assets, advanced) {
     const [glue, wasm, data] = await Promise.all(assets.compiler.map(getCompilerAsset));
     const createCompiler = await importProgram(glue);
     compiler = await createCompiler({
-      wasmBinary: new Uint8Array(wasm),
+      ...instantiate(await WebAssembly.compile(wasm), 'compiler'),
       locateFile: name => new URL(name, 'https://cuda-workbench.invalid/').href,
       getPreloadedPackage: () => data,
       print: line => compilerMessages.push(line), printErr: line => compilerMessages.push(line),
@@ -34,7 +55,7 @@ async function initialise(assets, advanced) {
     const [glue, wasm] = await Promise.all([getCompilerAsset(assets.advanced.nvptxGlue), getCompilerAsset(assets.advanced.nvptxWasm)]);
     const createNvptx = await importProgram(glue, 'createNvptxCompiler');
     nvptxCompiler = await createNvptx({
-      ...instantiate(await WebAssembly.compile(wasm)), noInitialRun: true,
+      ...instantiate(await WebAssembly.compile(wasm), 'nvptx'), noInitialRun: true,
       printErr: line => compilerMessages.push(line),
     });
     moduleSimulator = await importProgram(simGlue, 'createModuleSimulator');
@@ -67,7 +88,15 @@ async function initialise(assets, advanced) {
   for (const [name, text] of Object.entries(programHeaders)) compiler.FS.writeFile('/workbench/' + name, text);`);
   patch('function compileModule(source) {','function compileModule(source) {\n  moduleRuntime.installHeaders(compiler);');
   patch('source, assets, profile, fullProgram, advanced }','source, assets, profile, fullProgram, advanced, type }');
-  patch("    postMessage({ stage: 'Compiling your CUDA source…', ready: true });", "    if (type === 'prepare') { postMessage({ prepared: true }); return; }\n    postMessage({ stage: 'Compiling your CUDA source…', phase: 'compiling', ready: true });");
+  patch("    postMessage({ stage: 'Compiling your CUDA source…', ready: true });", "    if (type === 'prepare') { activeMemories.clear(); postMessage({ prepared: true, wasmBytes: allocatedWasm() }); return; }\n    postMessage({ stage: 'Compiling your CUDA source…', phase: 'compiling', ready: true });\n    postMessage({ telemetry: { wasmBytes: allocatedWasm() } });");
+  patch('function instantiate(module) {', "function instantiate(module, kind = 'active') {");
+  patch('const instance = new WebAssembly.Instance(module, imports);', 'const instance = new WebAssembly.Instance(module, imports);\n      allocationSample(instance, module, imports, kind);');
+  const hostInstance='instance = await WebAssembly.instantiate(module, { env: runtime });';
+  if(worker.split(hostInstance).length!==3)throw new Error('Review both host-memory instances before updating the worker.');
+  worker=worker.replaceAll(hostInstance,hostInstance+'\n  allocationSample(instance, module);');
+  patch("postMessage({ ...result, diagnostics: compilerMessages.join('\\n') });", "activeMemories.clear();\n    postMessage({ ...result, diagnostics: compilerMessages.join('\\n'), wasmBytes: allocatedWasm() });");
+  patch("postMessage({ error: String(error.message ?? error) });", "activeMemories.clear();\n    postMessage({ error: String(error.message ?? error), wasmBytes: allocatedWasm() });");
+  patch("postMessage({ diagnostics: compilerMessages.join('\\n'), compileError: true });", "activeMemories.clear();\n      postMessage({ diagnostics: compilerMessages.join('\\n'), compileError: true, wasmBytes: allocatedWasm() });");
   lab.worker=worker;
   return html.replace(line,prefix+JSON.stringify(lab).replaceAll('<','\\u003c')+';');
 }

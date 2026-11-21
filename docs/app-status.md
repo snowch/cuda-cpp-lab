@@ -272,7 +272,9 @@ The [code runner](code-runner-design.md) retains a per-window WASM toolchain dur
 matching-release lesson navigation. Runner readiness is a RAM/execution state;
 course offline readiness is verified CacheStorage availability. Saving/updating
 files does not start the compiler; releasing the runtime does not remove saved
-files. Same-document lesson requests use the acknowledged `X-Lab-Navigation: 1`
+files. Runner controls offer a saved 5/15/30/60-minute idle interval (30 by default),
+allocated WASM memory and the last completed compile/run duration. These are
+execution diagnostics, not download progress or physical GPU measurements. Same-document lesson requests use the acknowledged `X-Lab-Navigation: 1`
 contract described in the [offline design](offline-update-design.md#routing-rules).
 Older workers fall back to native navigation. A new release or coordinated restart
 loads a complete matching document and recreates the runtime when next needed.
