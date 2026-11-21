@@ -44,6 +44,8 @@ if(!embedded&&!window.gpuLabCodeRunner) {
     panel.addEventListener('toggle',()=>button.setAttribute('aria-expanded',String(opened())));
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&opened()){event.preventDefault();close(panel.contains(document.activeElement));}});
     document.addEventListener('pointerdown',event=>{if(!native&&opened()&&!panel.contains(event.target)&&!button.contains(event.target))close();});
+    // Pointer events inside an editor iframe do not reach the parent popover.
+    addEventListener('blur',()=>setTimeout(()=>{if(opened()&&document.activeElement?.tagName==='IFRAME')close();},0));
     addEventListener('resize',fit);addEventListener('scroll',fit,{passive:true});
     addEventListener('gpu-lab:lesson-changed',()=>close());
     panel.querySelector('[data-runner-start]').addEventListener('click',()=>runner.start());

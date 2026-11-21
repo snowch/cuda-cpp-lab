@@ -33,7 +33,11 @@ def check_code_runner(browser,url,root):
         link.click();page.wait_for_url('**/'+slug+'.html')
         expect(editor()).to_be_editable(timeout=30000)
         assert page.evaluate('window.__runnerDocumentToken')==origin,'Warm navigation must retain the worker owner.'
-    expect(editor()).to_be_editable();source=editor().input_value();edited=source.replace('42.0f','7.0f',1)
+    expect(editor()).to_be_editable();page.set_viewport_size({'width':1440,'height':1000})
+    editor().focus();page.locator('#code-runner-open').click();editor().click()
+    expect(page.locator('#code-runner-dialog')).not_to_be_visible();expect(editor()).to_be_focused()
+    page.set_viewport_size({'width':390,'height':1000})
+    source=editor().input_value();edited=source.replace('42.0f','7.0f',1)
     run('42.0','first run')
     toast=page.locator('#code-runner-toast');expect(toast).to_be_visible();expect(toast).to_contain_text('30 minutes without a run')
     expect(editor()).to_be_focused();expect(page.locator('#code-runner-dialog')).not_to_be_visible()
@@ -165,9 +169,7 @@ def check_code_runner(browser,url,root):
     expect(page.locator('#runner-timeout-help')).to_contain_text('Applies to this tab')
     assert page.evaluate('gpuLabCodeRunner.idleMs')==3600000
     page.set_viewport_size({'width':390,'height':360});panel=page.locator('#code-runner-dialog');assert panel.bounding_box()['height']<=344
-    page.keyboard.press('Escape');page.set_viewport_size({'width':1440,'height':1000})
-    page.locator('#code-runner-open').click();editor().click()
-    expect(panel).not_to_be_visible();expect(editor()).to_be_focused();fresh.close()
+    page.keyboard.press('Escape');expect(panel).not_to_be_visible();fresh.close()
     print('PASS: one real worker across basic/advanced lessons and Back/Forward; no repeated compiler download; editor/results retained through manual and idle release; stop during startup; first-use guidance; six layouts/themes.',flush=True)
 
 if __name__=='__main__':
