@@ -106,6 +106,9 @@ started while HTML is arriving. Respect composition, storage, completion-mark an
 restart guards. A failed guard keeps the current lesson intact. Read-only editors
 that have not initialised cannot contain new edits and need not block navigation.
 
+Abort an in-flight lesson request when the document leaves or reloads, and reject
+its stale continuation. It must not later replace content in a resumed document.
+
 History changes the URL before `popstate` runs. Keep the outgoing reading route
 explicitly so its snapshot cannot be stored under the destination’s key. Remount
 model, recording and completion controllers once; pause outgoing media; clear stale experiment hooks;

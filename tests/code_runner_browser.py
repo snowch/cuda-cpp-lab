@@ -117,6 +117,13 @@ def check_code_runner(browser,url,root):
     assert page.evaluate('window.__runnerDocumentToken')!=previous
     assert page.evaluate('gpuLabCodeRunner.boots')==0
     page.goto(url+'v2/first-kernel.html');expect(editor()).to_have_value(edited)
+    # Reload while a selected lesson is still arriving: cancel the abandoned
+    # request, rather than allowing its continuation to redirect a later page.
+    run('7.0','before interrupted lesson navigation')
+    aborted=[];page.expose_function('__reportNavigationAbort',lambda:aborted.append(True))
+    page.evaluate("""() => {const original=fetch;window.fetch=(...args)=>{if(args[1]?.headers?.['X-Lab-Navigation']==='1')return new Promise((resolve,reject)=>{window.__navigationHeld=true;args[1].signal.addEventListener('abort',()=>{window.__reportNavigationAbort().catch(()=>{});reject(new DOMException('aborted','AbortError'));});});return original(...args);};}""")
+    page.locator('.v2-page-next').click();page.wait_for_function('()=>window.__navigationHeld')
+    page.reload();expect(editor()).to_have_value(edited);assert aborted
     assert not errors,errors
     (results/'timings.json').write_text(json.dumps(timings,indent=2)+'\n')
     context.close()

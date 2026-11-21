@@ -6,7 +6,7 @@ import {saveReadingState,setReadingRoute,replaceReadingContext,restoreReadingSta
 export function installCourseSession(runner) {
   const release=document.querySelector('meta[name="gpu-release"]')?.content;
   const base=new URL(document.querySelector('meta[name="gpu-base"]').content,location.href);
-  let navigating=false,sequence=0,currentURL=location.href,index=0,suppressPop=false;
+  let navigating=false,sequence=0,currentURL=location.href,index=0,suppressPop=false,navigationAbort,leaving=false;
   setReadingRoute();
   const session=crypto.randomUUID();
   window.history.replaceState({...window.history.state,gpuLabSession:session,gpuLabIndex:index},'',location.href);
@@ -28,15 +28,17 @@ export function installCourseSession(runner) {
   }
   async function navigate(url,{history=false,targetIndex=index}={}) {
     if(navigating)return;navigating=true;const serial=++sequence;
+    navigationAbort=new AbortController();const deadline=setTimeout(()=>navigationAbort.abort(),12000);
     try {
       save();position.set(currentURL,[scrollX,scrollY]);
       // Fetch the normal URL so online reads still follow current published HTML
       // and the service worker can select verified HTML when offline.
       const requestURL=new URL(url);if(requestURL.pathname.endsWith('/'))requestURL.pathname+='index.html';
-      const response=await fetch(requestURL.href,{cache:'no-store',headers:{'X-Lab-Navigation':'1'},signal:AbortSignal.timeout(12_000)});
+      const response=await fetch(requestURL.href,{cache:'no-store',headers:{'X-Lab-Navigation':'1'},signal:navigationAbort.signal});
       if(!response.ok)throw new Error('Use normal navigation for this response.');
       if(navigator.serviceWorker?.controller&&response.headers.get('X-Lab-Navigation')!=='1') {location[history?'replace':'assign'](url.href);return;}
-      const doc=new DOMParser().parseFromString(await response.text(),'text/html');
+      const html=await response.text();if(leaving||serial!==sequence)return;
+      const doc=new DOMParser().parseFromString(html,'text/html');
       const main=doc.querySelector('main.v2-main');
       if(!main||doc.querySelector('meta[name="gpu-release"]')?.content!==release||!doc.documentElement.hasAttribute('data-course-session')) {
         location[history?'replace':'assign'](url.href);return;
@@ -68,6 +70,7 @@ export function installCourseSession(runner) {
       });
       dispatchEvent(new CustomEvent('gpu-lab:lesson-changed'));
     } catch(error) {
+      if(leaving||serial!==sequence)return;
       // Failed guards keep the current editor intact. Network/HTML failures use
       // the normal navigation path and the existing offline recovery mechanism.
       if(error.guard){
@@ -75,8 +78,10 @@ export function installCourseSession(runner) {
         notice(error.message);
       }
       else location[history?'replace':'assign'](url.href);
-    } finally {navigating=false;}
+    } finally {clearTimeout(deadline);if(serial===sequence)navigating=false;}
   }
+  addEventListener('pagehide',()=>{leaving=true;sequence++;navigating=false;navigationAbort?.abort();});
+  addEventListener('pageshow',()=>{leaving=false;});
   document.addEventListener('click',event=>{
     if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||!runner.worker)return;
     const link=event.target.closest('a[href]');if(!link||link.target||link.hasAttribute('download'))return;
