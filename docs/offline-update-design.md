@@ -6,7 +6,9 @@ saves it. Saving a replacement must preserve the previous usable copy and learne
 work. A metadata check, an installed shortcut and a few cached pages do not establish
 offline readiness.
 
-This design describes the CUDA C++ Lab implementation after [PR #185](https://github.com/snowch/cuda-cpp-lab/pull/185).
+This design describes the CUDA C++ Lab implementation, including the persistent
+[code runner lifecycle](code-runner-design.md). The original offline reliability
+work is recorded in [PR #185](https://github.com/snowch/cuda-cpp-lab/pull/185).
 It is a reference for adapting the mechanism to other labs, not an extracted shared
 package. [App status and release lifecycle](app-status.md) records the CUDA C++ Lab
 configuration and compatibility history. Product-specific names, storage keys,
@@ -40,7 +42,7 @@ and separately installed desktop tools remain outside the course download.
 
 | Identity | Meaning | Changes when |
 | --- | --- | --- |
-| Running document | The version of this page and its executable assets | A navigation or explicit restart opens another version |
+| Running document | The version of this page and its executable assets | A same-release lesson swap retains the document; navigation to another release, reload or explicit restart opens a complete matching document |
 | Published release | The last successfully checked deployment manifest | A fresh network metadata check succeeds |
 | Saved selection | The release chosen for offline navigation, plus its verified availability | First save or an explicit coordinated restart selects it; missing files can invalidate availability |
 | Installed worker | The code handling requests and the lifecycle protocol | The browser installs and activates a worker update |
@@ -128,12 +130,32 @@ hiding independently verified offline availability.
 
 | Request | Rule |
 | --- | --- |
-| Ordinary top-level navigation or reload | Try the network with a deadline and buffer HTML within it; on a connection failure or server error, fall back to the selected saved release |
+| Ordinary top-level navigation, acknowledged same-document lesson navigation, or reload | Try the network with a deadline and buffer HTML within it; on a connection failure or server error, fall back to the selected saved release |
 | Genuine online 404 | Preserve the 404 instead of reviving a retired saved page |
 | Explicit release asset or pinned editor | Use that release; never fall through to unrelated live bytes |
 | Coordinated restart navigation | Open the exact verified transaction target, even if another deployment has appeared |
 | Root or immutable release metadata | Network-only; do not serve stale cached deployment metadata |
 | Saved media range request | Return the correct range from the cached complete response |
+
+Same-document lesson navigation sends `X-Lab-Navigation: 1` on its normal-URL
+GET. Handle it with the same fresh-online/verified-offline HTML rules as a native
+navigation, including buffering, deadlines and genuine 404s. Echo the header to
+acknowledge support. A client controlled by an older worker without this response
+marker falls back to native navigation. Treat this as a compatible extension, not
+a reason to activate a waiting worker automatically.
+
+Adopt returned lesson content only when the release ID and shell marker match the
+running document. Otherwise perform normal full-page navigation. Resolve relative
+links against the **requested normal lesson URL**: a cached response can carry an
+immutable response URL that would otherwise double the release prefix. Track the
+outgoing route separately from browser history when saving state during Back/Forward.
+
+A warmed WASM compiler uses CPU/RAM and is independent of downloaded course files.
+**Code runner: Ready** does not mean downloaded; **Downloaded and ready to use offline**
+does not mean a runtime is resident. Freeing RAM or idle shutdown preserves saved
+files and drafts. Include all runner modules, styles and lazy execution adapters in
+the manifest so offline execution can start cold. A busy runner participates in
+restart guards; matching-release swaps reuse it, full release changes recreate it.
 
 Visited-page retention is an optimisation, not a full save or offline consent.
 Only already-loaded page resources are eligible; no worker installation or
@@ -311,7 +333,7 @@ sessionStorage or sibling app registrations.
 5. Add and migrate each experiment's save/restore hooks, durable drafts, busy
    guards, iframe ownership and snapshot schemas before enabling restart.
 6. Reuse the state distinctions and acceptance journeys below. Adapt fixtures to
-   the receiving lab's largest assets and real execution tools; do not treat GPU
+   the receiving lab's largest assets and real execution tools; do not treat CUDA C++
    Lab's Chromium results as validation of another lab or platform.
 
 ## Acceptance tests before reuse
@@ -329,9 +351,10 @@ conditions. The essential journeys are:
 | Close/hide page during native and foreground transfers | Native path completes when supported; fallback resumes consented work without competing jobs |
 | Update fails, exceeds quota or receives wrong bytes | Prior saved release still usable; accurate error and explicit recovery |
 | Evict/corrupt a lesson, including during another verification scan | Readiness invalidated; no corrupt HTML or stale ready result; explicit repair preserves work |
-| New online release with an older complete saved copy | Current online reads, stable open tabs, older offline navigation and current content after reconnect |
+| New online release with an older complete saved copy | Current online reads through both native and same-document navigation, stable open tabs, older offline navigation and current content after reconnect |
 | Prepared update while another deployment appears | Explicit restart opens the exact verified target and restores all participating work |
 | Busy/unresponsive tab, composition, denied snapshots or arriving window | Whole restart refused safely; controls unlock; no selection change or lost inputs |
+| Older worker without same-document navigation support | Native navigation fallback, fresh online HTML and retained work |
 | Actual older installed worker/client and complete-cache recognition | Compatible migration, no download loop or premature activation, preserved files/consent/drafts |
 | Metadata timeout, stale CDN response, late result or offline check | No misleading freshness or stale update action; saved availability remains independent |
 | Remove one lab with partial/complete copies and sibling apps present | Confirmed scoped deletion; learner storage and sibling apps unchanged |

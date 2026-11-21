@@ -2,14 +2,17 @@
 // Per-tab restart snapshots; no localStorage.clear and no replay of user actions.
 const hooks = new Map();
 let composing = false, lock = null, unlockTimer;
+let readingRoute;
+export function setReadingRoute(url=location.href) { readingRoute=url; }
 const snapshotKey = () => {
-  const url=new URL(location.href);
+  const url=new URL(readingRoute??location.href);
   url.searchParams.delete('gpu-release');
   if(url.searchParams.get('download')==='1')url.searchParams.delete('download');
   return 'gpu-lab:restart:' + url.pathname + url.search;
 };
 // Read the incoming route before a page migrates its URL; saves still use the live route.
-const incomingSnapshotKey = snapshotKey();
+let incomingSnapshotKey = snapshotKey();
+export function replaceReadingContext() { hooks.clear(); setReadingRoute(); incomingSnapshotKey=snapshotKey(); }
 export function registerExperiment(name, save, restore) { hooks.set(name, { save, restore }); }
 const controls = () => [...document.querySelectorAll('main input:not([data-lesson-completion]),main select,main textarea')];
 function formState() { return controls().map(el => ({ id: el.id, name: el.name, value: el.value, checked: el.checked })); }
@@ -75,7 +78,7 @@ navigator.serviceWorker?.addEventListener('message', ({ data, ports }) => {
     if (!self.frameElement?.hasAttribute('data-kernel-workbench')) location.reload();
   }
 });
-function restore() {
+export function restoreReadingState({navigation=false}={}) {
   const key = incomingSnapshotKey;
   let stored;
   try {
@@ -112,11 +115,11 @@ function restore() {
       const el = document.getElementById(id); if (el) el.textContent = text;
     }
     requestAnimationFrame(() => {
-      const navigation=performance.getEntriesByType('navigation')[0]?.type;
-      if(data.kind==='navigation'&&navigation!=='reload'){
+      const navigationType=navigation?'navigate':performance.getEntriesByType('navigation')[0]?.type;
+      if(data.kind==='navigation'&&navigationType!=='reload'){
         // A new link owns its destination; history owns back/forward scroll.
         // Restore exercise values without jumping to a previous reading place.
-        if(navigation==='navigate'&&location.hash){
+        if(navigationType==='navigate'&&location.hash){
           let id=location.hash.slice(1);try{id=decodeURIComponent(id);}catch{}
           document.getElementById(id)?.scrollIntoView({behavior:'instant'});
         }
@@ -135,4 +138,4 @@ function restore() {
     }
   }
 }
-if (document.readyState === 'complete') restore(); else addEventListener('load', restore, { once: true });
+if (document.readyState === 'complete') restoreReadingState(); else addEventListener('load', ()=>restoreReadingState(), { once: true });

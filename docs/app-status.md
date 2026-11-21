@@ -265,3 +265,14 @@ selection, request and verified files through subsequent cleanup. Recovery of
 Restart requires a completed update associated with this build/current action
 or the published manifest; it never treats an ordinary offline save or unrelated
 older update as permission to restart the current page into that cache.
+
+## Code runner and navigation
+
+The [code runner](code-runner-design.md) retains a per-window WASM toolchain during
+matching-release lesson navigation. Runner readiness is a RAM/execution state;
+course offline readiness is verified CacheStorage availability. Saving/updating
+files does not start the compiler; releasing the runtime does not remove saved
+files. Same-document lesson requests use the acknowledged `X-Lab-Navigation: 1`
+contract described in the [offline design](offline-update-design.md#routing-rules).
+Older workers fall back to native navigation. A new release or coordinated restart
+loads a complete matching document and recreates the runtime when next needed.

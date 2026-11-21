@@ -313,7 +313,7 @@ def previous_client_upgrade(browser,url,old_root):
                     assert page.locator('html').get_attribute('data-test-release')=='old-client'
                     page.locator('#restart-update').click()
                     expect(page.locator('html')).to_have_attribute('data-test-release','two',timeout=30000)
-                    assert page.locator('#draft').input_value()=='old client draft'
+                    expect(page.locator('#draft')).to_have_value('old client draft')
         print('PASS the actual older client upgrades normally; its missing-state defect is reproduced with the old worker and fixed by the new worker without losing drafts',flush=True)
     finally:Handler.roots['one']=original;Handler.previous_worker=False
 

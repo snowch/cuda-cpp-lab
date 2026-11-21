@@ -1,6 +1,8 @@
 // Copyright © 2026 Christopher Snow.
 import {registerExperiment} from './experiment-state.mjs';
-for(const video of document.querySelectorAll('video[data-recording]')){
+export function mountRecordings(root=document) {
+for(const video of root.querySelectorAll('video[data-recording]')){
+ if(video.dataset.recordingMounted)continue;video.dataset.recordingMounted='true';
  registerExperiment(video.dataset.recording,()=>({
   time:Number.isFinite(video.currentTime)?video.currentTime:0,
   volume:video.volume,rate:video.playbackRate,muted:video.muted,
@@ -16,3 +18,6 @@ for(const video of document.querySelectorAll('video[data-recording]')){
   }
  });
 }
+
+}
+mountRecordings();

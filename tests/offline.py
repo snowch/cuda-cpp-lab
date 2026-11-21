@@ -183,11 +183,17 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             expect(hello.locator('#program-output')).to_contain_text('7.0')
             # Use the real learner navigation while disconnected, including a
             # return to the edited source/results rather than just route fetches.
-            with tab.expect_navigation() as next_page:tab.locator('.v2-pager a').last.click()
+            document_token=tab.evaluate('window.__offlineDocument=crypto.randomUUID()')
+            with tab.expect_response(lambda response:response.url==url+'v2/one-thread-one-element.html') as next_page:tab.locator('.v2-pager a').last.click()
             assert next_page.value.ok and next_page.value.from_service_worker
+            assert next_page.value.header_value('X-Lab-Navigation')=='1'
             expect(tab).to_have_url(url+'v2/one-thread-one-element.html')
-            with tab.expect_navigation() as previous_page:tab.locator('.v2-pager a').first.click()
+            assert tab.evaluate('window.__offlineDocument')==document_token
+            with tab.expect_response(lambda response:response.url==url+'v2/first-kernel.html') as previous_page:tab.locator('.v2-pager a').first.click()
             assert previous_page.value.ok and previous_page.value.from_service_worker
+            assert previous_page.value.header_value('X-Lab-Navigation')=='1'
+            expect(tab).to_have_url(url+'v2/first-kernel.html')
+            assert tab.evaluate('window.__offlineDocument')==document_token
             expect(hello.get_by_role('textbox',name='CUDA source')).to_have_value(draft)
             expect(hello.locator('#program-output')).to_contain_text('7.0')
             tab.goto(url+'v2/more-threads-than-elements.html')
@@ -384,6 +390,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # host is unreachable before this cold launch. Exercise real Next,
             # Back, edited compilation and a recording before any update.
             tab.goto(url+'v2/first-kernel.html')
+            assert tab.evaluate('!window.gpuLabCodeRunner.worker'),'Cold offline navigation must not rely on a resident runtime.'
             with tab.expect_navigation() as travel_next:tab.locator('.v2-pager a').last.click()
             assert travel_next.value.ok and travel_next.value.from_service_worker
             expect(tab).to_have_url(url+'v2/one-thread-one-element.html')

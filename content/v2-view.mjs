@@ -299,7 +299,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'code-runner.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '', appendix } = {}) {
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
@@ -308,11 +308,12 @@ export function renderV2Page(lesson, versionMarkup = '', { home = false, firstPr
   const styles = v2Styles.map(name => `<link rel="stylesheet" href="${base}src/${name}">`).join('');
   return `<!doctype html>
 <!-- Copyright © 2026 Christopher Snow. -->
-<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en-GB" data-course-session><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark"><title>${title}</title>${styles}
 <meta name="description" content="Learn GPU architecture through hands-on CUDA C++ lessons. Edit, compile and run examples in your browser using GPU simulation.">
 <link rel="icon" type="image/svg+xml" href="${base}assets/icon.svg">
 <script type="module" src="${base}src/theme.mjs"></script>
+<script type="module" src="${base}src/code-runner-host.mjs"></script>
 ${lesson ? `<script type="module" src="${base}src/v2.mjs"></script><script type="module" src="${base}src/recording.mjs"></script>` : ''}
 </head>
 <body class="book-chapter v2-book">

@@ -578,12 +578,13 @@ self.addEventListener('fetch', event => {
     event.respondWith(fetch(new Request(event.request, { cache: 'no-store' }))); return;
   }
   if (path === 'sw.js') return;
+  const softNavigation=event.request.headers.get('X-Lab-Navigation')==='1'&&path.endsWith('.html')&&!path.startsWith('releases/');
   event.respondWith((async () => {
-    if (event.request.mode === 'navigate' && restarting) await navigationGate;
+    if ((event.request.mode === 'navigate'||softNavigation) && restarting) await navigationGate;
     const pinned = path.match(/^releases\/([a-f0-9]{64})\/(.+)$/);
     const documentPin = url.searchParams.get('gpu-release');
     const explicit = pinned?.[1] || (/^[a-f0-9]{64}$/.test(documentPin||'') ? documentPin : null);
-    const topNavigation = event.request.mode==='navigate' && event.request.destination==='document';
+    const topNavigation = softNavigation || (event.request.mode==='navigate' && event.request.destination==='document');
     const state = await readState().catch(()=>({}));
     let restartTarget;
     if(topNavigation){
@@ -612,7 +613,7 @@ self.addEventListener('fetch', event => {
     if (id) {
       const cache = await caches.open(cacheName(id)).catch(()=>null);
       let cached = await cache?.match(new URL(path, BASE)).catch(()=>null);
-      if(cached&&event.request.mode==='navigate'){
+      if(cached&&(event.request.mode==='navigate'||softNavigation)){
         const original=(await manifest(id).catch(()=>null))?.files.find(file=>file.path===path);
         if(original&&!await verified(cached.clone(),original)){cached=null;invalidateVerification(id);await broadcast({type:'STATUS_CHANGED'});}
       }
@@ -657,7 +658,11 @@ self.addEventListener('fetch', event => {
       throw error;
     }
   })().catch(async failure=>{
-    if(event.request.mode==='navigate'&&event.request.destination==='document')return offlineNavigationResponse(event.request,await readState().catch(()=>({})));
+    if(softNavigation||(event.request.mode==='navigate'&&event.request.destination==='document'))return offlineNavigationResponse(event.request,await readState().catch(()=>({})));
     throw failure;
+  }).then(response=>{
+    if(!softNavigation)return response;
+    const headers=new Headers(response.headers);headers.set('X-Lab-Navigation','1');
+    return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
   }));
 });

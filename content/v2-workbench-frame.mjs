@@ -1,9 +1,10 @@
 // Copyright © 2026 Christopher Snow.
+import { warmToolchain } from './v2-warm-toolchain.mjs';
 import { practicalRuntime } from './v2-practical-source.mjs';
 // The two standalone builds share the DOM contract of cuda-sim-wasm's workbench.
 export function workbenchFrame(html, {compilerBase, compilerParts} = {}) {
   if (!html.includes('lab.arrayProgram')) throw new Error('This workbench must support complete CUDA programs.');
-  html = practicalRuntime(html);
+  html = warmToolchain(practicalRuntime(html));
   if (compilerBase) {
     const marker = "\nconst editor = document.querySelector('#source');";
     if (!html.includes(marker)) throw new Error('The CUDA workbench initialisation changed.');
@@ -13,9 +14,9 @@ for (const [index, asset] of lab.assets.compiler.entries()) {
   delete asset.url;
 }${marker}`).replace('The first run downloads about 127 MiB of compiler assets.',
       'The first run loads the compiler. Offline course downloads include those files.')
-      .replace('</body>', '<script type="module" src="../src/v2-workbench-state.mjs"></script></body>');
+      .replace('</body>', '<script type="module" src="../src/v2-workbench-state.mjs"></script><script type="module" src="../src/code-runner-client.mjs"></script></body>');
   }
-  return html.replace('</head>', `<style>
+  return html.replace('</head>', `<link rel="stylesheet" href="../src/code-runner.css"><style>
 html[data-inline] body { min-height:0; background:transparent; }
 html[data-inline] main { width:100%; padding:2px; }
 html[data-inline] main>header,html[data-inline] .task { display:none; }

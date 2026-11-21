@@ -169,3 +169,10 @@ The GPGPU-Sim workflow compiles and checks those kernels as well as gather. The 
 Inspired by the model-driven learning approach in [Digital Design](https://github.com/snowch/digital-design)
 and [Assembly Lab](https://github.com/snowch/assembly-lab). This small standalone prototype does
 not yet integrate `snowch/learning-platform`; migration is a separate curriculum/platform decision.
+
+## Runtime design
+
+The [reusable code runner design](docs/code-runner-design.md) explains compiler
+reuse between lessons, CPU/RAM lifecycle, header controls, idle release and state
+preservation. Read it alongside the [offline/update design](docs/offline-update-design.md)
+when adapting these mechanisms to another lab.
