@@ -47,6 +47,8 @@ jobs:
           name: browser-screenshots
           path: |
             test-results/*.png
+            test-results/code-runner/*.png
+            test-results/code-runner/timings.json
             test-results/recording-context/*.png
             test-results/background-updates/*.png
             test-results/online-navigation/*.png

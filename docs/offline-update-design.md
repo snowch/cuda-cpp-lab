@@ -153,7 +153,9 @@ outgoing route separately from browser history when saving state during Back/For
 A warmed WASM compiler uses CPU/RAM and is independent of downloaded course files.
 **Code runner: Ready** does not mean downloaded; **Downloaded and ready to use offline**
 does not mean a runtime is resident. Freeing RAM or idle shutdown preserves saved
-files and drafts. Include all runner modules, styles and lazy execution adapters in
+files and drafts. The runner defaults to a 30-minute idle interval, configurable
+in its header controls; this preference does not change offline retention. Its
+allocated-WASM memory reading is unrelated to downloaded file size. Include all runner modules, styles and lazy execution adapters in
 the manifest so offline execution can start cold. A busy runner participates in
 restart guards; matching-release swaps reuse it, full release changes recreate it.
 

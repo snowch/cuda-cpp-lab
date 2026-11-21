@@ -16,12 +16,19 @@ saved course files and a running WebAssembly toolchain have different lifetimes.
   preparation before any program is executed. **Free memory** terminates the idle
   worker. Both keep editor text and previous results. Neither deletes downloaded
   files, drafts or manual completion marks.
-- Five minutes without a run releases the worker. The idle interval starts after
-  an operation finishes. A running compile/simulation is never cancelled by the
+- Thirty minutes without a run releases the worker by default. **Keep ready
+  between runs** offers 5, 15, 30 or 60 minutes. The choice is saved in this
+  browser for this course and synchronised across its tabs. The idle interval
+  starts after an operation finishes. Changing the choice counts from that same
+  completion, so shortening an already-expired interval releases an idle worker
+  immediately. If storage is unavailable, explain that the choice applies only
+  to this tab. A running compile/simulation is never cancelled by the
   idle policy; the separate execution deadline still applies.
-- The first run explains device CPU/RAM use, reuse, idle release and the header
-  control, beside the editor. It does not interrupt the task with a modal or
-  require the learner to understand WebAssembly. Later lessons omit that introduction.
+- After the first completed run, a short toast explains reuse and the selected
+  idle interval. It stays until **Dismiss** or **Manage runner**, never takes
+  focus automatically, and is remembered per browser/course. Preparation and
+  compiler errors do not trigger it. The lesson keeps the Run → result progression;
+  optional resource management belongs in the header. Later lessons omit the toast.
 - Each run receives fresh simulated program state. Compiler reuse must never
   carry simulated allocations, streams, events, output or errors into another run.
 
@@ -30,6 +37,39 @@ checked again on focus and visibility changes. A browser cannot promise that a
 runtime will survive backgrounding or release physical RAM at an exact second.
 When a worker ends, its WASM heaps become reclaimable; the browser controls actual
 memory reclamation. The next run starts the tools again.
+
+## Controls and resource measurements
+
+The header opens a compact **nonmodal** popover rather than blocking the lesson
+with a modal. Close and Escape return focus to the invoking control; clicking
+outside dismisses it without moving focus from the newly selected content.
+Keep controls keyboard accessible, at least 44 CSS pixels high, scrollable on
+short screens and usable in both themes. An explicit Close/Escape/outside-click
+fallback covers browsers without native popovers. A lesson change closes the
+controls. The saved timeout choice never interrupts a running operation.
+
+**WASM memory allocated** reports the most recent sample of allocated WebAssembly
+linear memory, in MiB. Capture actual memory objects from imports/exports as each
+compiler, simulator and host-program instance is created; deduplicate identical
+objects. Inspect only memory descriptors: enumerating dynamic-linker import
+proxies can alter symbol resolution. Retained compiler heaps remain counted after a run; discard references
+to per-run heaps on every terminal path. Report zero after terminating the worker.
+This is not total browser RAM, physical resident memory or a claim that the browser
+has already reclaimed memory. JavaScript objects, compiled code and other tabs
+are excluded. Samples are event-driven, not a continuous memory monitor. Display
+**Unavailable** if the allocation cannot be determined, rather than inventing a
+number. Instrumentation must not change compiler heap sizes or program semantics.
+
+**Last compile and run** is wall-clock elapsed time from the accepted Run request
+to its completed response. It includes initialisation, time waiting for manual
+startup, compilation and simulation. It is neither CPU utilisation nor physical
+GPU timing. Failed compilation, cancellation and manual preparation do not replace
+the last successful duration. Stopping preserves that duration in the current
+reading window. A fresh document starts without a completed duration.
+
+Do not display a CPU percentage: there is no portable browser API for accurate
+per-runner utilisation. No diagnostic counter should distract from the lesson's
+actual output or imply GPU hardware performance.
 
 ## Why a persistent reading document
 
@@ -148,11 +188,12 @@ being warm is an optimisation, never a condition for offline readiness.
 | File | Responsibility |
 | --- | --- |
 | [src/code-runner.mjs](../src/code-runner.mjs) | Worker ownership, serial jobs, cancellation, deadlines and idle release |
-| [src/code-runner-host.mjs](../src/code-runner-host.mjs) | Parent owner, header/dialog, restart guard and visibility checks |
-| [src/code-runner-client.mjs](../src/code-runner-client.mjs) | Same-release editor attachment, first-use guidance and worker facade |
+| [src/code-runner-host.mjs](../src/code-runner-host.mjs) | Parent owner, header popover/toast, saved preferences, restart guard and visibility checks |
+| [src/code-runner-client.mjs](../src/code-runner-client.mjs) | Same-release editor attachment and worker facade |
 | [src/course-session.mjs](../src/course-session.mjs) | Same-release navigation, URL handling, state guards, remounting and history |
 | [src/experiment-state.mjs](../src/experiment-state.mjs) | Existing snapshots plus explicit reading-route context for remounts |
-| [content/v2-warm-toolchain.mjs](../content/v2-warm-toolchain.mjs) | Build-time extension of the vendored worker’s compiler/adapter cache |
+| [content/v2-warm-toolchain.mjs](../content/v2-warm-toolchain.mjs) | Build-time extension of the vendored worker’s compiler/adapter cache and allocation samples |
+| [src/code-runner-settings.mjs](../src/code-runner-settings.mjs) | Idle choices, preference keys and measurement formatting |
 | [src/code-runner.css](../src/code-runner.css) | Compact header status and accessible controls using the existing palette/type |
 
 Keep worker transformation assertions and real basic → advanced → basic execution
@@ -173,8 +214,13 @@ Verify these journeys using real workers and real code:
 - Manual preparation executes no learner code; release/restart keeps results.
 - Stop while downloading, compiling and running; timeout/crash; a late old reply;
   another submission while busy; each can recover with the next run.
-- Idle release, activity resetting its deadline, delayed background timers and a
-  running operation crossing an idle deadline.
+- Default and changed idle intervals, shortening an expired deadline, persistence
+  across reload/tabs, unavailable storage, delayed background timers and a running
+  operation crossing an idle deadline.
+- Toast after a completed run without focus theft, explicit dismissal, no repetition
+  between lessons, popover keyboard/light dismissal and measured heaps after release.
+- Basic and advanced allocation samples, memory unavailable rather than guessed,
+  and elapsed time including a run queued during preparation.
 - New tab, reload, full page load, missing runtime APIs and a blocked owner startup.
 - New published HTML while an older version is saved; genuine 404; unreachable
   host; verified/corrupt offline HTML; old worker without navigation acknowledgement.
