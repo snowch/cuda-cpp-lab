@@ -12,7 +12,7 @@ export function warmToolchain(html) {
 async function initialise(assets, advanced) {
   const cached = toolchains.get(advanced);
   if (cached) { simulatorModule = cached; return; }
-  postMessage({ stage: 'Loading Clang and GPGPU-Sim…', phase: 'starting' });
+  postMessage({ stage: compiler ? 'Preparing the simulator for this lesson…' : 'Starting the compiler and GPU simulator…', phase: 'starting' });
   const loadCompiler = async () => {
     if (compiler) return;
     const [glue, wasm, data] = await Promise.all(assets.compiler.map(getCompilerAsset));

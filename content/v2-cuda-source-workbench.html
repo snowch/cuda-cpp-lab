@@ -1626,7 +1626,7 @@ function getRunAssets() {
 }
 
 run.addEventListener('click', () => {
-  clearMessages(prepared ? 'Compiling your CUDA source…' : 'Loading the compiler…');
+  clearMessages(prepared ? 'Compiling your CUDA source…' : 'Preparing to compile your CUDA source…');
   showPreviousResult();
   busy(true);
   try {
