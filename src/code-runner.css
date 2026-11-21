@@ -1,0 +1,10 @@
+/* Copyright © 2026 Christopher Snow. */
+/* Runtime status shares the existing header typography and restrained palette. */
+#code-runner-open { display:grid; text-align:left; align-content:center; line-height:1.3; min-height:44px; }
+#code-runner-summary { display:block; font-size:.78em; color:var(--muted); }
+#code-runner-open[data-state="ready"] #code-runner-summary { color:var(--accent); }
+#code-runner-dialog { width:min(560px,calc(100% - 32px)); max-height:calc(100dvh - 32px); overflow:auto; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:clamp(20px,4vw,32px); }
+#code-runner-dialog::backdrop { background:#0008; }
+#code-runner-dialog p { max-width:60ch; }
+#code-runner-dialog button { min-height:44px; }
+#course-navigation-status { padding:12px; border-left:3px solid var(--accent); }

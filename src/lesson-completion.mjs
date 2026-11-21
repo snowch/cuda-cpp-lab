@@ -3,9 +3,7 @@ import {LessonCompletionStore,completionPrefix} from './lesson-completion-store.
 let storage;
 try {storage=localStorage;} catch { /* Manual marks still work for this tab. */ }
 const store=new LessonCompletionStore(storage);
-const links=[...document.querySelectorAll('a[data-completion-lesson]')];
-const input=document.querySelector('[data-lesson-completion]');
-const note=document.getElementById('lesson-completion-note');
+let links=[],input,note;
 function render(){
   for(const link of links) {
     const done=store.isDone(link.dataset.completionLesson);
@@ -21,9 +19,13 @@ function render(){
       :'Marks are saved in this browser.';
   }
 }
-if(input){
-  input.closest('.lesson-completion').hidden=false;
+export function mountCompletion(){
+ links=[...document.querySelectorAll('a[data-completion-lesson]')];input=document.querySelector('[data-lesson-completion]');note=document.getElementById('lesson-completion-note');
+ if(input&&!input.dataset.completionMounted){
+  input.dataset.completionMounted='true';input.closest('.lesson-completion').hidden=false;
   input.addEventListener('change',()=>{store.set(input.dataset.completionLesson,input.checked);render();});
+ }
+ render();
 }
 addEventListener('storage',event=>{
   try {if(event.storageArea&&event.storageArea!==localStorage)return;} catch {return;}
@@ -34,4 +36,4 @@ addEventListener('pageshow',()=>{store.refresh();render();});
 addEventListener('gpu-lab:before-restart',event=>{
   if(store.unsaved.size)event.detail.reason='This tab has an unsaved lesson mark. Allow browser storage or undo that mark before updating.';
 });
-render();
+mountCompletion();

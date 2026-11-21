@@ -1551,11 +1551,20 @@ function fail(message, details = '') {
 
 const makeModule = text => URL.createObjectURL(new Blob([text], { type: 'text/javascript' }));
 function launchWorker() {
+  if (window.gpuLabRunnerClient) return sharedRunner();
   workerUrl = makeModule(lab.worker);
   const created = new Worker(workerUrl);
+  return observeWorker(created);
+}
+function sharedRunner() { return observeWorker(window.gpuLabRunnerClient.connect(lab.worker)); }
+function observeWorker(created) {
   created.onmessage = ({ data }) => {
     if (workerUrl) URL.revokeObjectURL(workerUrl);
     workerUrl = undefined;
+    if (data.cancelled) {
+      clearTimeout(timeout); prepared = false; engine = undefined;
+      clearMessages(data.stage); busy(false); return;
+    }
     if (data.stage) {
       status.textContent = data.stage;
       if (data.ready) prepared = true;
@@ -1601,19 +1610,8 @@ function launchWorker() {
   return created;
 }
 
-run.addEventListener('click', () => {
-  clearMessages(prepared ? 'Compiling your CUDA source…' : 'Loading the compiler…');
-  showPreviousResult();
-  busy(true);
-  try {
-    engine ??= launchWorker();
-    timeout = setTimeout(() => {
-      shutDown();
-      fail('The run timed out after 90 seconds. Your source remains in the CUDA source editor. Click Compile and run to try again.');
-    }, 90_000);
-    let assets;
-    if (!prepared) {
-      assets = { compiler: lab.assets.compiler };
+function getRunAssets() {
+      const assets = { compiler: lab.assets.compiler };
       if (advanced) assets.advanced = lab.assets.advanced;
       else assets.simulator = lab.assets.simulator;
       if (advanced && assets.advanced?.files) {
@@ -1624,7 +1622,20 @@ run.addEventListener('click', () => {
           name, { ...asset, parts: asset.parts.map(part => new URL(folder + part, location.href).href) },
         ]));
       }
-    }
+  return assets;
+}
+
+run.addEventListener('click', () => {
+  clearMessages(prepared ? 'Compiling your CUDA source…' : 'Loading the compiler…');
+  showPreviousResult();
+  busy(true);
+  try {
+    engine ??= launchWorker();
+    timeout = setTimeout(() => {
+      shutDown();
+      fail('The run timed out after 90 seconds. Your source remains in the CUDA source editor. Click Compile and run to try again.');
+    }, 90_000);
+    const assets = window.gpuLabRunnerClient || !prepared ? getRunAssets() : undefined;
     engine.postMessage({ source: editor.value, profile, fullProgram, advanced, assets });
   } catch (error) {
     shutDown();
@@ -1632,7 +1643,7 @@ run.addEventListener('click', () => {
   }
 });
 
-// Release the compiled toolchain when this lesson's iframe goes away.
+// Detach this editor on navigation; its idle parent-owned toolchain can survive.
 addEventListener('pagehide', shutDown);
 stop.addEventListener('click', () => {
   shutDown();
@@ -1701,6 +1712,7 @@ showValues();
 // hooks have finished loading. Otherwise the initial program can replace an
 // edit made while this document is still arriving over a slow connection.
 function editorReady() {
+  window.gpuLabRunnerClient?.configure(lab.worker, {assets: getRunAssets(), advanced});
   if (status.textContent === 'Preparing the CUDA source editor…')
     status.textContent = 'Ready to compile the CUDA source.';
   busy(false);

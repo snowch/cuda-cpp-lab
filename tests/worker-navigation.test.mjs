@@ -15,15 +15,15 @@ async function machine({state={active:A,saved:true},network=()=>new Response('la
  },async keys(){return [...stores.keys()];},async delete(name){return stores.delete(name);}};
  async function put(name,path,body){await(await caches.open(name)).put(new URL(path,base),new Response(typeof body==='string'?body:JSON.stringify(body)));}
  if(!denied)await put(prefix+'status-v1','__app_status_state__',state);
- const context=vm.createContext({URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,caches,
+ const context=vm.createContext({URL,Request,Response,Headers,AbortController,AbortSignal,crypto:webcrypto,console,setTimeout,clearTimeout,caches,
   mediaRangeResponse:(_,response)=>response,
   self:{registration:{scope:base},clients:{async matchAll(){return clients;}},addEventListener(type,fn){handlers.set(type,fn);}},
   async fetch(request,options){const url=typeof request==='string'||request instanceof URL?String(request):request.url;requests.push({url,cache:request.cache||options?.cache});return network(url);},
  });
  const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
  vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);
- async function request(path,{destination='document',replacesClientId='',mode='navigate',referrer=''}={}){
-  let response;const headers=new Headers();
+ async function request(path,{destination='document',replacesClientId='',mode='navigate',referrer='',soft=false}={}){
+  let response;const headers=new Headers();if(soft)headers.set('X-Lab-Navigation','1');
   handlers.get('fetch')({request:{url:new URL(path,base).href,referrer,method:'GET',mode,destination,headers},replacesClientId,clientId:'',respondWith(work){response=work;}});
   return response;
  }
@@ -164,4 +164,26 @@ test('recognising a complete copy never downloads missing bytes or overrides a c
  const legacy=await machine({state:{active:A,saved:false},network:()=>new Response('code')});
  await legacy.put(prefix+'release-'+A,'index.html','page');
  const saved=await legacy.rpc('PREPARE',{release,save:true});assert.equal(saved.offlineReady,true);assert.equal(legacy.requests.length,1,'An older explicit Save request must still fetch its missing file');
+});
+
+
+test('warm lesson navigation requests fresh online HTML and marks protocol support',async()=>{
+ const m=await machine();await m.put(prefix+'release-'+A,'next.html','saved old HTML');
+ const response=await m.request('next.html',{mode:'cors',destination:'',soft:true});
+ assert.equal(await response.text(),'latest');assert.equal(response.headers.get('X-Lab-Navigation'),'1');
+ assert.equal(m.requests[0].url,base+'next.html');assert.equal(m.requests[0].cache,'no-store');
+ const missing=await machine({network:()=>new Response('Retired',{status:404})});
+ assert.equal((await missing.request('next.html',{mode:'cors',destination:'',soft:true})).status,404);
+});
+test('warm offline navigation verifies saved HTML and never displays corrupted cached bytes',async()=>{
+ const file=(path,body)=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
+ for(const corrupt of [false,true]){
+  const m=await machine({network:()=>{throw Error('Offline');}});
+  await m.put(prefix+'release-'+A,'__release_manifest__',{schema:1,id:A,commit:null,date:null,files:[file('index.html','home'),file('next.html','verified HTML')],bytes:17});
+  await m.put(prefix+'release-'+A,'next.html',corrupt?'corrupt HTML':'verified HTML');
+  const response=await m.request('next.html',{mode:'cors',destination:'',soft:true});
+  const text=await response.text();assert.equal(response.headers.get('X-Lab-Navigation'),'1');
+  if(corrupt){assert.equal(response.status,503);assert.match(text,/needs repair/);assert.ok(!text.includes('corrupt HTML'));}
+  else assert.equal(text,'verified HTML');
+ }
 });
