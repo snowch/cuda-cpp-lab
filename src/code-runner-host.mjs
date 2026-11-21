@@ -1,6 +1,6 @@
 // Copyright © 2026 Christopher Snow.
 import {CodeRunner} from './code-runner.mjs';
-import {idleChoices,idleMinutes,idlePreference,toastPreference,wasmSize,elapsedTime} from './code-runner-settings.mjs';
+import {idleChoices,idleMinutes,idlePreference,introPreference,wasmSize,elapsedTime} from './code-runner-settings.mjs';
 let embedded=false;try{embedded=Boolean(frameElement?.hasAttribute('data-kernel-workbench'));}catch{}
 if(!embedded&&!window.gpuLabCodeRunner) {
   let minutes=idleMinutes(null);try{minutes=idleMinutes(localStorage.getItem(idlePreference));}catch{}
@@ -57,11 +57,29 @@ if(!embedded&&!window.gpuLabCodeRunner) {
       runner.setIdleMinutes(value);
     });
     addEventListener('storage',event=>{if(event.key===idlePreference||event.key===null){settingSaved=true;runner.setIdleMinutes(idleMinutes(event.newValue));}});
-    const toast=document.createElement('aside');toast.id='code-runner-toast';toast.hidden=true;toast.setAttribute('aria-label','Code runner notice');
-    toast.innerHTML='<p role="status" aria-live="polite"></p><div class="runner-actions"><button type="button" data-runner-manage>Manage runner</button><button type="button" data-runner-dismiss>Dismiss</button></div>';
-    document.body.append(toast);let toastSeen=false;try{toastSeen=localStorage.getItem(toastPreference)==='1';}catch{}
-    toast.querySelector('[data-runner-manage]').addEventListener('click',()=>{toast.hidden=true;runner.openControls();});
-    toast.querySelector('[data-runner-dismiss]').addEventListener('click',()=>{toast.hidden=true;button.focus({preventScroll:true});});
+    const intro=document.createElement('dialog');intro.id='code-runner-intro-dialog';intro.setAttribute('aria-labelledby','runner-intro-title');intro.setAttribute('aria-describedby','runner-intro-purpose runner-intro-policy');
+    intro.innerHTML=`<h2 id="runner-intro-title" tabindex="-1" autofocus>Code runs on your device</h2>
+<p id="runner-intro-purpose">The compiler and GPU simulator use this device’s CPU and memory. Keeping them ready avoids starting them again between lessons.</p>
+<p id="runner-intro-policy">The runner stops after <span data-intro-minutes></span> minutes without a run. Use <strong>Code runner</strong> in the header to change the time or free memory sooner. Your code and results are kept.</p>
+<p class="runner-setting-note" data-intro-status role="status"></p>
+<div class="runner-actions"><button type="button" class="primary" data-intro-back>Back to lesson</button><button type="button" data-intro-settings>Runner settings</button></div>`;
+    document.body.append(intro);let introShown=false,introAcknowledged=false,introReturnFocus=button;
+    try{introAcknowledged=localStorage.getItem(introPreference)==='1';}catch{}
+    const dismissIntro=(settings=false)=>{
+      introAcknowledged=true;try{localStorage.setItem(introPreference,'1');}catch{}
+      intro.close();
+      if(settings){button.focus({preventScroll:true});runner.openControls();}
+      else (introReturnFocus?.isConnected?introReturnFocus:button).focus({preventScroll:true});
+    };
+    intro.querySelector('[data-intro-back]').addEventListener('click',()=>dismissIntro());
+    intro.querySelector('[data-intro-settings]').addEventListener('click',()=>dismissIntro(true));
+    intro.addEventListener('keydown',event=>{
+      if(event.key!=='Tab'||event.altKey||event.ctrlKey||event.metaKey)return;
+      const first=intro.querySelector('[data-intro-back]'),last=intro.querySelector('[data-intro-settings]'),active=document.activeElement;
+      if(event.shiftKey&&(active===first||active===intro.querySelector('h2'))){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&active===last){event.preventDefault();first.focus();}
+    });
+    intro.addEventListener('cancel',event=>{event.preventDefault();dismissIntro();});
     const names={stopped:'Stopped',starting:'Starting',compiling:'Compiling',running:'Running',ready:'Ready'};
     const text=(element,value)=>{if(element.textContent!==value)element.textContent=value;};
     const render=()=>{
@@ -76,10 +94,13 @@ if(!embedded&&!window.gpuLabCodeRunner) {
       panel.querySelector('[data-runner-stop]').hidden=!runner.busy;
       panel.querySelector('[data-runner-stop]').textContent=runner.job?.preparing&&!runner.pending?'Stop startup':'Stop run';
       panel.querySelector('[data-runner-free]').hidden=runner.state!=='ready';
-      if(runner.completedRuns&&!toastSeen){
-        toastSeen=true;toast.hidden=false;try{localStorage.setItem(toastPreference,'1');}catch{}
+      text(intro.querySelector('[data-intro-minutes]'),String(runner.idleMs/60_000));
+      text(intro.querySelector('[data-intro-status]'),runner.busy?'Your run continues while this dialog is open.':'Return to the lesson to inspect the result or execution message.');
+      if((runner.job&&!runner.job.preparing||runner.pending)&&!introAcknowledged&&!introShown){
+        introShown=true;introReturnFocus=document.activeElement;
+        if(introReturnFocus?.tagName==='IFRAME')try{introReturnFocus=introReturnFocus.contentDocument.querySelector('#source')??button;}catch{introReturnFocus=button;}
+        close();intro.showModal();
       }
-      if(!toast.hidden)text(toast.querySelector('p'),`Keeping the code runner in memory makes later runs faster. It stops after ${runner.idleMs/60_000} minutes without a run.`);
       fit();
     };
     runner.addEventListener('change',render);render();
