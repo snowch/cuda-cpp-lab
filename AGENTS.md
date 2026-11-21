@@ -1,4 +1,4 @@
-# Working on GPU Lab
+# Working on CUDA C++ Lab
 
 Copyright © 2026 Christopher Snow.
 
@@ -30,7 +30,7 @@ Read `docs/plan.md`, `docs/model.md` and `docs/sources.md` before extending the 
 - Follow [shared chapter styling](docs/chapter-styling.md); reuse the common opening-code and browser-guidance components.
 - Use clear British English, accessible labels and keyboard controls. Preserve mobile layouts.
 - Keep the first build dependency-free unless a feature justifies adding a dependency.
-- Use relative asset paths; the production site is hosted beneath `/gpu-lab/`.
+- Use relative asset paths; the production site is hosted beneath `/cuda-cpp-lab/`.
 - Run `npm run check` and `python tests/browser.py` for simulator or interface changes.
 - Validate new CUDA examples on a named toolkit/GPU when available; record untested status otherwise.
 - Regenerate recordings with Common Ground's pinned `record-demo` workflow:

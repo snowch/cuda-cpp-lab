@@ -46,7 +46,7 @@ runKernel<<<blocks, threadsPerBlock>>>(
   ];
   const hostBody = [hostInput, ...phases.map(phase => phase.code)].join('\n\n')
     .split('\n').map(line => line ? '  ' + line : line).join('\n');
-  const source = `// GPU Lab · hello.cu
+  const source = `// CUDA C++ Lab · hello.cu
 #include <cuda_runtime.h>
 #include <cstdio>
 #include <cstdlib>

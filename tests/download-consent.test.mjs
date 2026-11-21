@@ -12,7 +12,7 @@ async function harness(){
   async put(url,response){if(rejectStop&&String(url).endsWith('__download_request_v1__')&&!(await response.clone().json()).wanted)throw Object.assign(new Error('full'),{name:'QuotaExceededError'});files.set(String(url),response.clone());},async delete(url){return files.delete(String(url));}
  };}};
  const context=vm.createContext({URL,Request,Response,AbortController,AbortSignal,crypto:webcrypto,setTimeout,clearTimeout,console,caches,
-  self:{registration:{scope:'https://example.test/gpu-lab/'},clients:{async matchAll(){return [];}},addEventListener(){}},
+  self:{registration:{scope:'https://example.test/cuda-cpp-lab/'},clients:{async matchAll(){return [];}},addEventListener(){}},
  });
  const contract=(await readFile(new URL('../src/release-contract.mjs',import.meta.url),'utf8')).replaceAll('export ','');
  vm.runInContext(contract+'\n'+await readFile(new URL('../scripts/service-worker.js',import.meta.url),'utf8'),context);

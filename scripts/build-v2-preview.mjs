@@ -15,15 +15,15 @@ const source = name => readFile(new URL('../src/' + name, import.meta.url), 'utf
 const encode = (type, value) => 'data:' + type + ';base64,' + Buffer.from(value).toString('base64');
 const icon = encode('image/svg+xml', await readFile(new URL('../assets/icon.svg', import.meta.url)));
 const href = (slug, part) => '#' + (part ?? slug);
-const current = 'https://snowch.github.io/gpu-lab/';
+const current = 'https://snowch.github.io/cuda-cpp-lab/';
 const legacy = slug => current + 'lessons/' + slug + '.html';
 const imports = {};
 const localImport = /^(import .*?['"])\.\/([\w-]+\.mjs)(['"];?)$/gm;
 async function embedModule(name) {
-  const specifier = 'gpu-lab/' + name;
+  const specifier = 'cuda-cpp-lab/' + name;
   if (imports[specifier]) return;
   const script = await source(name);
-  imports[specifier] = encode('text/javascript', script.replace(localImport, '$1gpu-lab/$2$3'));
+  imports[specifier] = encode('text/javascript', script.replace(localImport, '$1cuda-cpp-lab/$2$3'));
   for (const [, , dependency] of script.matchAll(localImport)) await embedModule(dependency);
 }
 for (const entry of ['theme.mjs', 'v2.mjs']) await embedModule(entry);
@@ -47,7 +47,7 @@ await writeFile(output, `<!doctype html>
 <html lang="en-GB">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light dark"><title>GPU Lab</title>
+<meta name="color-scheme" content="light dark"><title>CUDA C++ Lab</title>
 <link rel="icon" type="image/svg+xml" href="${icon}">
 <style>${styling}</style>
 <script type="importmap">${JSON.stringify({ imports })}</script>
@@ -64,8 +64,8 @@ ${workbench ? `<script id="offline-workbench" type="application/json">${JSON.str
 ${licenses.map(escapeText).join('\n\n').replaceAll('--', '—')}
 -->
 <script type="module">
-import 'gpu-lab/theme.mjs';
-import { mountV2 } from 'gpu-lab/v2.mjs';
+import 'cuda-cpp-lab/theme.mjs';
+import { mountV2 } from 'cuda-cpp-lab/v2.mjs';
 const main = document.querySelector('#main');
 function route() {
   const slug = location.hash.slice(1);
@@ -82,7 +82,7 @@ function route() {
     });
   }
   const title = main.querySelector('h1').textContent;
-  document.title = title + ' · GPU Lab';
+  document.title = title + ' · CUDA C++ Lab';
   const part = document.getElementById(slug);
   if (part?.matches('.v2-list h2')) {
     part.focus({ preventScroll: true });

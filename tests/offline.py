@@ -36,7 +36,7 @@ class CourseHandler(BaseHTTPRequestHandler):
     def log_message(self, *_): pass
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
-        if path.startswith('/gpu-lab/'): path = path[len('/gpu-lab'):]
+        if path.startswith('/cuda-cpp-lab/'): path = path[len('/cuda-cpp-lab'):]
         if path.endswith('/'): path += 'index.html'
         path = path.lstrip('/')
         self.requests.append(path)
@@ -140,7 +140,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             browser = p.chromium.launch(**options)
             # A V2 Update is also the offline download, including the real compiler.
             CourseHandler.revision='one'
-            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
+            url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/'
             ctx=foreground(browser.new_context());tab=ctx.new_page();tab.goto(url+'v2/first-kernel.html');panel(tab)
             expect(tab.locator('#offline-status')).to_have_text('Not downloaded for offline use')
             expect(tab.locator('#download-update')).to_be_visible()
@@ -236,7 +236,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             panel(tab);ready(tab);expect(tab.locator('#download-update')).to_be_hidden()
             ctx.close()
             print('PASS V2 update includes offline compiler: deferred refresh/reopen, offline restart, restored source/results/PTX/CUDA trace, real edited/array/architecture compilation, no second save, older complete copies recognised offline')
-            for prefix,width,theme in [('/gpu-lab/',390,'dark'),('/',1440,'light')]:
+            for prefix,width,theme in [('/cuda-cpp-lab/',390,'dark'),('/',1440,'light')]:
                 CourseHandler.revision='one';CourseHandler.fail=None;CourseHandler.slow=False;CourseHandler.requests=[]
                 url=f'http://127.0.0.1:{server.server_port}{prefix}'
                 context=foreground(browser.new_context(viewport={'width':width,'height':1000},color_scheme=theme,has_touch=width<500))
@@ -363,7 +363,7 @@ with TemporaryDirectory(prefix='gpu-status-releases-') as tmp:
             # A persistent installed profile: closing every window does NOT apply
             # a prepared release. Reopen completely offline, then explicitly restart.
             CourseHandler.revision='one';CourseHandler.requests=[]
-            url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
+            url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/'
             profile=temp/'profile'
             ctx=foreground(p.chromium.launch_persistent_context(str(profile),**options))
             tab=ctx.pages[0];tab.goto(url+'index.html');panel(tab);tab.locator('#download-update').click();ready(tab)

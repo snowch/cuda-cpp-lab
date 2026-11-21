@@ -17,7 +17,7 @@ def check_editor_ready(browser, root):
             pass
 
         def do_GET(self):
-            path = urlsplit(self.path).path.removeprefix('/gpu-lab/')
+            path = urlsplit(self.path).path.removeprefix('/cuda-cpp-lab/')
             file = (folder / (path or 'index.html')).resolve()
             if not file.is_relative_to(folder) or not file.is_file():
                 self.send_error(404)
@@ -43,7 +43,7 @@ def check_editor_ready(browser, root):
     thread.start()
     context = browser.new_context(viewport={'width': 390, 'height': 1000})
     try:
-        url = f'http://127.0.0.1:{server.server_port}/gpu-lab/v2/cuda-source-workbench.html?embed=hello'
+        url = f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/v2/cuda-source-workbench.html?embed=hello'
         page = context.new_page()
         page.goto(url, wait_until='commit')
         editor = page.locator('#source')

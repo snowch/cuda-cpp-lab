@@ -2,7 +2,7 @@
 
 Copyright © 2026 Christopher Snow.
 
-GPU Lab uses the same narration workflow as
+CUDA C++ Lab uses the same narration workflow as
 [Common Ground](https://github.com/snowch/common-ground-social-psychology/blob/main/production/README.md):
 the [record-demo skill](https://github.com/snowch/claude-skills/blob/c9a7c521568632aa216932f4c965df386498602a/plugins/demo-video/skills/record-demo/SKILL.md)
 at commit `c9a7c521568632aa216932f4c965df386498602a`. Settings are Kokoro-82M

@@ -3,7 +3,7 @@
 # dependencies = ["playwright==1.58.0", "numpy", "soundfile"]
 # ///
 # Copyright © 2026 Christopher Snow.
-"""Regenerate GPU Lab speech through Common Ground's pinned record-demo skill.
+"""Regenerate CUDA C++ Lab speech through Common Ground's pinned record-demo skill.
 
 The upstream scripts stay in a separate checkout; no upstream implementation or
 speech model is bundled. Use --stage prepare/narrate/screen to resume a production.

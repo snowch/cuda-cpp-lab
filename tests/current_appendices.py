@@ -37,7 +37,7 @@ def check_current_appendices(browser,url,root):
             page=context.new_page()
             for slug in ['desktop','profiling']:
                 page.goto(url+'lessons/'+slug+'.html')
-                expect(page.get_by_role('link',name='GPU Lab home',exact=True)).to_have_attribute('href','../')
+                expect(page.get_by_role('link',name='CUDA C++ Lab home',exact=True)).to_have_attribute('href','../')
                 expect(page.locator('.sidebar')).to_have_count(0)
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 expect(page.get_by_role('navigation',name='Breadcrumb')).to_contain_text('Course overview')

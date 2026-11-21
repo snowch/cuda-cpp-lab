@@ -6,9 +6,9 @@ saves it. Saving a replacement must preserve the previous usable copy and learne
 work. A metadata check, an installed shortcut and a few cached pages do not establish
 offline readiness.
 
-This design describes the GPU Lab implementation after [PR #185](https://github.com/snowch/gpu-lab/pull/185).
+This design describes the CUDA C++ Lab implementation after [PR #185](https://github.com/snowch/cuda-cpp-lab/pull/185).
 It is a reference for adapting the mechanism to other labs, not an extracted shared
-package. [App status and release lifecycle](app-status.md) records the GPU Lab
+package. [App status and release lifecycle](app-status.md) records the CUDA C++ Lab
 configuration and compatibility history. Product-specific names, storage keys,
 editor hooks and manifest contents must be adapted together.
 
@@ -98,13 +98,13 @@ of incomplete saves and mixed deployments. They are not a signed release system;
 manifest authenticity relies on the HTTPS origin and deployment access controls.
 
 Publish normal HTML routes, a stable `sw.js`, `release.json`, and immutable
-`releases/<id>/` copies together. In GPU Lab, the ID hashes the worker source and
+`releases/<id>/` copies together. In CUDA C++ Lab, the ID hashes the worker source and
 the sorted generated files containing a build-ID placeholder; substitute that ID
 before calculating the final per-file hashes and byte counts. The generated
 manifest and worker are excluded from their own file list, avoiding self-hashing.
 
 Pin each document's scripts, styles, media and example downloads to its immutable
-release. Pin embedded documents as well; GPU Lab uses `gpu-release` in their query
+release. Pin embedded documents as well; CUDA C++ Lab uses `gpu-release` in their query
 string to retain their normal base URL. Relative module imports must still resolve
 correctly after any verified response is recovered from a different network URL.
 
@@ -117,7 +117,7 @@ client-side verification.
 
 Published metadata is network-only, including through the worker. Use bounded
 requests, cache-busting, `cache: no-store`, response validation and rejection of
-late results. Explicitly account for the host's CDN: GPU Lab accepts a positive
+late results. Explicitly account for the host's CDN: CUDA C++ Lab accepts a positive
 `Age` only within an explicit `max-age` of at most 600 seconds and below that
 lifetime. This bounds freshness; it cannot defeat an intermediary that lies about
 its headers. The immutable running manifest needs integrity validation, not the
@@ -151,7 +151,7 @@ JavaScript, CSS or Wasm. A recovery tab must also participate safely in restart.
 Keep app-scoped selection metadata separate from each release's file cache and
 from learner work. Derive the namespace from both an app identity and the exact
 registration base URL so cleanup does not remove sibling labs' files on the same
-origin. GPU Lab uses these selection fields:
+origin. CUDA C++ Lab uses these selection fields:
 
 | Field | Purpose |
 | --- | --- |
@@ -239,7 +239,7 @@ Ordinary navigation restores values while honouring the requested anchor and
 history position. Never rerun an experiment automatically to manufacture restored
 output. If restoration fails, retain an exportable snapshot.
 
-Define who reloads embedded editors: GPU Lab's parent lesson owns that reload,
+Define who reloads embedded editors: CUDA C++ Lab's parent lesson owns that reload,
 avoiding a frame consuming its snapshot before the replacement parent creates it.
 Porting requires hooks for each lab's actual editors and experiments; copying the
 dialog and worker alone cannot preserve learner work.
@@ -269,7 +269,7 @@ for partial retention from **Remove offline copy** for verified copies. Preserve
 keyboard focus when actions disappear, label progress and status regions, and
 review phone, tablet, desktop and both themes.
 
-GPU Lab checks on opening, focus, reconnect and return to visibility with a
+CUDA C++ Lab checks on opening, focus, reconnect and return to visibility with a
 15-second throttle, and once a minute while visible and connected. Manual checks
 bypass the throttle. Abort or ignore stale responses, deduplicate checks and do
 not use `navigator.onLine` as evidence that a deployment is reachable.

@@ -250,7 +250,7 @@ saves/guards all open windows. This repair does not activate a waiting worker,
 reload the page automatically or request the published release again.
 
 For a tab already pinned to an older client without this recovery, closing every
-GPU Lab tab/app window and reopening permits the waiting worker to activate and
+CUDA C++ Lab tab/app window and reopening permits the waiting worker to activate and
 opens the downloaded copy. Keep the scoped caches and learner storage intact.
 `tests/offline_background.py` reproduces the original loop with the actual
 `ace5867` client and compiled `7ee4913` worker, checks that one-time recovery, and

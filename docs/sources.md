@@ -41,7 +41,7 @@ hardware. Each additional teaching model distinguishes its assumptions from hard
 
 The lesson CUDA fragments are illustrative source, not recorded compiler output or standalone
 benchmarks. The separately downloadable gather program passed the GPGPU-Sim functional workflow
-in [run 39041106905](https://github.com/snowch/gpu-lab/actions/runs/39041106905). That result does
+in [run 39041106905](https://github.com/snowch/cuda-cpp-lab/actions/runs/39041106905). That result does
 not validate the new scheduling assumptions, compiler lowering, or bank model against hardware.
 
 ## Labs 04B–08
@@ -374,6 +374,6 @@ The recorded-trace excerpt comes from PyTorch Kineto v0.4.0 at commit
 486c083b84a53c60aec0d2c522c1fc5b99ce5284, its ResNet50 zero-worker sample.
 Eight unchanged Kernel events and device properties are retained. Provenance,
 compressed-source SHA-256 and BSD licence are in examples/v2-practical/.
-These published V100 events are separate from GPU Lab's unmeasured native fusion
+These published V100 events are separate from CUDA C++ Lab's unmeasured native fusion
 exercise. CPU/reference, browser-simulator and source/schema checks do not validate
 native benchmarking, sanitizers or target GPU performance.

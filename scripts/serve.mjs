@@ -9,8 +9,8 @@ types['.wasm'] = 'application/wasm';
 const server = createServer(async (req, res) => {
   try {
     let pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    if (pathname === '/gpu-lab') { res.writeHead(302, { Location: '/gpu-lab/' }); res.end(); return; }
-    pathname = pathname.replace(/^\/gpu-lab\//, '/');
+    if (pathname === '/cuda-cpp-lab') { res.writeHead(302, { Location: '/cuda-cpp-lab/' }); res.end(); return; }
+    pathname = pathname.replace(/^\/cuda-cpp-lab\//, '/');
     const file = resolve(root, `.${pathname.endsWith('/') ? pathname + 'index.html' : pathname}`);
     if (!file.startsWith(root + sep)) { res.writeHead(403); res.end(); return; }
     const body = await readFile(file);
@@ -19,4 +19,4 @@ const server = createServer(async (req, res) => {
     res.end(req.method==='HEAD'?undefined:Buffer.from(await response.arrayBuffer()));
   } catch { if (!res.headersSent) res.writeHead(404); res.end('Not found'); }
 });
-server.listen(Number(process.env.PORT ?? 5173), '127.0.0.1', () => console.log('GPU Lab: http://localhost:5173/gpu-lab/'));
+server.listen(Number(process.env.PORT ?? 5173), '127.0.0.1', () => console.log('CUDA C++ Lab: http://localhost:5173/cuda-cpp-lab/'));

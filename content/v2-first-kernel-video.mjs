@@ -14,7 +14,7 @@ export function renderFirstKernelVideo(inline) {
       <source src="${media}first-kernel.mp4" type="video/mp4">
       <track kind="captions" src="${media}captions.vtt" srclang="en" label="English" default>
       Read the transcript below.
-    </video>` : '<p><a href="https://snowch.github.io/gpu-lab/v2/first-kernel.html#v2-first-video">Open the recording on the course site</a></p>'}
+    </video>` : '<p><a href="https://snowch.github.io/cuda-cpp-lab/v2/first-kernel.html#v2-first-video">Open the recording on the course site</a></p>'}
     <details class="sm-transcript"><summary>Read the transcript</summary>
       ${recordingTranscript(scenes)}
     </details>

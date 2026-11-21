@@ -1,7 +1,7 @@
 # Teaching redesign: static worked examples first
 
 This document records the before/after state of the teaching redesign
-requested in issue #1 ("Simplify GPU Lab teaching: static worked examples
+requested in issue #1 ("Simplify CUDA C++ Lab teaching: static worked examples
 first, meaningful experiments second").
 
 ## Before

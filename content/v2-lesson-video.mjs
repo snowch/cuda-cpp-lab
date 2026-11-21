@@ -17,7 +17,7 @@ export function renderV2Video(slug, inline) {
     ${inline ? `<video data-recording="v2-${slug}" controls playsinline preload="none" width="1280" height="720" poster="${path}poster.jpg" aria-label="${escape(metadata.learning?.outcome || (architecture ? 'Thread indices, GPU memory and shared SM execution hardware' : 'Recap of this CUDA example'))}">
       <source src="${path}recap.mp4" type="video/mp4">
       <track kind="captions" src="${path}captions.vtt" srclang="en" label="English" default>
-      Read the transcript below.</video>` : `<p><a href="https://snowch.github.io/gpu-lab/v2/${slug}.html#v2-video">Open the recording on the course site</a></p>`}
+      Read the transcript below.</video>` : `<p><a href="https://snowch.github.io/cuda-cpp-lab/v2/${slug}.html#v2-video">Open the recording on the course site</a></p>`}
     <details class="sm-transcript"><summary>Read the transcript</summary>
       ${recordingTranscript(slug==='one-thread-one-element'?arrayScenes:published)}
     </details></div></details>`;

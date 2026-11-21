@@ -6,7 +6,7 @@ The browser models, real PyTorch calculations, functional CUDA simulation and
 physical GPU measurements answer different questions. Passing one layer does not
 establish the others. Desktop commands and prerequisites are documented in
 [Run the examples on your desktop](run-cuda.md), with runnable downloads in the
-[in-book desktop appendix](https://snowch.github.io/gpu-lab/lessons/desktop.html).
+[in-book desktop appendix](https://snowch.github.io/cuda-cpp-lab/lessons/desktop.html).
 
 ## Browser models and interface
 

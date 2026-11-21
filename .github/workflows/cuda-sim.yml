@@ -29,12 +29,12 @@ jobs:
           python3 tests/test_cuda_output.py
           node scripts/generate-cuda-cases.mjs
       - name: Build the desktop simulator image
-        run: docker build -f docker/cuda-sim.Dockerfile -t gpu-lab-cuda-sim .
+        run: docker build -f docker/cuda-sim.Dockerfile -t cuda-cpp-lab-sim .
       - name: Compile and check CUDA examples in functional simulation
         run: |
           docker run --rm --network none --entrypoint bash \
             --mount "type=bind,src=$PWD,dst=/course" \
-            gpu-lab-cuda-sim /course/scripts/cuda-sim.sh
+            cuda-cpp-lab-sim /course/scripts/cuda-sim.sh
       - name: Restore ownership of CI artifacts
         if: always()
         run: sudo chown -R "$(id -u):$(id -g)" test-results
@@ -42,7 +42,7 @@ jobs:
         run: |
           docker run --rm --network none \
             --mount "type=bind,src=$PWD/test-results/generated-cuda,dst=/input,readonly" \
-            gpu-lab-cuda-sim /input/double.cu '[2,4,6,8,10]' > test-results/cuda-sim/desktop.log 2>&1
+            cuda-cpp-lab-sim /input/double.cu '[2,4,6,8,10]' > test-results/cuda-sim/desktop.log 2>&1
       - name: Preserve logs and configuration
         if: always()
         uses: actions/upload-artifact@v4

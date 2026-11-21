@@ -114,7 +114,7 @@ Review findings and release evidence are added here as that work completes.
 
 ### Chapter 1 release evidence
 
-[PR #137](https://github.com/snowch/gpu-lab/pull/137) merged as
+[PR #137](https://github.com/snowch/cuda-cpp-lab/pull/137) merged as
 `c7aa4e95ee76da460d8c9749f698a5dee6a64c2d`. PR and production checks passed,
 including offline packaging, the full browser suite and CPU example validation.
 Public release metadata and page footer matched that SHA. Inspected the live
@@ -146,7 +146,7 @@ stays collapsed until the reader opens the comparison.
 
 ### Chapter 3 release evidence
 
-[PR #138](https://github.com/snowch/gpu-lab/pull/138) merged as
+[PR #138](https://github.com/snowch/cuda-cpp-lab/pull/138) merged as
 `a75ecfcd5229b47c1aee2c2bf065bb08a37a80e9`. Local, PR and production checks
 passed. Public release metadata and footer matched that SHA; automated checks
 and actual phone/dark and desktop/light inspection confirmed the diagram,
@@ -177,7 +177,7 @@ overflow, hover-only content, new controls or reduced diagram text size.
 
 ### Chapter 5 release evidence
 
-[PR #139](https://github.com/snowch/gpu-lab/pull/139) merged as
+[PR #139](https://github.com/snowch/cuda-cpp-lab/pull/139) merged as
 `6bd7721c5a5d21d89673ad3c2c0c9aa8e18b377e`. Local/PR/production checks passed,
 and public metadata/footer matched the merged release. Inspected actual public
 phone/dark and desktop/light figures; shared/separate storage, unknown offsets
@@ -206,7 +206,7 @@ that a sector number is distinct from the count of sectors.
 
 ### Chapter 6 release evidence
 
-[PR #141](https://github.com/snowch/gpu-lab/pull/141) merged as
+[PR #141](https://github.com/snowch/cuda-cpp-lab/pull/141) merged as
 `d6c889921445cd9c2f7b01e5dd4d81d50422b955`. Local and PR checks passed.
 Production checks/deploy passed on retry after a local test-server connection
 reset while fetching a download. Public release/footer matched the merged SHA;
@@ -214,7 +214,7 @@ inspected actual phone/dark and desktop/light figures and verified keyboard
 row/column/packed/boundary cases before continuing.
 
 The separate user-requested Chapter 1 menu removal landed in
-[PR #142](https://github.com/snowch/gpu-lab/pull/142), release
+[PR #142](https://github.com/snowch/cuda-cpp-lab/pull/142), release
 `415d8387a0f75b10e26036f1f5e90c9b4f88314d`. Full local/PR/production checks and
 actual public phone/desktop, keyboard, direct-section-link and static checks
 passed. The five section targets and visible complete CUDA function remain.
@@ -243,7 +243,7 @@ no-JavaScript visibility. Results remain hidden until Run.
 
 ### Chapter 8 release evidence
 
-[PR #143](https://github.com/snowch/gpu-lab/pull/143) merged as
+[PR #143](https://github.com/snowch/cuda-cpp-lab/pull/143) merged as
 `3489002ee80099bdfd99897573f2597d6c9e0511`. Local/PR/production checks and
 deployment passed. Public release/footer matched that SHA; inspected actual
 phone/dark and desktop/light figures. Both masks stayed beside each other;
@@ -278,7 +278,7 @@ visible with JavaScript disabled.
 
 ### Chapter 9 release evidence
 
-[PR #144](https://github.com/snowch/gpu-lab/pull/144) merged as
+[PR #144](https://github.com/snowch/cuda-cpp-lab/pull/144) merged as
 `cca178582d5942f4c938967283f13f098f200720`. Local/PR/production checks and
 deployment passed. Public release/footer matched the SHA. Inspected actual
 phone/dark and desktop/light ordering figures and current-event memory cards;

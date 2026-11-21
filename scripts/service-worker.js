@@ -361,7 +361,7 @@ async function receiveBackground(event, outcome) {
     if(outcome==='success'&&current?.id===job.id&&current.wanted) {
       await markPrepared(release,job.save,operation.signal,undefined,job.running);
       await changeDownload(job.id,{state:'ready',wanted:false,bytes:release.bytes,error:null});
-      await event.updateUI?.({title:job.mode==='update'?'GPU Lab update ready':'GPU Lab available offline'});
+      await event.updateUI?.({title:job.mode==='update'?'CUDA C++ Lab update ready':'CUDA C++ Lab available offline'});
     } else {
       const failed=outcome==='fail',reason=event.registration.failureReason;
       const retry=failed&&!['aborted','quota-exceeded','download-total-exceeded'].includes(reason);
@@ -370,7 +370,7 @@ async function receiveBackground(event, outcome) {
     }
   } catch (failure) {
     await failDownload(job.id,failure);
-    try{await event.updateUI?.({title:'GPU Lab download needs attention'});}catch{/* The in-app status retains the failure. */}
+    try{await event.updateUI?.({title:'CUDA C++ Lab download needs attention'});}catch{/* The in-app status retains the failure. */}
   }
   finally {endOperation();await broadcast({type:'STATUS_CHANGED'});}
 }
@@ -394,7 +394,7 @@ async function courseWindows(release) {
 function ask(client, token) {
   return new Promise((resolve, reject) => {
     const channel = new MessageChannel();
-    const timer = setTimeout(() => { channel.port1.close(); reject(new Error('Another GPU Lab window did not respond. Open it and try again, or close it after saving your work.')); }, 5000);
+    const timer = setTimeout(() => { channel.port1.close(); reject(new Error('Another CUDA C++ Lab window did not respond. Open it and try again, or close it after saving your work.')); }, 5000);
     channel.port1.onmessage = ({ data }) => {
       clearTimeout(timer); channel.port1.close();
       data?.ready ? resolve() : reject(new Error(data?.error || 'Another window cannot save its work yet.'));
@@ -541,7 +541,7 @@ async function offlineNavigationResponse(request,state={}) {
   const retryLink=`<a${previous?'':' class="primary"'} href="${escape(request.url)}">Try again</a>`;
   const fontId=state.active||state.visited;
   const fontFace=/^[a-f0-9]{64}$/.test(fontId||'')?`@font-face{font-family:Plex;src:url('${new URL(`releases/${fontId}/assets/fonts/plex-sans.woff2`,BASE)}') format('woff2');font-display:swap}`:'';
-  return new Response(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="data:,"><title>${title} · GPU Lab</title>
+  return new Response(`<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="data:,"><title>${title} · CUDA C++ Lab</title>
 <script>
 try{const saved=localStorage.getItem('gpu-lab-theme');document.documentElement.dataset.theme=['light','dark'].includes(saved)?saved:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch{}
 // This page has no editable work, but must participate safely when another
@@ -566,7 +566,7 @@ ${fontFace}
 :root[data-theme=dark]{color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#142326;--ink:#e4efeb;--muted:#a7bfbd;--line:#3b5356;--accent:#a3ddc2}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.65 Plex,system-ui,sans-serif}header{border-bottom:1px solid var(--line);padding:20px max(20px,calc((100% - 720px)/2))}.brand{color:var(--ink);font-size:24px;font-weight:700;text-decoration:none}header small{display:block;color:var(--muted);font-size:14px}main{max-width:760px;padding:clamp(24px,6vw,48px) 20px;margin:auto}h1{font-size:clamp(30px,5vw,40px);line-height:1.2;margin:0 0 24px;max-width:24ch}p{max-width:64ch}nav{display:flex;flex-wrap:wrap;gap:12px;margin:32px 0}nav a{display:inline-block;min-height:48px;padding:10px 18px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);text-underline-offset:4px}.primary{background:var(--accent);color:var(--bg);font-weight:650;text-decoration:none}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.instruction{border-top:1px solid var(--line);padding-top:24px}
-</style></head><body><header><a class="brand" href="${escape(BASE.href)}">GPU Lab</a><small>CUDA C++</small></header><main><h1>${title}</h1><p>${explanation}</p><nav aria-label="Continue reading">${previous?backLink+retryLink:retryLink+backLink}</nav><p class="instruction">${instruction}</p></main></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+</style></head><body><header><a class="brand" href="${escape(BASE.href)}">CUDA C++ Lab</a><small>GPU architecture</small></header><main><h1>${title}</h1><p>${explanation}</p><nav aria-label="Continue reading">${previous?backLink+retryLink:retryLink+backLink}</nav><p class="instruction">${instruction}</p></main></body></html>`,{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
 }
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;

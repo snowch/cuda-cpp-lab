@@ -19,7 +19,7 @@ class Handler(BaseHTTPRequestHandler):
     revision='one';roots={};requests=[];pause=None;pause_path='zz-payload.bin';unreachable=False;corrupt=False;previous_worker=False;previous_native_worker=False;fail_metadata=False
     def log_message(self,*args):pass
     def do_GET(self):
-        path=unquote(urlsplit(self.path).path).removeprefix('/gpu-lab/').lstrip('/') or 'index.html'
+        path=unquote(urlsplit(self.path).path).removeprefix('/cuda-cpp-lab/').lstrip('/') or 'index.html'
         if self.unreachable:self.close_connection=True;return
         if self.fail_metadata and (path=='release.json' or path.endswith('/release.json')):self.send_error(503);return
         if path.endswith('/'):path+='index.html'
@@ -49,7 +49,7 @@ def fixture(temp,name,previous_client=False,embed=False):
     for icon in ['icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png']:shutil.copy2(ROOT/'assets'/icon,folder/'assets'/icon)
     shutil.copy2(ROOT/'manifest.webmanifest',folder/'manifest.webmanifest')
     (folder/'zz-payload.bin').write_bytes((b'one' if name=='one' else b'two')*350000)
-    (folder/'index.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/style.css"><title>GPU Lab lifecycle test</title></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Course {name}</h1><label for="draft">Saved learner draft</label><input id="draft" value="7"><p>The current lesson stays open while an update downloads.</p></main><footer><span class="build-info"><a href="#">{name}</a></span></footer><script>const d=document.querySelector('#draft');d.value=localStorage.getItem('fixture-draft')||d.value;d.addEventListener('input',()=>localStorage.setItem('fixture-draft',d.value));</script></body></html>''')
+    (folder/'index.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/style.css"><title>CUDA C++ Lab lifecycle test</title></head><body><header class="topbar"><a class="brand" href="./">CUDA C++ Lab</a><div class="top-actions"></div></header><main><h1>Course {name}</h1><label for="draft">Saved learner draft</label><input id="draft" value="7"><p>The current lesson stays open while an update downloads.</p></main><footer><span class="build-info"><a href="#">{name}</a></span></footer><script>const d=document.querySelector('#draft');d.value=localStorage.getItem('fixture-draft')||d.value;d.addEventListener('input',()=>localStorage.setItem('fixture-draft',d.value));</script></body></html>''')
     if embed:
         page=folder/'index.html'
         page.write_text(page.read_text().replace('</main>','<iframe data-kernel-workbench="fixture" src="./editor.html?embed=test" title="Versioned editor"></iframe></main>'))
@@ -57,7 +57,7 @@ def fixture(temp,name,previous_client=False,embed=False):
         (folder/'src/frame-dependency.mjs').write_text('export const version='+json.dumps(name)+';')
         (folder/'editor.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Editor {name}</title><script type="module" src="./src/frame-version.mjs"></script></head><body><header><div class="top-actions"></div></header><main><label>Editor state<input id="frame-draft" value="prepared {name}"></label></main><footer><span class="build-info">{name}</span></footer></body></html>''')
         page.write_text(page.read_text().replace('</main>','<a href="./next.html">Next lesson</a></main>'))
-        (folder/'next.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Next lesson</title><link rel="stylesheet" href="./src/style.css"></head><body><header class="topbar"><a class="brand" href="./">GPU Lab</a><div class="top-actions"></div></header><main><h1>Next lesson</h1><a href="./index.html">Previous lesson</a></main><footer><span class="build-info">{name}</span></footer></body></html>''')
+        (folder/'next.html').write_text(f'''<!doctype html><html lang="en-GB" data-test-release="{name}"><head><meta charset="utf-8"><title>Next lesson</title><link rel="stylesheet" href="./src/style.css"></head><body><header class="topbar"><a class="brand" href="./">CUDA C++ Lab</a><div class="top-actions"></div></header><main><h1>Next lesson</h1><a href="./index.html">Previous lesson</a></main><footer><span class="build-info">{name}</span></footer></body></html>''')
     if previous_client:
         # Recreate the removed control before a frozen older controller runs.
         # This parser-ordered module precedes the controller injected in <head>.
@@ -208,7 +208,7 @@ def full_course_native(browser,update_root):
     Handler.pause=None;Handler.corrupt=False;Handler.previous_worker=False
     server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
     Thread(target=server.serve_forever,daemon=True).start()
-    url=f'http://127.0.0.1:{server.server_port}/gpu-lab/v2/first-kernel.html'
+    url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/v2/first-kernel.html'
     try:
         with browser.new_context(viewport={'width':390,'height':1000},color_scheme='dark') as c:
             page=c.new_page();page.goto(url)
@@ -271,7 +271,7 @@ def quota_startup_error(browser,url):
         Handler.revision='two';manual_check(page)
         expect(page.locator('#download-update')).to_be_visible()
         cdp=c.new_cdp_session(page)
-        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/'),'quotaSize':1})
+        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/cuda-cpp-lab/'),'quotaSize':1})
         page.locator('#download-update').click()
         expect(page.locator('#app-status-error')).not_to_be_empty(timeout=30000)
         expect(page.locator('#app-status-error')).to_be_visible()
@@ -279,7 +279,7 @@ def quota_startup_error(browser,url):
         assert page.locator('html').get_attribute('data-test-release')=='one'
         expect(page.locator('#offline-status')).to_have_text('Downloaded and ready to use offline.')
         expect(page.locator('#restart-update')).to_be_hidden()
-        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/gpu-lab/')});cdp.detach()
+        cdp.send('Storage.overrideQuotaForOrigin',{'origin':url.removesuffix('/cuda-cpp-lab/')});cdp.detach()
         page.locator('#download-update').click()
         expect(page.locator('#version-status')).to_have_text('Update downloaded and checked',timeout=30000)
         expect(page.locator('#app-status-error')).to_be_empty()
@@ -543,7 +543,7 @@ def main():
         Handler.roots={name:fixture(Path(tmp),name) for name in ['one','two']}
         old_root=fixture(Path(tmp),'old-client',previous_client=True)
         native_old_root=fixture(Path(tmp),'old-native-client',previous_client='native')
-        server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/gpu-lab/'
+        server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/'
         try:
             with sync_playwright() as p:
                 browser=launch(p)

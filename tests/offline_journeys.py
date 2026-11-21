@@ -233,7 +233,7 @@ if __name__=='__main__':
     with TemporaryDirectory(prefix='gpu-offline-journeys-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name,embed=True) for name in ['one','two']}
         server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start()
-        url=f'http://127.0.0.1:{server.server_port}/gpu-lab/index.html'
+        url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/index.html'
         try:
             with sync_playwright() as p:
                 browser=launch(p)

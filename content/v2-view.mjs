@@ -304,7 +304,7 @@ export function renderV2Page(lesson, versionMarkup = '', { home = false, firstPr
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
   const legacy = slug => `${base}lessons/${slug}.html`;
-  const title = (lesson?.title||appendix?.title) ? (lesson?.title||appendix.title) + ' · GPU Lab' : 'GPU Lab';
+  const title = (lesson?.title||appendix?.title) ? (lesson?.title||appendix.title) + ' · CUDA C++ Lab' : 'CUDA C++ Lab';
   const styles = v2Styles.map(name => `<link rel="stylesheet" href="${base}src/${name}">`).join('');
   return `<!doctype html>
 <!-- Copyright © 2026 Christopher Snow. -->

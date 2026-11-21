@@ -1,10 +1,10 @@
-# GPU Lab V2
+# CUDA C++ Lab V2
 
-The CUDA-first course opens at `/gpu-lab/`. Lesson URLs stay under `/gpu-lab/v2/`.
+The CUDA-first course opens at `/cuda-cpp-lab/`. Lesson URLs stay under `/cuda-cpp-lab/v2/`.
 V2's 21 lessons progress from
 per-thread arithmetic and CPU–GPU copies to warp execution, matrix operations,
 attention, inference and stable token routing. The V1 course overview is at
-`/gpu-lab/v1.html`. V1 remains accessible through the course header. V2 lessons contain their own explanations, hardware context and CUDA references.
+`/cuda-cpp-lab/v1.html`. V1 remains accessible through the course header. V2 lessons contain their own explanations, hardware context and CUDA references.
 
 ## Run the course
 
@@ -12,7 +12,7 @@ attention, inference and stable token routing. The V1 course overview is at
 npm run dev
 ```
 
-Open `http://localhost:5173/gpu-lab/` and start with **Write your first GPU value**.
+Open `http://localhost:5173/cuda-cpp-lab/` and start with **Write your first GPU value**.
 Lesson 1 runs one thread that writes one value. Lessons 2–4 share a complete
 CUDA program that processes an array. Every subsequent lesson opens with an
 editable CUDA program that exercises its concept. The execution models
@@ -52,7 +52,7 @@ For a separate file that opens without hosting on a tablet, generate an HTML fil
 with the standalone workbench and open it in Chromium.
 
 ```sh
-node scripts/build-v2-preview.mjs GPU-Lab-V2.html GPU-Lab-CUDA-workbench.html
+node scripts/build-v2-preview.mjs CUDA-Cpp-Lab-V2.html CUDA-Cpp-Lab-workbench.html
 ```
 
 The file includes all lessons, their controls, styles, fonts and the offline

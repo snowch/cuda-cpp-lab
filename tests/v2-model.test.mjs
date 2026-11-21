@@ -76,7 +76,7 @@ test('the 20 model lessons have exercises, transfer prompts and local CUDA refer
     assert.match(page, /Compare your explanation/);
     assert.match(page, /Compare your answer/);
     assert.match(page, /docs.nvidia.com/);
-    assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
+    assert.doesNotMatch(page, /Explore this topic in CUDA C\+\+ Lab V1/);
   }
 });
 
@@ -98,7 +98,7 @@ test('the first lesson introduces a single launch before array indexing', () => 
     diagram < recording && recording < references);
   assert.match(page, /hello&lt;&lt;&lt;1, 1&gt;&gt;&gt;\(output\);/);
   assert.match(page, /kind="captions"/);
-  assert.doesNotMatch(page, /Explore this topic in GPU Lab V1/);
+  assert.doesNotMatch(page, /Explore this topic in CUDA C\+\+ Lab V1/);
 });
 
 test('every guided source variant produces its expected prediction and trace', () => {

@@ -22,7 +22,7 @@ def serve():
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-    url = f'http://127.0.0.1:{port}/gpu-lab/'
+    url = f'http://127.0.0.1:{port}/cuda-cpp-lab/'
     process = subprocess.Popen(
         ['node', 'scripts/serve.mjs', '--dist'],
         cwd=ROOT, env={**os.environ, 'PORT': str(port)}, stdout=subprocess.DEVNULL,

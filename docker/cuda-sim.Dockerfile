@@ -8,5 +8,5 @@ RUN --mount=type=secret,id=proxy_ca \
     cd /opt/gpgpu-sim && git checkout "$GPGPUSIM_REV" && \
     cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j2 && cmake --install build
 ENV GPGPUSIM_ROOT=/opt/gpgpu-sim
-COPY scripts/run-cuda.sh scripts/verify-cuda-output.py /opt/gpu-lab/
-ENTRYPOINT ["bash", "/opt/gpu-lab/run-cuda.sh", "simulator"]
+COPY scripts/run-cuda.sh scripts/verify-cuda-output.py /opt/cuda-cpp-lab/
+ENTRYPOINT ["bash", "/opt/cuda-cpp-lab/run-cuda.sh", "simulator"]

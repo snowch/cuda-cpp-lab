@@ -11,7 +11,7 @@ Compressed source SHA-256: `a91798b500ce9d6e21c416ce32dcd8ecf4788489df86f59ba2f9
 The source reports Tesla V100-DGXS-32GB devices. Filename identifies a ResNet50
 sample with zero data-loader workers. Toolkit version, warm-up, repetitions,
 validation and capture settings are not recorded here and remain unknown.
-These are published profiled durations, not a GPU Lab benchmark or evidence for
+These are published profiled durations, not a CUDA C++ Lab benchmark or evidence for
 our fusion kernel. Events, timestamps (microseconds), names and arguments are
 unchanged; all other events were omitted. They cannot establish CPU/kernel
 correlation without the omitted events. Do not infer end-to-end latency from this excerpt.

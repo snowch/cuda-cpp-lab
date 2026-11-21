@@ -1,4 +1,4 @@
-# GPU Lab course plan
+# CUDA C++ Lab course plan
 
 Copyright © 2026 Christopher Snow.
 

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {webcrypto,createHash} from 'node:crypto';
 import vm from 'node:vm';
-const base='https://example.test/gpu-lab/',prefix=`gpu-lab:${base}:`;
+const base='https://example.test/cuda-cpp-lab/',prefix=`gpu-lab:${base}:`;
 const A='a'.repeat(64),B='b'.repeat(64),C='c'.repeat(64),D='d'.repeat(64);
 async function machine({state={active:A,saved:true},network=()=>new Response('latest'),denied=false,clients=[],beforeRead=async()=>{}}={}){
  const stores=new Map(),handlers=new Map(),requests=[];
@@ -76,7 +76,7 @@ test('uncached offline navigation gives a usable recovery page without saving th
   const response=await m.request('next.html?x=1&y=2',{referrer:base+'index.html?keep=1&draft=7'});
   assert.equal(response.status,503);assert.match(response.headers.get('Content-Type'),/text\/html/);
   const html=await response.text();assert.match(html,/This lesson isn’t saved offline/);assert.match(html,/Choose Save offline copy/);
-  assert.match(html,/href="https:\/\/example.test\/gpu-lab\/index.html\?keep=1&amp;draft=7"/);
+  assert.match(html,/href="https:\/\/example.test\/cuda-cpp-lab\/index.html\?keep=1&amp;draft=7"/);
   assert.match(html,/next.html\?x=1&amp;y=2/);assert.match(html,/Back to previous lesson/);
   assert.equal(response.headers.get('Cache-Control'),'no-store');
   if(!denied)assert.equal(await(await m.caches.open(prefix+'release-'+A)).match(base+'next.html'),undefined);

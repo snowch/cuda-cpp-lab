@@ -100,7 +100,7 @@ function render() {
   $('cancel-remove').textContent=completeOfflineCopy?'Keep offline copy':'Keep saved files';
   $('remove-offline').disabled=locked;
   const cacheNote=cacheLifetime?` The host may take up to ${Math.ceil(cacheLifetime/60)} minutes to show a new deployment.`:'';
-  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using GPU Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?`Completed files are kept. Click ${offlineAction} to finish the download.`:available?`Reload this page to read the latest published course online. ${hasOfflineCopy?'The saved offline copy changes only when you update it.':'The complete course is not saved for offline use.'} ${offlineAction} saves the complete course for offline use (${progressSize(latest.bytes)}). Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
+  $('version-detail').textContent=transferring||ready?'':!supported?'This browser cannot prepare downloads. You can keep using CUDA C++ Lab online.':unavailable?'Offline downloads are unavailable. Reopen App status to retry.':incomplete?`Completed files are kept. Click ${offlineAction} to finish the download.`:available?`Reload this page to read the latest published course online. ${hasOfflineCopy?'The saved offline copy changes only when you update it.':'The complete course is not saved for offline use.'} ${offlineAction} saves the complete course for offline use (${progressSize(latest.bytes)}). Your saved work is kept.`:version==='Cannot check for updates'?'Connect to check for updates.':version==='Couldn’t check for updates'?'Couldn’t check for updates. Connect to the internet and retry.':'';
   $('release-detail').textContent=latest?`Published commit ${latest.commit?.slice(0,7)||latest.id.slice(0,7)}${latest.date?' · '+latest.date:''}. Offline copy size: ${progressSize(latest.bytes)}.${cacheNote}`:'';
   // State changes hide the previous action. Keep keyboard users at the next
   // useful control rather than dropping focus behind the modal.
@@ -397,7 +397,7 @@ async function performDownload(save, resume) {
       try {
         native=await registration.backgroundFetch.get(downloadId);
         if(!native&&!plan.existing)native=await registration.backgroundFetch.fetch(downloadId,plan.requests,{
-          title:'GPU Lab course update',downloadTotal:plan.downloadTotal,
+          title:'CUDA C++ Lab course update',downloadTotal:plan.downloadTotal,
           icons:[{src:new URL('assets/icon-192.png',base).href,sizes:'192x192',type:'image/png'}],
         });
       } catch(failure) {

@@ -36,7 +36,7 @@ function snapshot(kind='restart') {
   const required = document.querySelector('[data-book-experiment]') ? [...document.querySelectorAll('[data-book-experiment]')].map(el=>el.dataset.bookExperiment) : document.querySelector('.hello-section') ? ['hello-0','hello-1','hello-2','hello-3','hello-4','hello-launch','hello-bounds','hello-transfer'] : document.getElementById('sm-recording') ? ['sm-recording'] : document.getElementById('sm-explorer') ? ['sm-hardware'] : document.getElementById('kernel-editor') ? ['kernel'] : document.getElementById('tensor-diagram') ? ['memory','tensor-layout'] : document.body.dataset.lesson ? ['lesson'] : document.getElementById('gpu-map') ? ['gpu-map'] : document.getElementById('work-map') ? ['overview'] : [];
   if(document.getElementById('sm-explorer'))required.push('sm-hardware');
   if (required.some(name => !hooks.has(name))) throw new Error('An experiment has not finished loading. Wait or reload that window before restarting.');
-  if (composing || document.readyState !== 'complete' || document.querySelector('main [aria-busy="true"],main [contenteditable="true"]')) throw new Error('Finish the current input or operation in each GPU Lab window, then try again.');
+  if (composing || document.readyState !== 'complete' || document.querySelector('main [aria-busy="true"],main [contenteditable="true"]')) throw new Error('Finish the current input or operation in each CUDA C++ Lab window, then try again.');
   const guard = { reason: '', kind }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
   const data = { schema: 1, kind, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
@@ -130,7 +130,7 @@ function restore() {
     if (stored) {
       const notice = document.createElement('p'); notice.className = 'restore-notice'; notice.setAttribute('role', 'alert');
       notice.textContent = 'Some experiment state could not be restored. Your saved inputs remain in this tab’s restart snapshot.';
-      const download = document.createElement('a'); download.textContent = 'Download saved inputs'; download.download = 'gpu-lab-experiment.json'; download.href = URL.createObjectURL(new Blob([stored], { type: 'application/json' })); notice.append(' ', download);
+      const download = document.createElement('a'); download.textContent = 'Download saved inputs'; download.download = 'cuda-cpp-lab-experiment.json'; download.href = URL.createObjectURL(new Blob([stored], { type: 'application/json' })); notice.append(' ', download);
       document.querySelector('main')?.prepend(notice);
     }
   }

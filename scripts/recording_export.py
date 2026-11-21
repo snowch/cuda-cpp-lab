@@ -134,7 +134,7 @@ def encode(r):
             print('Reused verified export:', r['key'], flush=True)
             return r['slug'], saved['result']
     pieces, captions, srt, cuts, cues, display = [], ['WEBVTT', ''], [], [], [], []
-    chapters = [';FFMETADATA1', 'title='+r['scenes'][0]['title'], 'artist=GPU Lab']
+    chapters = [';FFMETADATA1', 'title='+r['scenes'][0]['title'], 'artist=CUDA C++ Lab']
     cursor, sr = 0.0, 24000
     for scene in r['scenes']:
         start = cursor

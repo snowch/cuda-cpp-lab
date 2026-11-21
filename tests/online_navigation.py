@@ -107,7 +107,7 @@ def installed_worker(browser,url):
         # the former worker alive. A CSS document executes no application code.
         observer=context.new_page();observer.goto(urlsplit(url)._replace(path='/src/style.css').geturl())
         old.close()
-        until(lambda:observer.evaluate('''async()=>{const r=await navigator.serviceWorker.getRegistration('/gpu-lab/');return r&&!r.waiting&&r.active?.state==='activated'}'''),timeout=30)
+        until(lambda:observer.evaluate('''async()=>{const r=await navigator.serviceWorker.getRegistration('/cuda-cpp-lab/');return r&&!r.waiting&&r.active?.state==='activated'}'''),timeout=30)
         before=payload_requests();fresh=context.new_page();fresh.goto(url);version(fresh,'two')
         fresh.locator('#app-status-open').click();assert rpc(fresh,'STATUS')['active']==one
         assert payload_requests()==before,'Installing the navigation fix does not consent to another course download'
@@ -181,7 +181,7 @@ def explicit_update_during_retention(browser,url):
 if __name__=='__main__':
     with TemporaryDirectory(prefix='gpu-online-navigation-') as tmp:
         Handler.roots={name:fixture(Path(tmp),name,embed=True) for name in ['one','two','three']}
-        server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/gpu-lab/index.html'
+        server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/cuda-cpp-lab/index.html'
         try:
             with sync_playwright() as p:
                 browser=launch(p)

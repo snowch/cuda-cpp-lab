@@ -129,7 +129,7 @@ Physical Android background execution is not claimed from these checks.
 ## Installation guidance
 
 The header keeps App status and the theme control. Browser installation guidance
-is a native disclosure labelled “Add GPU Lab to your apps” at the end of App
+is a native disclosure labelled “Add CUDA C++ Lab to your apps” at the end of App
 status. Its closed default keeps the download and update controls prominent;
 opening it explains the browser menu choices and distinguishes an app icon from
 the saved offline files. The old installation modal and its script are removed.
@@ -254,7 +254,7 @@ accept the pending result prepared by another tab. Cancellation stops the local
 recovery, and Restart still uses the existing all-window save transaction.
 
 Already-pinned older clients cannot load this new module in place. The reproduced
-one-time recovery is to close every GPU Lab browser tab and installed-app window,
+one-time recovery is to close every CUDA C++ Lab browser tab and installed-app window,
 then reopen the course. This lets the waiting worker activate and opens the
 already-downloaded build while retaining persisted learner drafts and preferences.
 Finish any running experiment before closing; the close/reopen check establishes

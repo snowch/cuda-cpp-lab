@@ -35,12 +35,12 @@ an additional diagram when it resolves the problem.
 
 Source: [README, Use offline](../README.md#use-offline).
 
-> Choose Install in the course header to add GPU Lab to your apps
+> Choose Install in the course header to add CUDA C++ Lab to your apps
 
 There is no header Install button. Installation help is inside App status and the
 browser performs installation. This instruction cannot be followed as written.
 
-Replace the opening instruction with: “Open **App status** and expand **Add GPU Lab
+Replace the opening instruction with: “Open **App status** and expand **Add CUDA C++ Lab
 to your apps** for your browser’s installation instructions. Installing the app
 does not save the complete course; choose **Save offline copy** separately.” Keep
 the following offline-readiness explanation. No diagram is needed.

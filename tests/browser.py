@@ -21,7 +21,7 @@ from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 PORT = 5178
-URL = f"http://127.0.0.1:{PORT}/gpu-lab/"
+URL = f"http://127.0.0.1:{PORT}/cuda-cpp-lab/"
 server = subprocess.Popen(
     ["node", "scripts/serve.mjs", "--dist"], cwd=ROOT,
     env={**os.environ, "PORT": str(PORT)}, stdout=subprocess.DEVNULL,

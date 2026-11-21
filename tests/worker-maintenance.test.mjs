@@ -7,7 +7,7 @@ import vm from 'node:vm';
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 
 test('eviction during a shared readiness scan is detected before reporting a complete release',async()=>{
-  const base='https://example.test/gpu-lab/';
+  const base='https://example.test/cuda-cpp-lab/';
   const bodies=new Map([['examples/gather.cu','kernel source'],['video.mp4','recording bytes']]);
   const release={id:'3'.repeat(64),files:[...bodies].map(([path,body])=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}))};
   const started=deferred(),resume=deferred();
@@ -35,7 +35,7 @@ test('eviction during a shared readiness scan is detected before reporting a com
 });
 
 test('concurrent readiness checks share byte verification but later checks detect eviction and recover from errors',async()=>{
-  const base='https://example.test/gpu-lab/',body='recording bytes';
+  const base='https://example.test/cuda-cpp-lab/',body='recording bytes';
   const release={id:'1'.repeat(64),bytes:Buffer.byteLength(body),files:[{path:'video.mp4',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}]};
   const started=deferred(),resume=deferred();
   let reads=0,present=true,denied=false;
@@ -64,7 +64,7 @@ test('concurrent readiness checks share byte verification but later checks detec
 });
 
 test('background cache pruning finishes before an update can create its staging cache',async()=>{
-  const base='https://example.test/gpu-lab/',prefix=`gpu-lab:${base}:`,stores=new Map(),handlers=new Map();
+  const base='https://example.test/cuda-cpp-lab/',prefix=`gpu-lab:${base}:`,stores=new Map(),handlers=new Map();
   const file=body=>({path:'index.html',bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
   const old={schema:1,id:'1'.repeat(64),commit:null,date:null,files:[file('old page')],bytes:8};
   const next={schema:1,id:'2'.repeat(64),commit:null,date:null,files:[file('new page')],bytes:8};
@@ -118,7 +118,7 @@ test('background cache pruning finishes before an update can create its staging 
 });
 
 test('readiness verification bounds parallel I/O and still rejects missing bytes and same-size corruption',async()=>{
-  const base='https://example.test/gpu-lab/';
+  const base='https://example.test/cuda-cpp-lab/';
   const bodies=new Map(Array.from({length:9},(_,i)=>[`file-${i}.bin`,`payload-${i}`]));
   const release={id:'4'.repeat(64),files:[...bodies].map(([path,body])=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')}))};
   let active=0,peak=0,tampered=null,missing=null,denied=null;
@@ -146,7 +146,7 @@ test('readiness verification bounds parallel I/O and still rejects missing bytes
 });
 
 test('late recognition of a saved running copy cannot discard another resumable update',async()=>{
-  const base='https://example.test/gpu-lab/',prefix=`gpu-lab:${base}:`,stores=new Map(),handlers=new Map();
+  const base='https://example.test/cuda-cpp-lab/',prefix=`gpu-lab:${base}:`,stores=new Map(),handlers=new Map();
   const file=(path,body)=>({path,bytes:Buffer.byteLength(body),sha256:createHash('sha256').update(body).digest('hex')});
   const old={schema:1,id:'5'.repeat(64),commit:null,date:null,files:[file('index.html','old page')],bytes:8};
   const next={schema:1,id:'6'.repeat(64),commit:null,date:null,files:[file('index.html','new page'),file('payload.bin','new data')],bytes:16};

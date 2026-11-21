@@ -1,6 +1,6 @@
 # Introducing new technical terms
 
-GPU Lab teaches from a fixed, visible explanation first, then invites prediction and exploration. Short first-use vocabulary notes support that approach; they are **not** another simulator or a glossary for every word.
+CUDA C++ Lab teaches from a fixed, visible explanation first, then invites prediction and exploration. Short first-use vocabulary notes support that approach; they are **not** another simulator or a glossary for every word.
 
 ## When to use a New concepts panel
 

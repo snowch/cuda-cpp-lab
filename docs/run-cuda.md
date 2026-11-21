@@ -3,7 +3,7 @@
 Copyright © 2026 Christopher Snow.
 
 No installation or GPU is required for the browser exercises. The optional
-[desktop appendix](https://snowch.github.io/gpu-lab/lessons/desktop.html) collects runnable downloads. Choose
+[desktop appendix](https://snowch.github.io/cuda-cpp-lab/lessons/desktop.html) collects runnable downloads. Choose
 one of three paths: compile CUDA C++ in a CPU-hosted simulator, run PyTorch in a
 Python environment, or execute CUDA C++ on an NVIDIA GPU. GPGPU-Sim runs the
 supported CUDA programs; it does not run the course's PyTorch examples.
@@ -29,9 +29,9 @@ the image.
 From a terminal, clone the repository and build the image:
 
 ```sh
-git clone https://github.com/snowch/gpu-lab.git
-cd gpu-lab
-docker build -f docker/cuda-sim.Dockerfile -t gpu-lab-cuda-sim .
+git clone https://github.com/snowch/cuda-cpp-lab.git
+cd cuda-cpp-lab
+docker build -f docker/cuda-sim.Dockerfile -t cuda-cpp-lab-sim .
 ```
 
 Download the default `hello.cu` from the desktop appendix, or use chapter 1’s
@@ -41,7 +41,7 @@ selected when you saved it. Open a terminal in the folder containing that file, 
 ```sh
 docker run --rm --network none \
   --mount "type=bind,src=$PWD,dst=/input,readonly" \
-  gpu-lab-cuda-sim /input/hello.cu
+  cuda-cpp-lab-sim /input/hello.cu
 ```
 
 The container compiles the file with `nvcc` and executes its CUDA kernel in
@@ -55,7 +55,7 @@ To check the values automatically, supply the expected output as a JSON array:
 ```sh
 docker run --rm --network none \
   --mount "type=bind,src=$PWD,dst=/input,readonly" \
-  gpu-lab-cuda-sim /input/hello.cu '[2,4,6,8,10]'
+  cuda-cpp-lab-sim /input/hello.cu '[2,4,6,8,10]'
 ```
 
 A successful comparison ends with
@@ -91,7 +91,7 @@ repository root, after building the image:
 node scripts/generate-cuda-cases.mjs
 docker run --rm --network none --entrypoint bash \
   --mount "type=bind,src=$PWD,dst=/course" \
-  gpu-lab-cuda-sim /course/scripts/cuda-sim.sh
+  cuda-cpp-lab-sim /course/scripts/cuda-sim.sh
 ```
 
 This mount is writable because the suite saves logs and configuration beneath
