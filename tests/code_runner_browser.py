@@ -34,7 +34,11 @@ def check_code_runner(browser,url,root):
         expect(editor()).to_be_editable(timeout=30000)
         assert page.evaluate('window.__runnerDocumentToken')==origin,'Warm navigation must retain the worker owner.'
     expect(editor()).to_be_editable();page.set_viewport_size({'width':1440,'height':1000})
-    editor().focus();page.locator('#code-runner-open').click();editor().click()
+    editor().focus();page.locator('#code-runner-open').click();page.locator('#code-runner-open').click()
+    expect(page.locator('#code-runner-dialog')).not_to_be_visible()
+    page.keyboard.press('Enter');expect(page.locator('#code-runner-dialog')).to_be_visible();page.keyboard.press('Escape')
+    expect(page.locator('#code-runner-open')).to_be_focused()
+    page.locator('#code-runner-open').click();editor().click()
     expect(page.locator('#code-runner-dialog')).not_to_be_visible();expect(editor()).to_be_focused()
     page.set_viewport_size({'width':390,'height':1000})
     source=editor().input_value();edited=source.replace('42.0f','7.0f',1)

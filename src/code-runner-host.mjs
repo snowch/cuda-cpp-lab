@@ -7,7 +7,7 @@ if(!embedded&&!window.gpuLabCodeRunner) {
   const runner=new CodeRunner({idleMs:minutes*60_000});window.gpuLabCodeRunner=runner;dispatchEvent(new Event('gpu-lab:runner-ready'));
   const actions=document.querySelector('.top-actions')??document.querySelector('main>header');
   if(actions) {
-    const button=document.createElement('button');button.type='button';button.id='code-runner-open';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','code-runner-dialog');button.setAttribute('aria-expanded','false');
+    const button=document.createElement('button');button.type='button';button.id='code-runner-open';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','code-runner-dialog');button.setAttribute('popovertarget','code-runner-dialog');button.setAttribute('aria-expanded','false');
     button.append('Code runner');const status=document.createElement('span');status.id='code-runner-summary';button.append(status);actions.prepend(button);
     const panel=document.createElement('section');panel.id='code-runner-dialog';panel.className='code-runner-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-labelledby','code-runner-title');panel.setAttribute('popover','auto');
     const native='showPopover' in panel;if(!native)panel.hidden=true;
@@ -39,7 +39,7 @@ if(!embedded&&!window.gpuLabCodeRunner) {
       if(native)panel.showPopover();else panel.hidden=false;
       button.setAttribute('aria-expanded','true');fit();panel.querySelector('[data-runner-close]').focus({preventScroll:true});
     };
-    button.addEventListener('click',()=>opened()?close(true):runner.openControls());
+    button.addEventListener('click',event=>{event.preventDefault();opened()?close(true):runner.openControls();});
     panel.querySelector('[data-runner-close]').addEventListener('click',()=>close(true));
     panel.addEventListener('toggle',()=>button.setAttribute('aria-expanded',String(opened())));
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&opened()){event.preventDefault();close(panel.contains(document.activeElement));}});
