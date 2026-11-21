@@ -21,7 +21,7 @@ function introduce(owner) {
   let seen=false;try{seen=localStorage.getItem('gpu-lab:code-runner-intro')==='1';localStorage.setItem('gpu-lab:code-runner-intro','1');}catch{}
   if(seen||document.getElementById('code-runner-intro'))return;
   const note=document.createElement('p');note.id='code-runner-intro';note.className='note';
-  note.append('The code runner uses your device’s CPU and memory. It stays ready between lessons and stops after five idle minutes. Use ');
+  note.append('The code runner uses your device’s CPU and memory. It stays ready between lessons and stops after five minutes without a run. Use ');
   const button=document.createElement('button');button.type='button';button.textContent='Code runner';
   button.addEventListener('click',()=>ownerReady.then(owner=>owner.openControls?.()));note.append(button,' in the header to free memory sooner. Your code and results are kept.');
   document.getElementById('status').before(note);

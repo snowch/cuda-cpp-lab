@@ -35,7 +35,7 @@ def check_code_runner(browser,url,root):
         assert page.evaluate('window.__runnerDocumentToken')==origin,'Warm navigation must retain the worker owner.'
     expect(editor()).to_be_editable();source=editor().input_value();edited=source.replace('42.0f','7.0f',1)
     run('42.0','first run')
-    expect(frame().locator('#code-runner-intro')).to_contain_text('five idle minutes')
+    expect(frame().locator('#code-runner-intro')).to_contain_text('five minutes without a run')
     frame().get_by_role('button',name='Code runner',exact=True).click()
     expect(page.locator('#code-runner-dialog')).to_be_visible()
     page.keyboard.press('Escape');expect(page.locator('#code-runner-open')).to_be_focused()
