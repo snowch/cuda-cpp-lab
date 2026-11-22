@@ -4,6 +4,22 @@ import json,time
 from pathlib import Path
 from playwright.sync_api import expect
 
+def hold_compiler_requests(context):
+    """Keep interception stable while the compiler's parallel chunks finish."""
+    pattern='**/assets/v2-compiler/Compiler.js-0.bin'
+    held=[];released=False
+    def handle(route):
+        if released:route.continue_()
+        else:held.append(route)
+    context.route(pattern,handle)
+    def release():
+        nonlocal released
+        released=True
+        for route in held:route.continue_()
+        # Removing interception here can strand another in-flight chunk in
+        # Chromium. Keep this pass-through handler until the context closes.
+    return held,release
+
 def check_code_runner(browser,url,root):
     results=root/'test-results/code-runner';results.mkdir(parents=True,exist_ok=True)
     context=browser.new_context(viewport={'width':390,'height':1000},color_scheme='dark')
@@ -41,7 +57,7 @@ def check_code_runner(browser,url,root):
     page.set_viewport_size({'width':390,'height':1000})
     source=editor().input_value();edited=source.replace('42.0f','7.0f',1)
     # Hold real startup: onboarding must appear before compilation can finish.
-    held=[];context.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    held,release_compiler=hold_compiler_requests(context)
     start=time.perf_counter();frame().locator('#run').click()
     intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
     assert intro.evaluate("e=>e.matches(':modal')"),'The introduction must dim and disable the page behind it.'
@@ -66,8 +82,7 @@ def check_code_runner(browser,url,root):
         if held:break
         page.wait_for_timeout(100)
     assert held,'The compiler request must still be blocked while the introduction is visible.'
-    for route in list(held):route.continue_()
-    context.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
+    release_compiler()
     expect(frame().locator('#run')).to_be_enabled(timeout=120000)
     expect(frame().locator('#program-output')).to_contain_text('42.0');expect(intro).to_be_visible()
     expect(intro.locator('[data-intro-status]')).to_contain_text('inspect the result')
@@ -184,10 +199,10 @@ def check_code_runner(browser,url,root):
     context.close()
     # Exact reported journey: header startup introduces the runner; Ready is not a completed program.
     fresh=browser.new_context(viewport={'width':390,'height':700});page=fresh.new_page();page.goto(url+'v2/first-kernel.html')
-    expect(editor()).to_be_editable();held=[]
+    expect(editor()).to_be_editable()
     # Keep another tab open before acknowledgement to verify its initial stale flag is refreshed.
     sibling=fresh.new_page();sibling.goto(url+'v2/first-kernel.html');expect(sibling.frame_locator('[data-kernel-workbench]').locator('#source')).to_be_editable()
-    fresh.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    held,release_compiler=hold_compiler_requests(fresh)
     page.locator('#code-runner-open').click();page.get_by_role('button',name='Start code runner',exact=True).click()
     intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
     expect(intro.locator('[data-intro-status]')).to_contain_text('does not run your program')
@@ -196,8 +211,7 @@ def check_code_runner(browser,url,root):
         if held:break
         page.wait_for_timeout(100)
     assert held
-    for route in list(held):route.continue_()
-    fresh.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
+    release_compiler()
     expect(page.locator('#code-runner-summary')).to_have_text('Ready',timeout=120000)
     expect(intro).to_be_visible();expect(intro.locator('[data-intro-status]')).to_contain_text('then Compile and run')
     assert page.evaluate('gpuLabCodeRunner.completedRuns')==0
@@ -222,8 +236,7 @@ def check_code_runner(browser,url,root):
     page.set_viewport_size({'width':390,'height':360});panel=page.locator('#code-runner-dialog');assert panel.bounding_box()['height']<=344
     page.keyboard.press('Escape');expect(panel).not_to_be_visible();fresh.close()
     queued=browser.new_context(viewport={'width':390,'height':700});page=queued.new_page();page.goto(url+'v2/first-kernel.html')
-    expect(editor()).to_be_editable();held=[]
-    queued.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    expect(editor()).to_be_editable();held,release_compiler=hold_compiler_requests(queued)
     page.locator('#code-runner-open').click();page.get_by_role('button',name='Start code runner',exact=True).click()
     intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
     page.keyboard.press('Escape');expect(intro).not_to_be_visible();expect(page.locator('#code-runner-open')).to_be_focused()
@@ -233,9 +246,10 @@ def check_code_runner(browser,url,root):
         if held:break
         page.wait_for_timeout(100)
     assert held
-    for route in list(held):route.continue_()
-    queued.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
-    expect(frame().locator('#run')).to_be_enabled(timeout=120000);expect(frame().locator('#program-output')).to_contain_text('42.0')
+    release_compiler()
+    expect(frame().locator('#run')).to_be_enabled(timeout=120000)
+    expect(frame().locator('#status')).to_have_attribute('data-error','false')
+    expect(frame().locator('#program-output')).to_contain_text('42.0')
     expect(intro).not_to_be_visible();assert page.evaluate('gpuLabCodeRunner.boots')==1
     queued.close()
     # Seeing the old passive notice is not acknowledgement of the new introduction.
