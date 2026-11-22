@@ -201,3 +201,20 @@
 [data-practical] form { max-width:42rem; }
 [data-practical-feedback] { min-height:3rem; }
 @media(max-width:600px) { .v2-practical-flow ol { grid-template-columns:1fr; } }
+
+/* Shared course design guide: compact reading, explicit progress, local Material icons. */
+.v2-book{--muted:#49636b;--line:#cad9d9}:root[data-theme="dark"].v2-book,:root[data-theme="dark"] .v2-book{--muted:#a7bfbd;--line:#3b5356}
+html{scroll-padding-top:calc(var(--course-header-height,90px) + 16px)}
+.v2-book .v2-main{padding-top:24px}.v2-main .intro{margin-bottom:24px;padding-bottom:0;border-bottom:0}.v2-main .intro h1{max-width:none;font-size:clamp(38px,4vw,56px);letter-spacing:-.04em}
+.book-chapter .hello-section,.book-chapter .book-section{margin-block:32px;padding-top:0;border-top:0}
+.book-chapter .hello-section h2,.book-chapter .book-section h2{font-size:26px;line-height:1.25;margin-bottom:12px}
+.v2-course-progress,.v2-overview-progress{font-size:13px;font-weight:400;color:var(--muted)}.v2-course-progress{margin-left:8px}
+.v2-breadcrumb .v2-course-lessons a{grid-template-columns:2ch minmax(0,1fr) 20px}.v2-done-tick{margin-left:8px;color:var(--accent)}
+.v2-course-switcher>summary>svg{width:20px;height:20px}.v2-resources .section-cue-icon svg{width:24px;height:24px}
+.v2-completion{padding:24px 0}.v2-completion label{display:flex;align-items:center;gap:12px;min-height:44px;width:fit-content}.v2-completion input{width:20px;height:20px;min-height:20px;padding:0;margin:0;accent-color:var(--accent)}
+.v2-completion p{font-size:13px;color:var(--muted);margin:0 0 0 32px}.v2-main .v2-completion+.v2-pager{margin-top:0}
+.v2-code-prediction{margin:18px 0}.v2-code-prediction label{display:block;font-size:15px;font-weight:600;margin-bottom:6px}.v2-code-prediction label span{font-size:13px;font-weight:400;color:var(--muted)}
+.v2-code-prediction textarea{display:block;width:100%;min-height:48px;resize:vertical;padding:10px 12px;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.v2-main footer .v2-version-details{display:none}.v2-list h2{scroll-margin-top:16px}
+.v2-resource-description{font-size:15px}.v2-resource-copy>strong{font-size:18px}
+@media(max-width:600px){.v2-resource-copy>strong{font-size:17px}.v2-resource-description{font-size:14px}.v2-book .v2-main h1{font-size:38px}.book-chapter .hello-section h2,.book-chapter .book-section h2{font-size:24px}}

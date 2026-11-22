@@ -1,3 +1,4 @@
+import {materialSymbol} from '../src/material-symbols.mjs';
 // Copyright © 2026 Christopher Snow.
 import { sectionIcon } from '../src/section-cues.mjs';
 import { escape } from '../src/continuation-ui.mjs';
@@ -7,8 +8,10 @@ export function resourceSummary(kind, title, description, id = '') {
   return `<summary>${sectionIcon(kind)}<span class="v2-resource-copy">
     <strong${id ? ` id="${id}"` : ''}>${escape(title)}</strong>
     <span class="v2-resource-description">${escape(description)}</span>
-    </span><svg class="v2-resource-chevron" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg></summary>`;
+    </span>${materialSymbol('chevron_right','v2-resource-chevron')}</summary>`;
 }
+
+export function durationLabel(value){const seconds=Math.round(value);return seconds<60?`${seconds} sec`:`${Math.floor(seconds/60)} min${seconds%60?' '+seconds%60+' sec':''}`;}
 
 export function recordingTranscript(scenes) {
   const groups=[];

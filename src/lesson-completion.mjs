@@ -20,7 +20,7 @@ function render(){
   }
 }
 export function mountCompletion(){
- links=[...document.querySelectorAll('a[data-completion-lesson]')];input=document.querySelector('[data-lesson-completion]');note=document.getElementById('lesson-completion-note');
+ links=[...document.querySelectorAll('a[data-completion-lesson]')];input=document.querySelector('[data-lesson-completion]:not([data-v2-completion])');note=document.getElementById('lesson-completion-note');
  if(input&&!input.dataset.completionMounted){
   input.dataset.completionMounted='true';input.closest('.lesson-completion').hidden=false;
   input.addEventListener('change',()=>{store.set(input.dataset.completionLesson,input.checked);render();});

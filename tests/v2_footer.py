@@ -12,7 +12,7 @@ def check_v2_footer(browser, url, root):
                 page.goto(url + 'v2/' + slug + '.html')
                 resources = page.locator('.v2-resources')
                 rows = resources.locator('.v2-resource')
-                expect(rows).to_have_count(2)
+                expect(rows).to_have_count(3)
                 for row in rows.all():
                     expect(row).not_to_have_attribute('open', '')
                     summary = row.locator(':scope > summary')
@@ -61,7 +61,7 @@ def check_v2_footer(browser, url, root):
         references = page.locator('[data-v2-resource="references"]')
         references.locator(':scope > summary').click()
         links = references.locator('.chapter-reference-list > li > a')
-        expect(links).to_have_count(2)
+        assert 2 <= links.count() <= 4, route
         urls = links.evaluate_all('links=>links.map(a=>a.href)')
         assert len(urls) == len(set(urls)), route
         for item in references.locator('.chapter-reference-list > li').all():

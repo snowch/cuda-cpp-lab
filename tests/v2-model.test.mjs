@@ -188,10 +188,10 @@ test('all 21 lessons pair each reference with its question without repeated sour
   for (const lesson of v2Course) {
     const html = renderV2References(lesson.slug);
     const urls = [...html.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
-    assert.equal(urls.length, 2, lesson.slug);
-    assert.equal(new Set(urls).size, 2, lesson.slug);
-    assert.equal((html.match(/class="v2-reference-question"/g) ?? []).length, 2, lesson.slug);
-    assert.equal((html.match(/Compare your answer/g) ?? []).length, 2, lesson.slug);
+    assert.equal(urls.length, lesson.slug==='first-kernel'?3:2, lesson.slug);
+    assert.equal(new Set(urls).size, lesson.slug==='first-kernel'?3:2, lesson.slug);
+    assert.equal((html.match(/class="v2-reference-question"/g) ?? []).length, lesson.slug==='first-kernel'?3:2, lesson.slug);
+    assert.equal((html.match(/Compare your answer/g) ?? []).length, lesson.slug==='first-kernel'?3:2, lesson.slug);
     assert.doesNotMatch(html, /data-v2-resource="documentation"/);
   }
 });

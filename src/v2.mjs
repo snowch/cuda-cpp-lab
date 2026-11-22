@@ -1,3 +1,4 @@
+import {mountV2Progress} from './v2-progress.mjs';
 // Copyright © 2026 Christopher Snow.
 import { mountPractical } from './v2-practical.mjs';
 import { mountCourseNavigation } from './v2-course-navigation.mjs';
@@ -56,6 +57,7 @@ export function mountV2(root = document) {
     measure();
   }
   mountCourseNavigation(root);
+  mountV2Progress(root);
   mountGuided(root);
   mountPractical(root);
   const activity = root.querySelector('[data-v2-mode]');
