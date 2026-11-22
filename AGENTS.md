@@ -2,6 +2,8 @@
 
 Copyright © 2026 Christopher Snow.
 
+Use the [shared course design guide](https://github.com/snowch/cuda-python-lab/blob/main/docs/course-design-guide.md) for common layout and interaction decisions.
+
 Use the [chapter authoring checklist](docs/authoring-checklist.md) for every new or revised chapter.
 Complete its required reading-order review for every learner-facing edit, including
 small copy changes: review the preceding, changed and following sections in the built

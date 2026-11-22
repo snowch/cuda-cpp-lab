@@ -1,3 +1,4 @@
+from v2_progress import check_v2_progress
 from v2_practical import check_v2_practical
 from v2_navigation import check_v2_navigation
 from v2_editor_focus import check_v2_editor_focus
@@ -53,6 +54,7 @@ try:
         check_v2_context(browser, URL, ROOT)
         check_v2_footer(browser, URL, ROOT)
         check_v2_navigation(browser, URL, ROOT)
+        check_v2_progress(browser, URL, ROOT)
         check_v2_editor_focus(browser, URL, ROOT)
         check_v2_clarity(browser, URL, ROOT)
         check_version(browser, URL)

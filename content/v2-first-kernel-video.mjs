@@ -1,12 +1,12 @@
 // Copyright © 2026 Christopher Snow.
-import { resourceSummary, recordingTranscript } from './v2-resource-view.mjs';
+import { resourceSummary, recordingTranscript, durationLabel } from './v2-resource-view.mjs';
 import scenes from './first-kernel-scenes.json' with {type:'json'};
 import metadata from './first-kernel-media.json' with {type:'json'};
 
 export function renderFirstKernelVideo(inline) {
   const media = '../assets/media/first-kernel/';
   return `<details class="more-settings sm-recording v2-resource" id="v2-first-video">
-    ${resourceSummary('recap', 'Follow the value through the GPU and back', `${metadata.durationSeconds} sec · Video walkthrough, captions and transcript`)}
+    ${resourceSummary('recap', 'Follow the value through the GPU and back', `${durationLabel(metadata.durationSeconds)} · Video walkthrough, captions and transcript`)}
     <div class="v2-resource-body">
     ${inline ? '<p>Use fullscreen to inspect the code and diagram labels.</p>' : ''}
     ${inline ? `<video data-recording="v2-first-kernel" controls playsinline preload="none" width="1920" height="1080"

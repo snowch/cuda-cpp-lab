@@ -8,6 +8,8 @@ curriculum; `docs/model.md` defines numerical assumptions; the styling and termi
 documents describe implementation details. Historical redesign notes are not a
 second set of authoring requirements.
 
+For the current CUDA course, use the [shared course design guide](https://github.com/snowch/cuda-python-lab/blob/main/docs/course-design-guide.md) for navigation, references, completion and visual components. The PyTorch-specific examples below describe companion material; they do not require adding a second language to a CUDA-only lesson.
+
 ## Design and learning review
 
 Every new or revised learner-facing page, exercise, diagram and recording requires

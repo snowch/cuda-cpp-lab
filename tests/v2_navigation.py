@@ -17,7 +17,7 @@ def check_v2_navigation(browser, url, root):
                 trigger.focus(); page.keyboard.press('Enter')
                 expect(switcher).to_have_attribute('open','')
                 panel=page.get_by_role('navigation',name='Course contents',exact=True)
-                expect(trigger).to_have_text('Course lessons')
+                expect(trigger).to_contain_text('Course lessons')
                 expect(panel.locator('.v2-course-part')).to_have_count(4)
                 expect(panel.locator('.v2-course-part > h2')).to_have_count(4)
                 expect(panel.locator('details')).to_have_count(0)

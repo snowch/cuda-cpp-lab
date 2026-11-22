@@ -1,3 +1,5 @@
+import {materialSymbol} from '../src/material-symbols.mjs';
+import {homeArchitecture} from '../src/home-architecture.mjs';
 // Copyright © 2026 Christopher Snow.
 import { renderPractical, practicalReferences } from './v2-practical-view.mjs';
 import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
@@ -13,6 +15,7 @@ import { renderV2Hardware } from './v2-hardware.mjs';
 import { renderV2References } from './v2-references.mjs';
 import { renderV2Video } from './v2-lesson-video.mjs';
 import { renderFirstKernelVideo } from './v2-first-kernel-video.mjs';
+import {resourceSummary} from './v2-resource-view.mjs';
 import { renderV2Brand } from './v2-brand.mjs';
 
 const modelTopics = {
@@ -57,17 +60,18 @@ const teaching = {
 };
 
 export function renderV2Contents(href) {
-  return `<header class="intro">
+  return `<header class="intro course-home-opening"><div class="course-home-copy">
     <h1>Learn the GPU through CUDA C++</h1>
     <p class="lead">Run a small CUDA C++ program, predict what one edit will change and compare the results. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
     <p>Before you start, be comfortable with basic programming, reading Python and array indexing. The course introduces CUDA and GPU architecture.</p>
     <p>No installation or GPU required. The browser compiles CUDA C++ and runs the examples in a functional GPU simulator. The teaching models calculate specific details such as memory addresses and possible instruction schedules.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
-  </header>
+  </div>${homeArchitecture('cpp')}</header>
+  <p class="v2-overview-progress" aria-live="polite"></p>
   ${groups.map(([id, title, start, end]) => `<section class="v2-list" aria-labelledby="${id}">
     <h2 id="${id}" tabindex="-1">${title}</h2>
     <ol start="${start + 1}">${v2Course.slice(start, end).map(lesson => `<li data-course-kind="${lesson.practical ? 'practical' : 'core'}">
-      <a href="${href(lesson.slug)}">${lesson.title}</a>
+      <a data-v2-completion-link="${lesson.slug}" href="${href(lesson.slug)}">${lesson.title}<span class="v2-done-tick" role="img" aria-label="Complete" hidden>${materialSymbol("check")}</span></a>
       <p>${lesson.goal}</p>
     </li>`).join('')}</ol>
   </section>`).join('')}`;
@@ -75,7 +79,7 @@ export function renderV2Contents(href) {
 
 function workbenchEditor(mode, href, title) {
   const source = href === 'bundled' ? '' : ` src="${href}?embed=${mode}"`;
-  return `<iframe class="v2-inline-workbench" data-kernel-workbench="${mode}"${source} title="${title}"></iframe>`;
+  return `<div class="v2-code-prediction"><label for="v2-code-prediction">Your prediction <span>· Optional</span></label><textarea id="v2-code-prediction" data-code-prediction="${mode}" disabled rows="1" placeholder="What do you expect to see in Console?"></textarea></div><iframe class="v2-inline-workbench" data-kernel-workbench="${mode}"${source} title="${title}"></iframe>`;
 }
 
 function cudaStarter(evidence) {
@@ -286,7 +290,9 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   <section class="v2-resources" aria-label="Optional lesson resources">
     ${lesson.practical ? '' : lesson.mode === 'hello' ? renderFirstKernelVideo(workbenchHref && workbenchHref !== 'bundled') : renderV2Video(lesson.slug, workbenchHref && workbenchHref !== 'bundled')}
     ${lesson.practical ? practicalReferences(lesson.slug) : lesson.mode === 'hello' ? renderV2References(lesson.slug).replaceAll('v2-references', 'v2-first-references') : renderV2References(lesson.slug)}
+    <details class="more-settings v2-resource" data-v2-resource="investigation">${resourceSummary('investigation','Further GPU investigation','Run this CUDA example on an NVIDIA GPU')}<div class="v2-resource-body"><p>In the CUDA source editor, open <strong>Editor tools</strong> and choose <strong>Export .cu</strong> to save the complete program. Use an NVIDIA GPU and a matching CUDA toolkit to run it outside the browser.</p><p><a href="${legacy('desktop')}">GPU setup and tools</a></p><p>Browser simulation checks program behaviour; physical GPU timing requires a hardware measurement.</p></div></details>
   </section>
+  <section class="v2-completion" aria-label="Lesson completion"><label><input type="checkbox" id="v2-complete" disabled data-lesson-completion data-v2-completion="${lesson.slug}"> Mark lesson complete</label><p id="v2-completion-note" role="status">Enable JavaScript to save completion.</p></section>
   <nav class="v2-pager" aria-label="Lesson sequence">
     <a class="v2-page-card" href="${href(previous?.slug ?? 'contents')}">
       <span class="v2-page-direction">${previous ? '← Previous lesson' : 'Course overview'}</span>
@@ -299,7 +305,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'code-runner.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'material-symbols.css', 'home-architecture.css', 'code-runner.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '', appendix } = {}) {
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
@@ -321,6 +327,6 @@ ${lesson ? `<script type="module" src="${base}src/v2.mjs"></script><script type=
 <header class="topbar v2-topbar">${renderV2Brand(base, base + 'assets/icon.svg')}
 <div class="top-actions">
 <button id="theme" type="button" aria-label="Switch colour theme">Theme</button></div></header>
-<main id="main" class="v2-main">${appendix ? `<header class="intro"><nav aria-label="Breadcrumb"><a href="../index.html">Course overview</a> / <span aria-current="page">${escape(appendix.title)}</span></nav><h1>${escape(appendix.title)}</h1><p class="lead">${escape(appendix.lead)}</p></header>${appendix.body}<nav class="v2-pager" aria-label="Appendix navigation"><a href="../index.html">Course overview</a><a href="${appendix.otherHref}">${escape(appendix.otherTitle)}</a></nav>` : lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}${versionMarkup}</footer></main>
+<main id="main" class="v2-main">${appendix ? `<header class="intro"><nav aria-label="Breadcrumb"><a href="../index.html">Course overview</a> / <span aria-current="page">${escape(appendix.title)}</span></nav><h1>${escape(appendix.title)}</h1><p class="lead">${escape(appendix.lead)}</p></header>${appendix.body}<nav class="v2-pager" aria-label="Appendix navigation"><a href="../index.html">Course overview</a><a href="${appendix.otherHref}">${escape(appendix.otherTitle)}</a></nav>` : lesson ? renderV2Lesson(lesson, href, legacy, './cuda-source-workbench.html', firstProgram) : renderV2Contents(href)}<footer><span>Copyright © 2026 Christopher Snow.</span>${lesson ? '<a href="./cuda-source-workbench.html#software-licences">Software licences</a>' : ''}<a href="https://github.com/snowch/cuda-cpp-lab/issues" target="_blank" rel="noopener">Report a problem</a>${versionMarkup.replace('class="build-info"','class="build-info v2-version-details"')}</footer></main>
 </body></html>`;
 }

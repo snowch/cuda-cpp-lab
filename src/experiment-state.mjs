@@ -43,7 +43,7 @@ function snapshot(kind='restart') {
   const guard = { reason: '', kind }; dispatchEvent(new CustomEvent('gpu-lab:before-restart', { detail: guard }));
   if (guard.reason) throw new Error(guard.reason);
   const data = { schema: 1, kind, controls: formState(), experiments: Object.fromEntries([...hooks].map(([name, hook]) => [name, hook.save()])),
-    details: readingDetails().map(el => el.open),
+    detailsVersion: 2, details: readingDetails().map(el => el.open),
     messages: Object.fromEntries([...document.querySelectorAll('main [id]')].filter(el => /(?:feedback|kernel-status|prediction-feedback|challenge-feedback)$/.test(el.id)).map(el => [el.id, el.textContent])),
     focus: document.activeElement?.closest('main') ? document.activeElement.id : null, scroll: [scrollX, scrollY] };
   const encoded = JSON.stringify(data);
@@ -85,6 +85,9 @@ export function restoreReadingState({navigation=false}={}) {
     stored = sessionStorage.getItem(key); if (!stored) return;
     const data = JSON.parse(stored);
     if (data.schema !== 1) throw new Error('Unknown snapshot');
+    // The first lesson gained a kernel-definition reference before the two existing questions.
+    // Old snapshots must not reveal the new answer or shift the learner’s two saved answers.
+    if(location.pathname.endsWith('/v2/first-kernel.html')&&data.detailsVersion!==2)data.details.splice(3,0,false);
     // Retired arithmetic controls do not apply to the fixed worked examples.
     // Old positional disclosures must not reveal newly introduced challenge answers.
     if(location.pathname.endsWith('/hello.html')&&data.experiments['hello-0']?.version!==3)data.details=[];
