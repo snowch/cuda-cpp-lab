@@ -54,6 +54,11 @@ jobs:
             test-results/online-navigation/*.png
             test-results/offline-journeys/*.png
           if-no-files-found: ignore
+      - name: Retain verified runtime assets for older open tabs
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: node scripts/retain-for-publish.mjs
+        env:
+          PUBLISHED_COURSE_URL: https://snowch.github.io/cuda-cpp-lab/
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:

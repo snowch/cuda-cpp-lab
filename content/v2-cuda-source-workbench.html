@@ -90,7 +90,7 @@ void runKernel(
 <button id="stop" type="button" hidden>Stop</button>
 </div>
 <p id="draft-warning" role="status" hidden></p>
-<p id="status" role="status">Preparing the CUDA source editor…</p>
+<p id="status" role="status">Preparing the CUDA source editor…</p><button type="button" id="runtime-reload" hidden>Reload lesson</button>
 <details id="compiler-messages" hidden><summary>Compiler and execution messages</summary><pre id="diagnostics" hidden aria-label="Compiler diagnostics"></pre></details>
 </section>
 <section class="card" aria-labelledby="output-title">
@@ -1503,7 +1503,9 @@ function showValues(output) {
   }));
 }
 
+document.querySelector('#runtime-reload').onclick=()=>window.gpuLabRunnerClient?.reloadLesson();
 function clearMessages(message) {
+  status.dataset.runtimeFailure='false';document.querySelector('#runtime-reload').hidden=true;compilerMessages.querySelector('summary').textContent='Compiler and execution messages';
   diagnostics.textContent = '';
   diagnostics.hidden = true;
   compilerMessages.hidden = true;
@@ -1577,7 +1579,8 @@ function observeWorker(created) {
     }
     if (data.error) {
       if (!prepared) shutDown();
-      fail('The run did not complete.', data.error);
+      fail(data.runtimeLoad?'Code runner files could not be loaded.':'The run did not complete.', data.error);
+      if(data.runtimeLoad){status.dataset.runtimeFailure='true';compilerMessages.open=false;compilerMessages.querySelector('summary').textContent='File download details';document.querySelector('#runtime-reload').hidden=false;}
       return;
     }
     if (fullProgram) {

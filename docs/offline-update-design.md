@@ -379,3 +379,15 @@ Reference suites: [manifest/build](../tests/offline.test.mjs),
 The reference was verified with Chromium, including the public cold offline
 journey. Native installation prompts, physical Android lifecycle/storage behaviour
 and Safari/iOS need their own platform checks before making equivalent claims.
+
+## Runtime assets and older open tabs
+
+Retain two previous immutable release trees at publication, including original compiler/runtime archives and manifests. Verify original byte hashes; retention failure blocks deployment. Keep archive timestamps reproducible. An old tab may not start its compiler until after a newer version is published, so testing only an already-warm compiler misses this lifecycle. Do not substitute a newer archive merely because its extracted files look equivalent. Retained trees do not increase the current course download manifest. Both CUDA labs and C++ Foundry use this publication rule.
+
+## Missing runtime files are infrastructure failures
+
+Classify missing, failed, corrupt or incompatible runtime downloads separately from compiler diagnostics and program checks. Preserve the last genuine result and identify it as previous output. Show a persistent native alert dialog with a dimmed backdrop, **Reload lesson** and **Stay on lesson**. Escape stays on the lesson and returns focus. Never auto-dismiss or stack it over another modal. Keep download diagnostics optional and an inline recovery control available after Stay. The common `src/runtime-recovery.mjs` component accepts a course-specific save guard and run-control label.
+
+Explain that reload needs an online connection and saves work first. Save source, predictions, selected cases, results, disclosures and scroll before navigation. Cancel reload if any save fails or a run is active; keep the lesson open and explain the failure inside the modal. Reload must never automatically execute learner code. Ordinary compilation/execution errors remain beside the editor, and valid output changes do not fail an original-example comparison.
+
+Verify old-tab first Run after a deployment, startup from the header, runtime failure after a previous successful result, Stay/Escape/focus and keyboard trapping, storage-blocked reload, safe reload and edited rerun. Also test true offline navigation in a fresh tab, interrupted download, return online, busy/multiple tabs, restart and removal. A passing compiler test alone does not verify offline readiness or learning effectiveness.

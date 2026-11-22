@@ -305,7 +305,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'material-symbols.css', 'home-architecture.css', 'code-runner.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'material-symbols.css', 'home-architecture.css', 'code-runner.css', 'runtime-recovery.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '', appendix } = {}) {
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;

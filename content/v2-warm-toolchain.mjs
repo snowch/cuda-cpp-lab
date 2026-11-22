@@ -88,6 +88,7 @@ async function initialise(assets, advanced) {
   for (const [name, text] of Object.entries(programHeaders)) compiler.FS.writeFile('/workbench/' + name, text);`);
   patch('function compileModule(source) {','function compileModule(source) {\n  moduleRuntime.installHeaders(compiler);');
   patch('source, assets, profile, fullProgram, advanced }','source, assets, profile, fullProgram, advanced, type }');
+  patch('await initialise(assets, advanced);',"await initialise(assets, advanced).catch(error => { error.runtimeLoad = true; throw error; });");
   patch("    postMessage({ stage: 'Compiling your CUDA source…', ready: true });", "    if (type === 'prepare') { activeMemories.clear(); postMessage({ prepared: true, wasmBytes: allocatedWasm() }); return; }\n    postMessage({ stage: 'Compiling your CUDA source…', phase: 'compiling', ready: true });\n    postMessage({ telemetry: { wasmBytes: allocatedWasm() } });");
   patch('function instantiate(module) {', "function instantiate(module, kind = 'active') {");
   patch('const instance = new WebAssembly.Instance(module, imports);', 'const instance = new WebAssembly.Instance(module, imports);\n      allocationSample(instance, module, imports, kind);');
@@ -95,7 +96,7 @@ async function initialise(assets, advanced) {
   if(worker.split(hostInstance).length!==3)throw new Error('Review both host-memory instances before updating the worker.');
   worker=worker.replaceAll(hostInstance,hostInstance+'\n  allocationSample(instance, module);');
   patch("postMessage({ ...result, diagnostics: compilerMessages.join('\\n') });", "activeMemories.clear();\n    postMessage({ ...result, diagnostics: compilerMessages.join('\\n'), wasmBytes: allocatedWasm() });");
-  patch("postMessage({ error: String(error.message ?? error) });", "activeMemories.clear();\n    postMessage({ error: String(error.message ?? error), wasmBytes: allocatedWasm() });");
+  patch("postMessage({ error: String(error.message ?? error) });", "activeMemories.clear();\n    postMessage({ error: String(error.message ?? error), runtimeLoad: Boolean(error.runtimeLoad), wasmBytes: allocatedWasm() });");
   patch("postMessage({ diagnostics: compilerMessages.join('\\n'), compileError: true });", "activeMemories.clear();\n      postMessage({ diagnostics: compilerMessages.join('\\n'), compileError: true, wasmBytes: allocatedWasm() });");
   lab.worker=worker;
   return html.replace(line,prefix+JSON.stringify(lab).replaceAll('<','\\u003c')+';');

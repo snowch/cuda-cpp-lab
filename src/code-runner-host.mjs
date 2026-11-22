@@ -1,5 +1,7 @@
 // Copyright © 2026 Christopher Snow.
 import {CodeRunner} from './code-runner.mjs';
+import {mountRuntimeRecovery} from './runtime-recovery.mjs';
+import {saveReadingState} from './experiment-state.mjs';
 import {idleChoices,idleMinutes,idlePreference,introPreference,wasmSize,elapsedTime} from './code-runner-settings.mjs';
 let embedded=false;try{embedded=Boolean(frameElement?.hasAttribute('data-kernel-workbench'));}catch{}
 if(!embedded&&!window.gpuLabCodeRunner) {
@@ -80,6 +82,21 @@ if(!embedded&&!window.gpuLabCodeRunner) {
       else if(!event.shiftKey&&active===last){event.preventDefault();first.focus();}
     });
     intro.addEventListener('cancel',event=>{event.preventDefault();dismissIntro();});
+    const recovery=mountRuntimeRecovery({runLabel:'Compile and run',save:()=>{
+      saveReadingState();
+      for(const frame of document.querySelectorAll('[data-kernel-workbench]')){
+        const client=frame.contentWindow?.gpuLabRunnerClient;
+        if(!client?.save)throw new Error('Wait for the editor to finish loading before reloading.');
+        client.save();
+      }
+    },beforeOpen:()=>{
+      let target=intro.open?introReturnFocus:document.activeElement;
+      if(target?.tagName==='IFRAME')try{target=target.contentDocument.activeElement;}catch{}
+      if(intro.open)intro.close();close();return target?.isConnected?target:button;
+    }});
+    runner.showRuntimeRecovery=recovery.open;runner.reloadLesson=recovery.reload;
+    runner.addEventListener('runtime-load-error',()=>recovery.open());
+    addEventListener('gpu-lab:lesson-changed',()=>recovery.close(false));
     const names={stopped:'Stopped',starting:'Starting',compiling:'Compiling',running:'Running',ready:'Ready'};
     const text=(element,value)=>{if(element.textContent!==value)element.textContent=value;};
     const render=()=>{
