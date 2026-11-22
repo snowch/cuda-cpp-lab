@@ -25,11 +25,9 @@ def check_code_runner(browser,url,root):
         timings.append({'case':label,'seconds':round(time.perf_counter()-start,3)})
         print('PASS runner',label,timings[-1]['seconds'],flush=True)
     def navigate(slug):
-        switcher=page.locator('[data-v2-course-switcher]')
+        switcher=page.locator('[data-v2-course-outline]')
         if not switcher.evaluate('e=>e.open'):switcher.locator(':scope>summary').click()
-        link=switcher.locator('a[href$="/'+slug+'.html"]')
-        part=link.locator('xpath=ancestor::details[contains(@class,"v2-course-part")]')
-        if not part.evaluate('e=>e.open'):part.locator(':scope>summary').click()
+        link=page.locator('.v2-course-panel a[href$="/'+slug+'.html"]')
         link.click();page.wait_for_url('**/'+slug+'.html')
         expect(editor()).to_be_editable(timeout=30000)
         assert page.evaluate('window.__runnerDocumentToken')==origin,'Warm navigation must retain the worker owner.'
