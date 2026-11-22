@@ -24,21 +24,25 @@ saved course files and a running WebAssembly toolchain have different lifetimes.
   immediately. If storage is unavailable, explain that the choice applies only
   to this tab. A running compile/simulation is never cancelled by the
   idle policy; the separate execution deadline still applies.
-- The first **Compile and run** opens a compact introductory modal immediately,
-  including when waiting for manual startup. Dim the page, move focus into the
-  dialog and keep the lesson inert until **Back to lesson**, **Runner settings**
-  or Escape. Compilation continues behind the dialog: opening it must not delay
-  the accepted run or require a second Run click. Do not wait for a result before
-  showing the introduction, auto-expire it, or hide it on a backdrop click.
-- Explain device CPU/memory use, reuse between lessons and the selected idle
-  interval. Keep detailed measurements and preferences in the header controls.
-  Manual preparation alone does not trigger the introduction. Returning to the
-  lesson restores editor focus; **Runner settings** closes the introduction and
-  opens the normal nonmodal controls. Remember acknowledgement per browser/course
-  only after an explicit dismissal. Keep a separate presentation flag within the
-  reading window so progress updates cannot reopen the modal. A reload without
-  acknowledgement offers it again on the next Run. Preserve previous preference
-  keys and all saved learner work when changing this introductory pattern.
+- The first startup opens a compact introductory modal immediately, whether
+  requested through **Start code runner** in the header or automatically through
+  **Compile and run**. Both entry points share the same acknowledgement. Dim the
+  page and keep the lesson inert until **Back to lesson**, **Runner settings** or
+  Escape. Startup and any requested compile/run continue behind the dialog;
+  acknowledgement is not a second confirmation to start work. Do not wait for a
+  result, auto-expire the introduction, or dismiss it on a backdrop click.
+- Explain device CPU/memory use, reuse and the selected idle interval. Manual
+  preparation starts tools without executing the editor's program. Show distinct
+  preparation and ready guidance, not a request to inspect a result that does not
+  exist. **Ready** permits **Compile and run**; that later operation must not show
+  another introduction. The same applies to a Run queued during preparation.
+- Returning to the lesson restores editor focus for automatic startup, or header
+  focus when startup came from its controls. **Runner settings** opens the usual
+  nonmodal controls. Remember acknowledgement per browser/course only after an
+  explicit dismissal and recheck it on first activation in an already-open tab.
+  Keep a separate per-document presentation flag so progress cannot reopen the
+  dialog. An unread introduction can reappear on the next startup after reload.
+  Keep existing acknowledgements, timeout choices and all saved learner work.
 - Each run receives fresh simulated program state. Compiler reuse must never
   carry simulated allocations, streams, events, output or errors into another run.
 
@@ -60,32 +64,55 @@ Two decisions caused the mismatch: completion was the wrong trigger for an
 introduction, and a corner notification did not give it enough prominence.
 Removing an expiry timer made the notice persistent but did not fix either issue.
 
-Use a **one-time modal introduction** at the first accepted Run request. A real
+Use a **one-time modal introduction** at the first accepted startup request. A real
 native modal supplies a dimmed backdrop and makes the background inert; a grey
 overlay alone would leave misleading keyboard and pointer interactions possible.
 Focus the heading initially so a short screen starts at the explanation, then
 keep Tab/Shift+Tab within the two actions. **Back to lesson** returns focus to the
-editor; **Runner settings** opens the usual nonmodal controls. Escape acknowledges
+editor for automatic startup, or the header for a start from its controls; **Runner settings** opens the usual nonmodal controls. Escape acknowledges
 and closes the introduction. Clicking the backdrop does not acknowledge it.
 
 The modal explains an operation already requested by the learner. It must not
 hold the compile until a second confirmation. Let startup/compilation/simulation
 continue, keep the introduction open after completion, and direct the learner
-back to the result or execution message. Manual startup alone stays quiet; a Run
-queued during that startup still opens the introduction immediately.
+back to the result or execution message when a program was requested. When only
+preparation was requested, explain that no program is being executed and direct
+the learner to **Compile and run** after the tools become ready.
+
+A follow-up report exposed another timing error: the learner chose **Start code
+runner**, waited for **Ready**, then chose **Compile and run** and received the
+introduction. The earlier rule deliberately kept manual preparation quiet, so it
+introduced tools only after the learner had already prepared them. This is the
+wrong lifecycle boundary. Introduce the first startup through either entry point,
+and do not introduce the later use of an already-ready runner.
+
+Preparation and program execution need separate feedback. Preparation must leave
+Console, completed-run count and last-run duration unchanged. Its ready message
+is **Ready to compile and run your code**, not **Ready for another run**. The
+introduction describes preparation while it is happening and explains the next
+editor action when preparation finishes. A program run instead points back to its
+result or execution message. Existing acknowledgement remains valid: this timing
+fix must not reset the preference and show every learner the introduction again.
 
 Store acknowledgement only after an explicit return, settings choice or Escape,
 not merely after displaying the dialog. Keep a per-document presentation flag
 so progress events cannot reopen it. An unread introduction can appear again on
-the next Run after reload. The former corner-notice preference remains untouched;
+the next startup after reload. The former corner-notice preference remains untouched;
 its presence does not prove that the learner acknowledged the new introduction.
 Never reset source, results, completion marks or timeout preferences to deliver it.
+Before presenting in an already-open tab, recheck browser storage for another tab’s
+acknowledgement. Do not automatically close an introduction already being read in
+this tab when another tab acknowledges it.
 
 Verify timing by holding a real compiler request: the introduction must already
 be modal before any result exists. Check the backdrop, inert background, keyboard
 cycle, explicit dismissal, no expiry, execution continuing behind the modal,
 short-screen scrolling, both themes, acknowledgement across reload and an unread
-reload retaining an edited source. Verify routine header controls separately: they
+reload retaining an edited source. Exercise **Start → Ready → Compile and run**
+and **Start → dismiss while preparing → queue Compile and run** as separate
+journeys, with one introduction and one worker in each. Check acknowledgement in
+a tab opened before the other tab dismissed the introduction. A queued-start test
+alone does not cover the completed-preparation journey. Verify header controls separately: they
 remain nonmodal and should not interrupt every experiment. These functional checks
 establish behaviour; they do not establish that learners understood the message.
 
@@ -262,7 +289,10 @@ Verify these journeys using real workers and real code:
 
 - Cold run, same-editor repeat, Next, a different adapter, return and Back/Forward:
   one worker/compiler, correct outputs, fresh program state and retained edits.
-- Manual preparation executes no learner code; release/restart keeps results.
+- Manual preparation executes no learner code or new duration/result. First
+  manual startup introduces the tools; Start → Ready → Compile and a compile
+  queued during preparation do not repeat the introduction. Release/restart keeps
+  results and acknowledgement.
 - Stop while downloading, compiling and running; timeout/crash; a late old reply;
   another submission while busy; each can recover with the next run.
 - Default and changed idle intervals, shortening an expired deadline, persistence

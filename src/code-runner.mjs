@@ -69,7 +69,7 @@ export class CodeRunner extends EventTarget {
             job.emit(reply);pending?.emit(reply);return;
           }
           if(!job.preparing&&!reply.compileError){this.lastRunMs=Math.max(0,this.now()-job.requestedAt);this.completedRuns++;}
-          this.set('ready','Ready for another run.');this.touch();job.emit(reply);
+          this.set('ready',job.preparing?'Ready to compile and run your code.':'Ready for another run.');this.touch();job.emit(reply);
           if(pending)this.execute(pending.client,pending.text,pending.data,pending.emit,pending.requestedAt);
         };
         worker.onerror=event=>{

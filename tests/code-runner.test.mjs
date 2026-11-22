@@ -31,7 +31,7 @@ test('a second client cannot replace the busy job, and detaching another client 
  const {runner:r,workers:w}=fixture(),owner={},other={},a=[],b=[];r.execute(owner,'worker',{},d=>a.push(d));r.execute(other,'worker',{},d=>b.push(d));assert.match(b[0].error,/in progress/);r.detach(other);assert.equal(w[0].dead,undefined);w[0].reply({stdout:'owner'});assert.equal(a.at(-1).stdout,'owner');
 });
 test('manual startup prepares without running code, and compile errors keep the toolchain ready',()=>{
- const {runner:r,workers:w}=fixture();r.configure('worker',{assets:{verified:true}});r.start();assert.equal(w[0].sent[0].type,'prepare');w[0].reply({prepared:true});assert.equal(r.state,'ready');
+ const {runner:r,workers:w}=fixture();r.configure('worker',{assets:{verified:true}});r.start();assert.equal(w[0].sent[0].type,'prepare');w[0].reply({prepared:true});assert.equal(r.state,'ready');assert.equal(r.reason,'Ready to compile and run your code.');assert.equal(r.completedRuns,0);assert.equal(r.lastRunMs,null);
  r.execute({},'worker',{},()=>{});w[0].reply({compileError:true,diagnostics:'bad source'});assert.equal(r.state,'ready');assert.equal(r.boots,1);
 });
 
