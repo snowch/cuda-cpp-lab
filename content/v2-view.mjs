@@ -1,4 +1,5 @@
 import {materialSymbol} from '../src/material-symbols.mjs';
+import {homeArchitecture} from '../src/home-architecture.mjs';
 // Copyright © 2026 Christopher Snow.
 import { renderPractical, practicalReferences } from './v2-practical-view.mjs';
 import { codePanel, definitions, readerTask } from '../src/chapter-view.mjs';
@@ -59,13 +60,13 @@ const teaching = {
 };
 
 export function renderV2Contents(href) {
-  return `<header class="intro">
+  return `<header class="intro course-home-opening"><div class="course-home-copy">
     <h1>Learn the GPU through CUDA C++</h1>
     <p class="lead">Run a small CUDA C++ program, predict what one edit will change and compare the results. Later lessons trace memory, synchronisation and the parallel patterns behind AI workloads.</p>
     <p>Before you start, be comfortable with basic programming, reading Python and array indexing. The course introduces CUDA and GPU architecture.</p>
     <p>No installation or GPU required. The browser compiles CUDA C++ and runs the examples in a functional GPU simulator. The teaching models calculate specific details such as memory addresses and possible instruction schedules.</p>
     <p><a class="v2-start" href="${href(v2Course[0].slug)}">Start with your first kernel →</a></p>
-  </header>
+  </div>${homeArchitecture('cpp')}</header>
   <p class="v2-overview-progress" aria-live="polite"></p>
   ${groups.map(([id, title, start, end]) => `<section class="v2-list" aria-labelledby="${id}">
     <h2 id="${id}" tabindex="-1">${title}</h2>
@@ -304,7 +305,7 @@ export function renderV2Lesson(lesson, href, legacy, workbenchHref, firstProgram
   </nav>`;
 }
 
-export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'material-symbols.css', 'code-runner.css'];
+export const v2Styles = ['style.css', 'lessons.css', 'chapter.css', 'continuation.css', 'parallel.css', 'sm-video.css', 'v2.css', 'material-symbols.css', 'home-architecture.css', 'code-runner.css'];
 export function renderV2Page(lesson, versionMarkup = '', { home = false, firstProgram = '', appendix } = {}) {
   const base = home ? './' : '../';
   const href = (slug, part) => slug === 'contents' ? base + (part ? '#' + part : '') : `${home ? './v2/' : './'}${slug}.html`;
