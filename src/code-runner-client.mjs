@@ -19,6 +19,7 @@ const ownerReady=(async()=>{
 window.gpuLabRunnerClient={
   configure(text,data) { ownerReady.then(owner=>owner.configure(text,data)).catch(()=>{}); },
   save() { saveReadingState('navigation'); },
+  reloadLesson() { return ownerReady.then(owner=>owner.reloadLesson?.()); },
   connect(text) {
     let assets,disposed=false;
     const client={onmessage:null,onerror:null,

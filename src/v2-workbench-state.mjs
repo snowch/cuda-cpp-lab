@@ -27,9 +27,9 @@ registerExperiment('v2-cuda-workbench', () => ({
   console: consoleOutput.textContent, consoleHidden: consoleOutput.hidden,
   previous: !provenance.hidden,
   operations: operations.querySelector('pre').textContent, operationsHidden: operations.hidden,
-  status: status.textContent, error: status.dataset.error === 'true',
-  outcome: status.dataset.outcome ?? '', messagesOpen: messages.open,
-  diagnostics: diagnostics.textContent, diagnosticsHidden: diagnostics.hidden,
+  status: status.dataset.runtimeFailure==='true'?'Previous program output is shown. Compile and run to check this draft.':status.textContent, error: status.dataset.runtimeFailure!=='true'&&status.dataset.error === 'true',
+  outcome: status.dataset.outcome ?? '', messagesOpen: status.dataset.runtimeFailure!=='true'&&messages.open,
+  diagnostics: status.dataset.runtimeFailure==='true'?'':diagnostics.textContent, diagnosticsHidden: status.dataset.runtimeFailure==='true'||diagnostics.hidden,
   ptx: ptx.textContent, ptxHidden: ptxPanel.hidden,
 }), saved => {
   const cells = outputCells();

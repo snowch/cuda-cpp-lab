@@ -256,11 +256,14 @@ def check_code_runner(browser,url,root):
     # Reloading an unread dialog must offer it again on the next Run, keeping edits.
     unread=browser.new_context(viewport={'width':390,'height':700})
     unread.add_init_script("localStorage.setItem('gpu-lab:code-runner-intro:2','1')")
-    unread.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:route.abort())
+    fail_assets={'enabled':True}
+    unread.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:route.abort() if fail_assets['enabled'] else route.continue_())
     page=unread.new_page();page.goto(url+'v2/first-kernel.html');expect(editor()).to_be_editable()
     draft=editor().input_value().replace('42.0f','7.0f',1);editor().fill(draft);frame().locator('#run').click()
-    intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
+    intro=page.locator('#code-runner-intro-dialog')
+    recovery=page.get_by_role('alertdialog');expect(recovery).to_be_visible();expect(intro).not_to_be_visible()
     assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')") is None
+    page.keyboard.press('Escape');expect(recovery).not_to_be_visible();fail_assets['enabled']=False
     page.reload();expect(editor()).to_have_value(draft);expect(intro).not_to_be_visible()
     frame().locator('#run').click();expect(intro).to_be_visible()
     intro.get_by_role('button',name='Back to lesson',exact=True).click();expect(intro).not_to_be_visible();expect(editor()).to_be_focused()

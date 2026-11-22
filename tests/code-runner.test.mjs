@@ -67,3 +67,12 @@ test('telemetry updates allocation without completing a job; elapsed time includ
  w[0].reply({prepared:true,wasmBytes:67108864});advance(1500);w[0].reply({stdout:'done',wasmBytes:67108864});assert.equal(r.lastRunMs,3500);assert.equal(r.completedRuns,1);
  r.release();assert.equal(r.wasmBytes,0);assert.equal(r.lastRunMs,3500);
 });
+test('only infrastructure download failures emit runtime recovery',()=>{
+ const {runner:r,workers:w}=fixture(),seen=[];r.addEventListener('runtime-load-error',event=>seen.push(event.detail));
+ r.execute({},'worker',{},()=>{});w[0].reply({compileError:true,diagnostics:'missing semicolon'});assert.equal(seen.length,0);
+ r.execute({},'worker',{},()=>{});w.at(-1).reply({error:'archive unavailable',runtimeLoad:true});assert.equal(seen.length,1);assert.equal(seen[0].error,'archive unavailable');
+});
+
+test('a worker import failure during startup opens infrastructure recovery',()=>{
+ const {runner:r,workers:w}=fixture(),seen=[];r.addEventListener('runtime-load-error',event=>seen.push(event.detail));r.execute({},'worker',{},()=>{});w[0].onerror({message:'Worker import failed'});assert.equal(seen.length,1);assert.equal(seen[0].runtimeLoad,true);
+});
