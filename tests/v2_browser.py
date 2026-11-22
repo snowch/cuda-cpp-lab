@@ -39,7 +39,7 @@ def check_v2(browser, url):
             expect(page.get_by_role('link', name='CUDA C++ Lab home', exact=True)).to_have_attribute('href', '../')
             breadcrumb = page.get_by_role('navigation', name='Breadcrumb')
             expect(breadcrumb.locator('.v2-course-overview')).to_have_attribute('href', '../')
-            expect(breadcrumb.locator('a').last).to_have_attribute('href', '../#' + part)
+            expect(breadcrumb.locator(':scope > ol > li > a')).to_have_attribute('href', '../#' + part)
             expect(breadcrumb.locator(':scope > ol > li > [aria-current="page"]')).to_have_text(page.locator('h1').inner_text())
             expect(page.locator('.topbar').get_by_role('link', name='Contents', exact=True)).to_have_count(0)
             expect(page.locator('.v2-hardware')).to_be_visible()
@@ -74,7 +74,7 @@ def check_v2(browser, url):
         for index in [0, 4, 15]:
             page.goto(routes[index])
             part = parts[index]
-            page.get_by_role('navigation', name='Breadcrumb').locator('a').last.press('Enter')
+            page.get_by_role('navigation', name='Breadcrumb').locator(':scope > ol > li > a').press('Enter')
             expect(page).to_have_url(url + '#' + part)
             expect(page.locator('#' + part)).to_be_in_viewport()
 
