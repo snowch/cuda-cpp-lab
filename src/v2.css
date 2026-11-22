@@ -168,29 +168,29 @@
 .v2-resource-body .chapter-reference-list>li+li { margin-top:24px; padding-top:24px; border-top:1px solid var(--line); }
 .v2-resource-body { font-size:1rem; line-height:1.6; }
 .v2-resource-body summary { min-height:44px; align-content:center; font-size:1rem; }
-/* Course switcher stays in normal flow without JavaScript. */
+/* The course outline expands in the reading flow, like CUDA Python Lab. */
 .v2-course-switcher { margin:0; padding:0; min-width:0; }
 .v2-course-switcher>summary { display:flex; align-items:center; gap:6px; min-height:44px; padding:4px 0; color:var(--accent); font-family:inherit; font-size:1rem; font-weight:650; line-height:1.5; cursor:pointer; list-style:none; }
 .v2-course-switcher>summary::-webkit-details-marker { display:none; }
 .v2-course-switcher>summary::marker { content:''; }
 .v2-course-switcher[open]>summary>svg { transform:rotate(180deg); }
-.v2-breadcrumb { position:relative; }
-.v2-course-switcher[data-enhanced] { position:static; }
-.v2-course-panel { display:block; width:min(44rem,calc(100vw - 32px)); max-width:100%; padding:10px 14px; margin-top:10px; border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--ink); font-size:1rem; box-shadow:0 12px 30px #00000014; }
-.v2-course-switcher[data-enhanced]>.v2-course-panel { position:absolute; top:calc(100% + 10px); left:0; z-index:40; max-width:none; max-height:min(640px,var(--v2-course-height,60dvh)); overflow-y:auto; overscroll-behavior:contain; }
-.v2-breadcrumb .v2-course-panel .v2-course-overview { display:block; padding:12px 8px; color:var(--accent); }
-.v2-course-part { padding:0; margin:0; border-top:1px solid var(--line); }
-.v2-course-part>summary { min-height:48px; padding:14px 8px; color:var(--ink); font-size:1rem; font-weight:650; cursor:pointer; }
-.v2-breadcrumb .v2-course-lessons { display:block; list-style:none; margin:0 0 10px; padding:0; }
+.v2-course-panel { display:block; width:100%; padding:12px 0 4px; margin:0; color:var(--ink); font-size:1rem; }
+.v2-course-panel[hidden] { display:none!important; }
+.v2-course-tools { margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+.v2-breadcrumb .v2-course-panel .v2-course-overview { display:inline-flex; align-items:center; padding:4px 0; min-height:44px; color:var(--accent); font-size:1rem; }
+.v2-course-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; }
+.v2-course-part { min-width:0; margin:0; padding:0; }
+.v2-course-part>h2 { margin:0 0 6px; color:var(--ink); font-size:.95rem; line-height:1.4; font-weight:650; letter-spacing:0; }
+.v2-breadcrumb .v2-course-lessons { display:block; list-style:none; margin:0; padding:0; }
 .v2-breadcrumb .v2-course-lessons li { display:block; margin:0; padding:0; }
-.v2-breadcrumb .v2-course-lessons a { display:grid; grid-template-columns:2ch minmax(0,1fr); gap:10px; align-items:start; min-height:44px; padding:12px 10px; border-left:3px solid transparent; border-radius:5px; color:var(--ink); font-size:1rem; line-height:1.5; text-decoration:none; }
-.v2-course-number { color:var(--muted); }
-.v2-breadcrumb .v2-course-lessons a[aria-current="page"] { border-left-color:var(--accent); background:var(--accent-soft); }
-.v2-course-current { display:block; color:var(--accent); font-size:.85rem; font-weight:650; }
-.v2-breadcrumb .v2-course-lessons a:hover { background:var(--soft); text-decoration:underline; }
+.v2-breadcrumb .v2-course-lessons a { position:relative; display:grid; grid-template-columns:2ch minmax(0,1fr); gap:8px; align-items:baseline; min-height:44px; padding:8px 6px; border-radius:5px; color:var(--muted); font-size:.875rem; line-height:1.4; text-decoration:none; }
+.v2-breadcrumb .v2-course-number { color:var(--accent); font:.75rem ui-monospace,SFMono-Regular,Consolas,monospace; }
+.v2-breadcrumb .v2-course-lessons a[aria-current="page"] { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+.v2-course-current { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.v2-breadcrumb .v2-course-lessons a:hover { background:var(--accent-soft); color:var(--accent); }
 .v2-course-panel :focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
-
-.v2-course-switcher[data-enhanced][data-placement="above"]>.v2-course-panel { top:auto; bottom:calc(100% + 10px); }
+@media(max-width:1000px) { .v2-course-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px 20px; } }
+@media(max-width:500px) { .v2-course-grid { grid-template-columns:minmax(0,1fr); gap:20px; } }
 
 /* Practical investigations reuse the chapter's typography and actions. */
 .v2-practical-flow ol { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; padding-left:1.6rem; }

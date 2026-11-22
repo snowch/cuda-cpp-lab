@@ -201,7 +201,7 @@ test('every breadcrumb contains all course destinations and one marked current l
   for (const lesson of allLessons) {
     const html = courseBreadcrumb(lesson, (slug,part) => slug === 'contents' ? '../' + (part ? '#'+part : '') : './'+slug+'.html');
     assert.equal((html.match(/class="v2-course-part"/g) ?? []).length,4);
-    assert.equal((html.match(/class="v2-course-part"[^>]* open/g) ?? []).length,1);
+    assert.doesNotMatch(html,/<details class="v2-course-part"/);
     for(const item of allLessons) assert.ok(html.includes('href="./'+item.slug+'.html"'),lesson.slug);
     assert.match(html,/aria-label="Course contents"/);
     assert.match(html,new RegExp('href="\\./'+lesson.slug+'\\.html" aria-current="page"'));
