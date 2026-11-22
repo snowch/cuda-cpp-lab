@@ -51,7 +51,7 @@ uses. Browser models and simulated execution do not measure physical GPU perform
 26. [Measure a GPU kernel fairly](https://snowch.github.io/cuda-cpp-lab/v2/measure-a-kernel.html): Separate correctness, kernel timing and profiling, then interpret recorded evidence.
 27. [Build and verify a stable softmax](https://snowch.github.io/cuda-cpp-lab/v2/softmax-capstone.html): Implement an independent row-wise kernel, verify unseen shapes and explain its bottleneck.
 
-Original book and lab URLs remain available for existing bookmarks.
+Use the [shared course design guide](https://github.com/snowch/cuda-python-lab/blob/main/docs/course-design-guide.md) for common layout and interaction patterns.
 See [the model contract](docs/model.md) for the scope of the teaching models.
 
 ## Run examples on your desktop
