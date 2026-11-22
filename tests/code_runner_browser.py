@@ -184,22 +184,36 @@ def check_code_runner(browser,url,root):
     assert not errors,errors
     (results/'timings.json').write_text(json.dumps(timings,indent=2)+'\n')
     context.close()
-    # Manual preparation alone is quiet; an accepted queued Run introduces the runner.
+    # Exact reported journey: header startup introduces the runner; Ready is not a completed program.
     fresh=browser.new_context(viewport={'width':390,'height':700});page=fresh.new_page();page.goto(url+'v2/first-kernel.html')
     expect(editor()).to_be_editable();held=[]
+    # Keep another tab open before acknowledgement to verify its initial stale flag is refreshed.
+    sibling=fresh.new_page();sibling.goto(url+'v2/first-kernel.html');expect(sibling.frame_locator('[data-kernel-workbench]').locator('#source')).to_be_editable()
     fresh.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
     page.locator('#code-runner-open').click();page.get_by_role('button',name='Start code runner',exact=True).click()
-    intro=page.locator('#code-runner-intro-dialog');expect(intro).not_to_be_visible();page.keyboard.press('Escape')
-    frame().locator('#run').click();expect(intro).to_be_visible()
-    assert page.evaluate('!!gpuLabCodeRunner.pending'),'The introduction should also appear while Run waits for manual startup.'
-    page.keyboard.press('Escape');expect(intro).not_to_be_visible();expect(editor()).to_be_focused()
+    intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
+    expect(intro.locator('[data-intro-status]')).to_contain_text('does not run your program')
+    expect(frame().locator('#program-output')).to_be_empty()
     for _ in range(50):
         if held:break
         page.wait_for_timeout(100)
     assert held
     for route in list(held):route.continue_()
     fresh.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
-    expect(frame().locator('#run')).to_be_enabled(timeout=120000);expect(frame().locator('#program-output')).to_contain_text('42.0')
+    expect(page.locator('#code-runner-summary')).to_have_text('Ready',timeout=120000)
+    expect(intro).to_be_visible();expect(intro.locator('[data-intro-status]')).to_contain_text('then Compile and run')
+    assert page.evaluate('gpuLabCodeRunner.completedRuns')==0
+    assert page.evaluate('gpuLabCodeRunner.lastRunMs') is None
+    expect(frame().locator('#program-output')).to_be_empty()
+    page.screenshot(path=str(results/'manual-start-ready-intro.png'))
+    intro.get_by_role('button',name='Back to lesson',exact=True).click();expect(intro).not_to_be_visible()
+    expect(page.locator('#code-runner-open')).to_be_focused()
+    # Its existing tab must also honour browser-wide acknowledgement without a reload.
+    sibling.locator('#code-runner-open').click();sibling.get_by_role('button',name='Start code runner',exact=True).click()
+    expect(sibling.locator('#code-runner-intro-dialog')).not_to_be_visible()
+    sibling.get_by_role('button',name='Stop startup',exact=True).click();sibling.close()
+    run('42.0','header startup to Ready then Compile: no second dialog');expect(intro).not_to_be_visible()
+    assert page.evaluate('gpuLabCodeRunner.boots')==1
     page.reload();expect(editor()).to_be_editable()
     run('42.0','introduction stays acknowledged after reload');expect(intro).not_to_be_visible()
     # Blocked settings storage still allows an in-tab choice and explains its scope.
@@ -209,6 +223,23 @@ def check_code_runner(browser,url,root):
     assert page.evaluate('gpuLabCodeRunner.idleMs')==3600000
     page.set_viewport_size({'width':390,'height':360});panel=page.locator('#code-runner-dialog');assert panel.bounding_box()['height']<=344
     page.keyboard.press('Escape');expect(panel).not_to_be_visible();fresh.close()
+    queued=browser.new_context(viewport={'width':390,'height':700});page=queued.new_page();page.goto(url+'v2/first-kernel.html')
+    expect(editor()).to_be_editable();held=[]
+    queued.route('**/assets/v2-compiler/Compiler.js-0.bin',lambda route:held.append(route))
+    page.locator('#code-runner-open').click();page.get_by_role('button',name='Start code runner',exact=True).click()
+    intro=page.locator('#code-runner-intro-dialog');expect(intro).to_be_visible()
+    page.keyboard.press('Escape');expect(intro).not_to_be_visible();expect(page.locator('#code-runner-open')).to_be_focused()
+    frame().locator('#run').click();assert page.evaluate('!!gpuLabCodeRunner.pending')
+    expect(intro).not_to_be_visible()
+    for _ in range(50):
+        if held:break
+        page.wait_for_timeout(100)
+    assert held
+    for route in list(held):route.continue_()
+    queued.unroute('**/assets/v2-compiler/Compiler.js-0.bin')
+    expect(frame().locator('#run')).to_be_enabled(timeout=120000);expect(frame().locator('#program-output')).to_contain_text('42.0')
+    expect(intro).not_to_be_visible();assert page.evaluate('gpuLabCodeRunner.boots')==1
+    queued.close()
     # Seeing the old passive notice is not acknowledgement of the new introduction.
     # Reloading an unread dialog must offer it again on the next Run, keeping edits.
     unread=browser.new_context(viewport={'width':390,'height':700})
@@ -224,7 +255,7 @@ def check_code_runner(browser,url,root):
     assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:2')")=='1'
     assert page.evaluate("localStorage.getItem('gpu-lab:code-runner-intro:3')")=='1'
     unread.close()
-    print('PASS: one real worker across basic/advanced lessons and Back/Forward; no repeated compiler download; editor/results retained through manual and idle release; stop during startup; immediate first-run modal during held/queued startup, dimmed/inert background, focus containment, no expiry, explicit return/settings/Escape, acknowledgement and saved edits; six layouts/themes.',flush=True)
+    print('PASS: one real worker across basic/advanced lessons and Back/Forward; no repeated compiler download; editor/results retained through manual and idle release; stop during startup; one introduction at first header/automatic startup, no repeat after Ready or queued Run, acknowledgement in already-open tabs, dimmed/inert background, focus containment, no expiry, explicit return/settings/Escape, acknowledgement and saved edits; six layouts/themes.',flush=True)
 
 if __name__=='__main__':
     from v2_editor import serve
