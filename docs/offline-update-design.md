@@ -38,6 +38,29 @@ explicit save where supported, reverify availability, and never retain a permane
 HTTPS or localhost, storage access and a controlling service worker. External links
 and separately installed desktop tools remain outside the course download.
 
+## Self-hosted dependency boundary
+
+All files needed to read or run a course must be published inside that lab's own
+project scope. This includes lazy-loaded packages, fonts, workers, WebAssembly,
+compiler support, recordings, emulator firmware, Linux kernels and guest images.
+A third-party iframe, CDN fallback or another lab's runtime directory is a missing
+release dependency. Do not claim complete offline access while execution still
+requires any of them. Optional external documentation links and separately installed
+desktop tools are outside the saved course; label those destinations clearly.
+
+The build may fetch pinned upstream packages with verified checksums. Bundle the
+runtime files and their licence/source obligations in the published release. Include
+all transitively loaded files in the manifest, even if the learner has never opened
+the associated tool. Updates must retain files needed by active previous clients;
+self-hosting does not remove the release-retention contract below.
+
+Release verification must block requests outside the project scope and exercise a
+cold runner, the first compilation, package-dependent examples, embedded tools and
+lazy media. Then save the complete release, disable the network, open an unvisited
+lesson and repeat execution. Inspect service-worker, worker and iframe requests as
+well as the top-level page. Record the tested journeys and limitations; loading the
+homepage without third-party requests does not establish course completeness.
+
 ## Separate the four identities
 
 | Identity | Meaning | Changes when |
