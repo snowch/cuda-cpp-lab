@@ -229,6 +229,29 @@ reopened page recover the same request without starting competing jobs.
 6. Select a first saved copy immediately only when no different selection needs
    preserving. Otherwise store it as `pending`; expose explicit restart.
 
+### Native download stalls
+
+API support does not guarantee progress. In C Foundry, a real Chromium download
+stopped at exactly 222.7 MB of 242.6 MB after both three and six minutes. A longer
+test timeout did not repair the transport. A visible online page needs a bounded
+no-progress watchdog and a foreground handoff for the same persisted request.
+
+The tested adapter waits 45 seconds without byte progress, records a per-job
+`foregroundOnly` flag, aborts the native registration, imports completed responses
+that pass the release path, byte-count and SHA-256 checks, and resumes missing
+files through PREPARE. The handoff preserves the existing job ID and download
+consent. Explicit Cancel still revokes consent. Unresolved native response
+promises have a bounded wait (ten seconds in this adapter); incomplete or invalid
+aborted responses are retried, never accepted as verified files. Join concurrent
+completion-event and handoff imports for a registration. Keep the earlier
+complete course usable until the entire replacement verifies.
+
+Do not equate a native progress event or a transferred-byte total with completed
+verification. Test the watchdog, partial response import, cancellation, retry and
+earlier-copy preservation separately from a real full offline runtime journey.
+See C Foundry's [protocol regression](https://github.com/snowch/c-foundry/blob/main/tests/background-protocol.cjs)
+and [browser handoff journey](https://github.com/snowch/c-foundry/blob/main/tests/background-handoff.cjs).
+
 Cancellation must persist `wanted: false` before aborting native/foreground work.
 Late completion cannot revive that consent or select a cancelled replacement.
 Quota and integrity failures need explicit attention; eligible connection failures
@@ -271,6 +294,21 @@ Refuse restart for running experiments, input composition, incomplete experiment
 initialisation, unsaved guards, unavailable snapshot storage or unresponsive
 participants. Locks must have a bounded recovery timeout. Gate navigation during
 the transaction and confirm the window set has not changed before committing.
+
+Participant discovery must normalize every directory URL to its manifest HTML
+path, not just the course root. For example, `/lessons/addition/` corresponds to
+`lessons/addition/index.html`; a query or hash does not make it a different
+document. Match the normalized pathname and origin against shipped HTML. Include
+all lesson windows and define iframe ownership explicitly; exclude unrelated
+documents and other origins.
+
+A root-only SPA fixture cannot verify this rule. RISC-V's two-lesson browser test
+caught an implementation that skipped directory-based lesson windows entirely.
+It could select the update without saving or reloading those windows and then
+show Restart again. The regression blocks snapshot storage in one of two
+different lesson directories, requires a refused transaction with an explanation,
+then enables saving and requires both windows to restore into the same new
+release.
 
 Store the exact reload target with participating navigation IDs and a token also
 stored in selection metadata. A ticket without a matching committed selection
@@ -378,6 +416,8 @@ conditions. The essential journeys are:
 | Evict/corrupt a lesson, including during another verification scan | Readiness invalidated; no corrupt HTML or stale ready result; explicit repair preserves work |
 | New online release with an older complete saved copy | Current online reads through both native and same-document navigation, stable open tabs, older offline navigation and current content after reconnect |
 | Prepared update while another deployment appears | Explicit restart opens the exact verified target and restores all participating work |
+| Two directory-based lesson URLs, explicit `.html`, root, query/hash variants and unrelated documents | All course windows save and reload; a blocked save in either lesson vetoes selection; unrelated windows are untouched |
+| Native transfer stops reporting byte progress while a page is visible and online | Same consented job hands off; verified partial files reused; unresolved native records cannot block indefinitely; prior complete copy remains usable |
 | Busy/unresponsive tab, composition, denied snapshots or arriving window | Whole restart refused safely; controls unlock; no selection change or lost inputs |
 | Older worker without same-document navigation support | Native navigation fallback, fresh online HTML and retained work |
 | Actual older installed worker/client and complete-cache recognition | Compatible migration, no download loop or premature activation, preserved files/consent/drafts |
