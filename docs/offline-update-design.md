@@ -254,6 +254,11 @@ and [browser handoff journey](https://github.com/snowch/c-foundry/blob/main/test
 
 Cancellation must persist `wanted: false` before aborting native/foreground work.
 Late completion cannot revive that consent or select a cancelled replacement.
+A late native completion/abort event must also leave an already ready, verified
+job unchanged. Check before waiting for a mutation lock and again after acquiring
+it: the foreground replacement may finish during that wait. Regression tests
+must dispatch a delayed native event after readiness and require the ready state,
+pending selection and earlier complete copy to remain intact.
 Quota and integrity failures need explicit attention; eligible connection failures
 may resume the existing request. Keep completed verified files and the prior saved
 selection across failures. Never use learner draft storage as download state.
