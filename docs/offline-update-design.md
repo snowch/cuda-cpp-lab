@@ -300,6 +300,13 @@ initialisation, unsaved guards, unavailable snapshot storage or unresponsive
 participants. Locks must have a bounded recovery timeout. Gate navigation during
 the transaction and confirm the window set has not changed before committing.
 
+Use one directory-to-index mapping for saved-file lookup, restart participation
+and recovery-page classification. RISC-V's first-save-before-any-run test stopped
+the actual host server, then opened and executed an unvisited lesson. It caught a
+cache-key mismatch that browser offline emulation had masked. Repeat this proof
+after an update, with the host still refused; a warmed compiler cache is not
+proof of a complete first save.
+
 Participant discovery must normalize every directory URL to its manifest HTML
 path, not just the course root. For example, `/lessons/addition/` corresponds to
 `lessons/addition/index.html`; a query or hash does not make it a different
