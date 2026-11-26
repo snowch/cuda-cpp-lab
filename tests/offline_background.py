@@ -40,7 +40,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def fixture(temp,name,previous_client=False,embed=False):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
-    for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
+    for module in ['offline.mjs','header-controls.mjs','header-controls.LICENSE.txt','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
     if previous_client:
         client_fixture='previous-native-download-client.mjs' if previous_client=='native' else 'previous-download-client.mjs'
@@ -61,7 +61,9 @@ def fixture(temp,name,previous_client=False,embed=False):
     if previous_client:
         # Recreate the removed control before a frozen older controller runs.
         # This parser-ordered module precedes the controller injected in <head>.
-        legacy_action='''<script type="module">document.querySelector('.status-actions').insertAdjacentHTML('beforeend','<button id="save-offline" type="button">Download for offline use</button>');</script>'''
+        # The frozen historical controller predates the disabled-until-mounted
+        # guard. Recreate its enabled header before that controller executes.
+        legacy_action='''<script type="module">document.querySelector('#app-status-open').disabled=false;document.querySelector('.status-actions').insertAdjacentHTML('beforeend','<button id="save-offline" type="button">Download for offline use</button>');</script>'''
         page=folder/'index.html'
         page.write_text(page.read_text().replace('</head>',legacy_action+'</head>'))
     subprocess.run(['node','--input-type=module','-e',"import {buildOffline} from './scripts/offline.mjs';await buildOffline(process.argv[1]);",str(folder)],cwd=ROOT,check=True,stdout=subprocess.DEVNULL)
