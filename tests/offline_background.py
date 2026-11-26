@@ -40,7 +40,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def fixture(temp,name,previous_client=False,embed=False):
     folder=temp/name;folder.mkdir();(folder/'src').mkdir();(folder/'assets').mkdir()
-    for module in ['offline.mjs','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
+    for module in ['offline.mjs','header-controls.mjs','header-controls.LICENSE.txt','experiment-state.mjs','release-metadata.mjs','release-contract.mjs','style.css']:
         shutil.copy2(ROOT/'src'/module,folder/'src'/module)
     if previous_client:
         client_fixture='previous-native-download-client.mjs' if previous_client=='native' else 'previous-download-client.mjs'
