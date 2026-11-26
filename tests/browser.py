@@ -13,6 +13,9 @@ from code_runner_browser import check_code_runner
 # Copyright © 2026 Christopher Snow.
 """Browser checks against the built course, including the GitHub Pages subpath."""
 import os
+# Let HTTP fault fixtures observe worker-owned fetches without disabling the
+# actual offline worker or weakening controlled-navigation checks.
+os.environ["PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS"] = "1"
 import sys
 from pathlib import Path
 import subprocess
